@@ -75,6 +75,8 @@ uint8_t card[25] = {};
 uint8_t statusapdu[2] = {0x90, 0x00};
 uint8_t finished[] = {0x6f, 0x00};
 
+uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //20
+
 boolean detectCardFlag = false;
 
 uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
@@ -214,7 +216,7 @@ void seekTrack2() {
   bool chktoken = false, existpdol = false;
   uint8_t apdubuffer[255] = {}, apdulen;
 
-  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //20
+  
   uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
   uint8_t processing [] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
   uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
@@ -226,15 +228,15 @@ void seekTrack2() {
       //Serial.print("\nEnter For: ");
   for (uint8_t i = 0; i < 4; i++) {
     //blink(L2, 150, 1);
-    //Serial.print("\n For: ");
-    //Serial.print(i);
+
     nfc.CardModeSend(apdus[i], apdusLen[i]);
-    //Serial.print("\nCardModeReceive ");
+
     while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
-//Serial.print("\n Exit CardModeReceive ");
+
     if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
       printData(apdus[i], apdusLen[i], 1);
       printData(apdubuffer, apdulen, 4);
+      client.publish("NFC", apdubuffer, apdulen);
       for (uint8_t u = 0; u < apdulen; u++) {
         if (i == 1) {
           if (apdubuffer[u] == 0x9F && apdubuffer[u + 1] == 0x38) {
@@ -272,71 +274,71 @@ void seekTrack2() {
   }
 }
 
-// Read Mifare Classic 1K
-void readingmifare(void) {
-  uint8_t success = 1;                          // Flag to check if there was an error
-  uint8_t currentblock = 0;                     // Counter to keep track of which block we're on
-  bool authenticated = false;                   // Flag to indicate if the sector is authenticated
-  unsigned char respm[16];
-  unsigned char respsize;
-  unsigned char authm[] = {0x40, currentblock / 4, 0x10, KEY_MFC};
-
-  /* Read block 4 */
-  unsigned char readm[] = {0x10, 0x30, currentblock};
-  Serial.println("Reading Mifare...");
-  // Now we try to go through all 16 sectors (each having 4 blocks)
-  // authenticating each sector, and then dumping the blocks
-  for (currentblock = 0; currentblock < 64; currentblock++) {
-    // Check if this is a new block so that we can reauthenticate
-
-    /* Authenticate sector 1 with generic keys */
-    //authenticated = true;
-    authm[1] = currentblock / 4;
-    authenticated = nfc.ReaderTagCmd(authm, sizeof(authm), respm, &respsize);
-
-    if ((authenticated == NFC_ERROR) || (respm[respsize - 1] != 0)) {
-      authenticated = false;
-    } else {
-      authenticated = true;
-    }
-    // If we're still not authenticated just skip the block
-    if (!authenticated) {
-      Serial.print("Block "); Serial.print(currentblock, DEC);
-      Serial.println(" unable to authenticate");
-    } else {
-      // Authenticated ... we should be able to read the block now
-      // Dump the data into the 'data' array
-      readm[2] = {currentblock};
-      success = nfc.ReaderTagCmd(readm, sizeof(readm), respm, &respsize);
-      if ((success == NFC_ERROR) || (respm[respsize - 1] != 0)) {
-        success = 0;
-      } else {
-        success = 1;
-      }
-      if (success) {
-        // Read successful
-        Serial.print("Block "); Serial.print(currentblock, DEC);
-        if (currentblock < 10)
-          Serial.print("  ");
-        else
-          Serial.print(" ");
-
-        // Dump the raw data
-        //nfc.PrintHexChar(data, 16);
-
-        printBuf(respm + 1, respsize - 2);
-      } else {
-        // Oops ... something happened
-        Serial.print("Block ");
-        Serial.print(currentblock, DEC);
-        Serial.println(" unable to read this block");
-      }
-    }
-    delay(50);
-  }
-  
-  Serial.println("Finish Dump Card...");
-}
+//// Read Mifare Classic 1K
+//void readingmifare(void) {
+//  uint8_t success = 1;                          // Flag to check if there was an error
+//  uint8_t currentblock = 0;                     // Counter to keep track of which block we're on
+//  bool authenticated = false;                   // Flag to indicate if the sector is authenticated
+//  unsigned char respm[16];
+//  unsigned char respsize;
+//  unsigned char authm[] = {0x40, currentblock / 4, 0x10, KEY_MFC};
+//
+//  /* Read block 4 */
+//  unsigned char readm[] = {0x10, 0x30, currentblock};
+//  Serial.println("Reading Mifare...");
+//  // Now we try to go through all 16 sectors (each having 4 blocks)
+//  // authenticating each sector, and then dumping the blocks
+//  for (currentblock = 0; currentblock < 64; currentblock++) {
+//    // Check if this is a new block so that we can reauthenticate
+//
+//    /* Authenticate sector 1 with generic keys */
+//    //authenticated = true;
+//    authm[1] = currentblock / 4;
+//    authenticated = nfc.ReaderTagCmd(authm, sizeof(authm), respm, &respsize);
+//
+//    if ((authenticated == NFC_ERROR) || (respm[respsize - 1] != 0)) {
+//      authenticated = false;
+//    } else {
+//      authenticated = true;
+//    }
+//    // If we're still not authenticated just skip the block
+//    if (!authenticated) {
+//      Serial.print("Block "); Serial.print(currentblock, DEC);
+//      Serial.println(" unable to authenticate");
+//    } else {
+//      // Authenticated ... we should be able to read the block now
+//      // Dump the data into the 'data' array
+//      readm[2] = {currentblock};
+//      success = nfc.ReaderTagCmd(readm, sizeof(readm), respm, &respsize);
+//      if ((success == NFC_ERROR) || (respm[respsize - 1] != 0)) {
+//        success = 0;
+//      } else {
+//        success = 1;
+//      }
+//      if (success) {
+//        // Read successful
+//        Serial.print("Block "); Serial.print(currentblock, DEC);
+//        if (currentblock < 10)
+//          Serial.print("  ");
+//        else
+//          Serial.print(" ");
+//
+//        // Dump the raw data
+//        //nfc.PrintHexChar(data, 16);
+//
+//        printBuf(respm + 1, respsize - 2);
+//      } else {
+//        // Oops ... something happened
+//        Serial.print("Block ");
+//        Serial.print(currentblock, DEC);
+//        Serial.println(" unable to read this block");
+//      }
+//    }
+//    delay(50);
+//  }
+//  
+//  Serial.println("Finish Dump Card...");
+//}
 
 //Is it a card in range? for Mifare and ISO cards
 void detectcard() {
@@ -379,7 +381,7 @@ void detectcard() {
         case PROT_MIFARE:
           Serial.println(" - Found MIFARE card");
 
-          readingmifare();
+          //readingmifare();
           break;
 
         default:
@@ -450,10 +452,13 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
+    
+    ppse[i] = payload[i];
     Serial.print((char)payload[i]);
   }
   Serial.println();
-  //readcard();
+  mifarevisa();
+  
   //Time test
   //  Serial.print("Time: ");
   //  myTime2 = millis();
@@ -522,5 +527,4 @@ void loop() { // Main loop
     reconnect();
   }
   client.loop();
-  //mifarevisa();
 }
