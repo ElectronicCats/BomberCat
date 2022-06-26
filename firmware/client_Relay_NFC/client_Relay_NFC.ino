@@ -36,8 +36,8 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-const char* outTopic = "NFC";
-const char* inTopic = "NFC";
+const char* outTopic = "RelayClient";
+const char* inTopic = "RelayHost";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 #define L2         (12)  //LED2 indicates the emulation process 
