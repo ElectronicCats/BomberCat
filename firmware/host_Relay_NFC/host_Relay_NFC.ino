@@ -36,7 +36,10 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-#define L1         (11)  //LED1 indicates activity
+const char* outTopic = "RelayHost";
+const char* inTopic = "RelayClient";
+
+#define L1         (LED_BUILTIN)  //LED1 indicates activity
 #define L2         (12)  //LED2 indicates the emulation process 
 #define L3         (13)
 
@@ -236,7 +239,7 @@ void seekTrack2() {
     if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
       printData(apdus[i], apdusLen[i], 1);
       printData(apdubuffer, apdulen, 4);
-      client.publish("NFC", apdubuffer, apdulen);
+      client.publish(outTopic, apdubuffer, apdulen);
       for (uint8_t u = 0; u < apdulen; u++) {
         if (i == 1) {
           if (apdubuffer[u] == 0x9F && apdubuffer[u + 1] == 0x38) {
@@ -273,72 +276,6 @@ void seekTrack2() {
 
   }
 }
-
-//// Read Mifare Classic 1K
-//void readingmifare(void) {
-//  uint8_t success = 1;                          // Flag to check if there was an error
-//  uint8_t currentblock = 0;                     // Counter to keep track of which block we're on
-//  bool authenticated = false;                   // Flag to indicate if the sector is authenticated
-//  unsigned char respm[16];
-//  unsigned char respsize;
-//  unsigned char authm[] = {0x40, currentblock / 4, 0x10, KEY_MFC};
-//
-//  /* Read block 4 */
-//  unsigned char readm[] = {0x10, 0x30, currentblock};
-//  Serial.println("Reading Mifare...");
-//  // Now we try to go through all 16 sectors (each having 4 blocks)
-//  // authenticating each sector, and then dumping the blocks
-//  for (currentblock = 0; currentblock < 64; currentblock++) {
-//    // Check if this is a new block so that we can reauthenticate
-//
-//    /* Authenticate sector 1 with generic keys */
-//    //authenticated = true;
-//    authm[1] = currentblock / 4;
-//    authenticated = nfc.ReaderTagCmd(authm, sizeof(authm), respm, &respsize);
-//
-//    if ((authenticated == NFC_ERROR) || (respm[respsize - 1] != 0)) {
-//      authenticated = false;
-//    } else {
-//      authenticated = true;
-//    }
-//    // If we're still not authenticated just skip the block
-//    if (!authenticated) {
-//      Serial.print("Block "); Serial.print(currentblock, DEC);
-//      Serial.println(" unable to authenticate");
-//    } else {
-//      // Authenticated ... we should be able to read the block now
-//      // Dump the data into the 'data' array
-//      readm[2] = {currentblock};
-//      success = nfc.ReaderTagCmd(readm, sizeof(readm), respm, &respsize);
-//      if ((success == NFC_ERROR) || (respm[respsize - 1] != 0)) {
-//        success = 0;
-//      } else {
-//        success = 1;
-//      }
-//      if (success) {
-//        // Read successful
-//        Serial.print("Block "); Serial.print(currentblock, DEC);
-//        if (currentblock < 10)
-//          Serial.print("  ");
-//        else
-//          Serial.print(" ");
-//
-//        // Dump the raw data
-//        //nfc.PrintHexChar(data, 16);
-//
-//        printBuf(respm + 1, respsize - 2);
-//      } else {
-//        // Oops ... something happened
-//        Serial.print("Block ");
-//        Serial.print(currentblock, DEC);
-//        Serial.println(" unable to read this block");
-//      }
-//    }
-//    delay(50);
-//  }
-//  
-//  Serial.println("Finish Dump Card...");
-//}
 
 //Is it a card in range? for Mifare and ISO cards
 void detectcard() {
@@ -380,8 +317,6 @@ void detectcard() {
 
         case PROT_MIFARE:
           Serial.println(" - Found MIFARE card");
-
-          //readingmifare();
           break;
 
         default:
@@ -476,9 +411,9 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("NFC", "Hello I'm here");
+      client.publish(outTopic, "Hello I'm here");
       // ... and resubscribe
-      client.subscribe("NFC");
+      client.subscribe(inTopic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
