@@ -1,3 +1,3 @@
 (fp_lib_table
-  (lib (name "RP2040")(type "KiCad")(uri "C:/Users/DELL/OneDrive/Documentos/GitHub/badge-pnwcon/Badge-pwnCon/badge_pwnCon.pretty/RP2040.pretty")(options "")(descr ""))
+  (lib (name "BomberCat")(type "KiCad")(uri "${KIPRJMOD}/hunter-cat-nfc.pretty")(options "")(descr ""))
 )
