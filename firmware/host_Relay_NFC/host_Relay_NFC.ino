@@ -78,8 +78,7 @@ uint8_t card[25] = {};
 uint8_t statusapdu[2] = {0x90, 0x00};
 uint8_t finished[] = {0x6f, 0x00};
 
-uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //20
-
+uint8_t ppse[20];
 boolean detectCardFlag = false;
 
 uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
@@ -196,8 +195,9 @@ uint8_t treatPDOL(uint8_t* apdu) {
   return plen;
 }
 
-void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
+void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   char tmp[1];
+  
   if (cmd == 1)
     Serial.print("\nCommand: ");
   else if (cmd == 2)
@@ -207,10 +207,14 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
   else
     Serial.print("\nCard answer: ");
 
-  for (uint8_t u = 0; u < lenbuffer; u++) {
-    sprintf(tmp, "0x%.2X", buff[u]);
-    Serial.print(tmp); Serial.print(" ");
+  for (uint8_t i = 0; i < lenbuffer; i++) {
+    Serial.print("0x");
+    Serial.print(buff[i] < 16 ? "0" : "");
+    Serial.print(buff[i],HEX);
+    Serial.print(" ");
   }
+
+  Serial.println();
 }
 
 //Find Track 2 in the NFC reading transaction
@@ -220,61 +224,35 @@ void seekTrack2() {
   uint8_t apdubuffer[255] = {}, apdulen;
 
   
-  uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
-  uint8_t processing [] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
-  uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
+  //uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
+  //uint8_t processing [] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
+  //uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
 
-  uint8_t *apdus[] = {ppse, visa, processing, sfi};
-  uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
+  //uint8_t *apdus[] = {ppse, visa, processing, sfi};
+  //uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
 
   uint8_t pdol[50], plen = 8;
       //Serial.print("\nEnter For: ");
-  for (uint8_t i = 0; i < 4; i++) {
+  //for (uint8_t i = 0; i < 1; i++) { // para que el for?
     //blink(L2, 150, 1);
-
-    nfc.CardModeSend(apdus[i], apdusLen[i]);
+    printData(ppse, sizeof(ppse), 1); 
+    
+    // aqui mandar el comando recibido por MQTT o no?
+    nfc.CardModeSend(ppse, sizeof(ppse));
 
     while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
 
     if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
-      printData(apdus[i], apdusLen[i], 1);
+      //printData(apdus[i], apdusLen[i], 1);
+      
       printData(apdubuffer, apdulen, 4);
       client.publish(outTopic, apdubuffer, apdulen);
-      for (uint8_t u = 0; u < apdulen; u++) {
-        if (i == 1) {
-          if (apdubuffer[u] == 0x9F && apdubuffer[u + 1] == 0x38) {
-            for (uint8_t e = 0; e <= apdubuffer[u + 2]; e++)
-              pdol[e] =  apdubuffer[u + e + 2];
-
-            plen = treatPDOL(pdol);
-            apdus[2] = ppdol;
-            apdusLen[2] = plen;
-            existpdol = true;
-          }
-        }
-        else if (i == 3) {
-          if (apdubuffer[u] == 0x57 && apdubuffer[u + 1] == 0x13 && !chktoken) {
-            chktoken = true;
-            memcpy(&token, &apdubuffer[u + 2], 19);
-            break;
-          }
-        }
-      }
-      if (i == 1) {
-        char tmp[1];
-        Serial.print("\nFull challenge: ");
-        for (uint8_t b = 0; b < plen; b++) {
-          sprintf(tmp, "0x%.2X", existpdol ? ppdol[b] : processing[b]);
-          Serial.print(tmp); Serial.print(" ");
-        }
-        Serial.println("");
-      }
       Serial.println("");
     }
     else
       Serial.println("Error reading the card!");
 
-  }
+  //}
 }
 
 //Is it a card in range? for Mifare and ISO cards
@@ -344,7 +322,7 @@ void detectcard() {
 void mifarevisa() {
   mode = 1;
   resetMode();
-  detectcard();
+  detectcard(); //++
   detectCardFlag = false;
 }
 
@@ -382,24 +360,21 @@ void setup_wifi() {
   }
 }
 
+// AQUI ***********
 void callback(char* topic, byte * payload, unsigned int length) {
-  Serial.print("Message arrived [");
+  Serial.print("HOLA Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
     
     ppse[i] = payload[i];
     Serial.print((char)payload[i]);
+    
   }
   Serial.println();
   mifarevisa();
-  
-  //Time test
-  //  Serial.print("Time: ");
-  //  myTime2 = millis();
-  //  result = myTime1 - myTime2;
-  //  Serial.println(result); // prints time since program started
 }
+
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -411,7 +386,7 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish(outTopic, "Hello I'm here");
+      //client.publish(outTopic, "Hello I'm here");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {
@@ -440,9 +415,7 @@ void setup() {
   client.setCallback(callback);
 
   // blink to show we started up
-  blink(L1, 200, 2);
-  blink(L2, 200, 2);
-  blink(L3, 200, 2);
+  blink(L1, 200, 6);
   
   Serial.println("BomberCat, yes Sir!");
 }
