@@ -62,6 +62,8 @@ RfIntf_t RfInterface;
 
 uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
+boolean flag_send = false;
+
 unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 
 // Token = data to be use it as track 2
@@ -136,36 +138,25 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
   }
 }
 
-void printDataMQTT(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
-  char tmp[1];
-  if (cmd == 1)
-    Serial.print("\nCommand: ");
-  else if (cmd == 2)
-    Serial.print("\nReader command: ");
-  else if (cmd == 3)
-    Serial.print("\nHunter Cat answer: ");
-  else
-    Serial.print("\nCard answer: ");
-  
-  //String templateStr;
-  //for (uint8_t u = 0; u < lenbuffer; u++) {
-    //sprintf(tmp, "0x%.2X", buff[u]);
-    //uint8_t mask = buff[u] & 0xF0;
-    //if (!mask)templateStr += "0"; //Single digit number add 0 before
-    //templateStr += String(buff[u], HEX);
-    client.publish(outTopic, buff, lenbuffer);
-  //}
-}
 //Emulate a Visa MSD
 void visamsd() {
-  mode = 2;
-  resetMode();
+  
   memcpy(&card[0], last, sizeof(last));
   memcpy(&card[4], token, sizeof(token));
   memcpy(&card[23], statusapdu, sizeof(statusapdu));
 
   uint8_t *apdus2[] = {ppsea, visaa, processinga, card, finished, finished};
   uint8_t apdusLen2 [] = { sizeof(ppsea), sizeof(visaa), sizeof(processinga), sizeof(card), sizeof(finished), sizeof(finished)};
+
+  if(flag_send == true) {
+    
+    nfc.CardModeSend(ppsea, sizeof(ppsea));
+    printData(ppsea, sizeof(ppsea), 3);
+
+    flag_send = false;
+  }
+
+
 
   for (uint8_t i = 0; i < 6; i++) {
 
@@ -175,10 +166,9 @@ void visamsd() {
 
       printData(Cmd, CmdSize, 1);
       
-      printDataMQTT(Cmd, CmdSize, 1);
-      
+      //printDataMQTT(Cmd, CmdSize, 1);
+      client.publish(outTopic, Cmd, CmdSize);
       //nfc.CardModeSend(apdus2[i], apdusLen2[i]);
-      
 
       //printData(apdus2[i], apdusLen2[i], 3);*/
 
@@ -220,11 +210,23 @@ void setup_wifi() {
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
   }
+
+  
 }
 
 void callback(char* topic, byte * payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for(int i = 0; i < length; i++){
+    ppsea[i] = payload[i]; 
+    Serial.print((char)payload[i]);
+  }
+
+  flag_send = true;
+  
   visamsd();
-  //Time test
+   
   //  Serial.print("Time: ");
   //  myTime2 = millis();
   //  result = myTime1 - myTime2;
@@ -241,9 +243,9 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      //client.publish(outTopic, "Hello I'm here");
+      client.publish("status", "Hello I'm here RelayClient");
       // ... and resubscribe
-      client.subscribe(outTopic);
+      client.subscribe(inTopic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -262,8 +264,9 @@ void setup() {
 
   Serial.begin(9600);
   //while (!Serial);
-
+  //mode = 2;
   resetMode();
+  delay(100);
 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -292,5 +295,5 @@ void loop() { // Main loop
     reconnect();
   }
   client.loop();
-  visamsd();
+  //visamsd();
 }
