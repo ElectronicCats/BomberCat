@@ -233,7 +233,6 @@ void seekTrack2() {
 
   uint8_t pdol[50], plen = 8;
       //Serial.print("\nEnter For: ");
-  //for (uint8_t i = 0; i < 1; i++) { // para que el for?
     //blink(L2, 150, 1);
     printData(ppse, sizeof(ppse), 1); 
     
@@ -247,10 +246,12 @@ void seekTrack2() {
       
       printData(apdubuffer, apdulen, 4);
       client.publish(outTopic, apdubuffer, apdulen);
+
       Serial.println("");
     }
-    else
+    else{
       Serial.println("Error reading the card!");
+    }
 
   //}
 }
@@ -386,7 +387,6 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      //client.publish(outTopic, "Hello I'm here");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {
@@ -418,6 +418,7 @@ void setup() {
   blink(L1, 200, 6);
   
   Serial.println("BomberCat, yes Sir!");
+  Serial.println("Host Relay NFC");
 }
 
 void blink(int pin, int msdelay, int times) {
