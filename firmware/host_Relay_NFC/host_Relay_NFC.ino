@@ -229,7 +229,8 @@ void seekTrack2() {
 
   uint8_t pdol[50], plen = 8;
       //Serial.print("\nEnter For: ");
-  for (uint8_t i = 0; i < 4; i++) {
+  //for (uint8_t i = 0; i < 1; i++) {
+  uint8_t i = 0;
     //blink(L2, 150, 1);
 
     nfc.CardModeSend(apdus[i], apdusLen[i]);
@@ -246,7 +247,7 @@ void seekTrack2() {
             for (uint8_t e = 0; e <= apdubuffer[u + 2]; e++)
               pdol[e] =  apdubuffer[u + e + 2];
 
-            plen = treatPDOL(pdol);
+            //plen = treatPDOL(pdol);
             apdus[2] = ppdol;
             apdusLen[2] = plen;
             existpdol = true;
@@ -260,7 +261,7 @@ void seekTrack2() {
           }
         }
       }
-      if (i == 1) {
+      /*if (i == 1) {
         char tmp[1];
         Serial.print("\nFull challenge: ");
         for (uint8_t b = 0; b < plen; b++) {
@@ -268,13 +269,14 @@ void seekTrack2() {
           Serial.print(tmp); Serial.print(" ");
         }
         Serial.println("");
-      }
+      }*/
       Serial.println("");
     }
-    else
+    else{
       Serial.println("Error reading the card!");
+    }
 
-  }
+  //}
 }
 
 //Is it a card in range? for Mifare and ISO cards
@@ -411,7 +413,7 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish(outTopic, "Hello I'm here");
+      client.publish("status", "Hello I'm here RelayHost");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {
@@ -445,6 +447,7 @@ void setup() {
   blink(L3, 200, 2);
   
   Serial.println("BomberCat, yes Sir!");
+  Serial.println("Host Relay NFC");
 }
 
 void blink(int pin, int msdelay, int times) {
