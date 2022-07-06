@@ -55,8 +55,6 @@ unsigned long lastMsg = 0;
 #define PN7150_VEN   (8)
 #define PN7150_ADDR  (0x28)
 
-#define KEY_MFC      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF        // Default Mifare Classic key
-
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;
 
@@ -65,29 +63,21 @@ uint8_t mode = 2;                                                  // modes: 1 =
 boolean flag_send = false;
 boolean flag_read = false;
 
-unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
+unsigned char Cmd[256], CmdSize;
 
-// Token = data to be use it as track 2
-// 4412345605781234 = card number in this case
-uint8_t token[19] = {0x44, 0x12, 0x34, 0x56, 0x05 , 0x78, 0x12, 0x34, 0xd1, 0x71, 0x12, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x99, 0x1f};
 uint8_t commandlarge = 0;
+
 //Visa MSD emulation variables
 uint8_t apdubuffer[255] = {}, apdulen;
 uint8_t ppsea[255] = {};
-uint8_t visaa[] = {0x6F, 0x1E, 0x84, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0xA5, 0x13, 0x50, 0x0B, 0x56, 0x49, 0x53, 0x41, 0x20, 0x43, 0x52, 0x45, 0x44, 0x49, 0x54, 0x9F, 0x38, 0x03, 0x9F, 0x66, 0x02, 0x90, 0x00};
-uint8_t processinga[] = {0x80, 0x06, 0x00, 0x80, 0x08, 0x01, 0x01, 0x00, 0x90, 0x00};
-uint8_t last [4] =  {0x70, 0x15, 0x57, 0x13};
-uint8_t card[25] = {};
-uint8_t statusapdu[2] = {0x90, 0x00};
-uint8_t finished[] = {0x6f, 0x00};
-
-uint8_t rapdu[] = {0x6F, 0x1E, 0x84, 0x0E, 0x31, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0xA5, 0x0C, 0x88, 0x01, 0x01, 0x5F, 0x2D, 0x02, 0x65, 0x6E, 0x9F, 0x11, 0x01, 0x01, 0x90, 0x00};
-
 
 boolean detectCardFlag = false;
 
 uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
 
+/*****************
+       NFC
+ *****************/
 void resetMode() { //Reset the configuration mode after each reading
   Serial.println("Reset...");
   if (nfc.connectNCI()) { //Wake up the board
@@ -150,15 +140,6 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 //Emulate a Visa MSD
 void visamsd() {
 
-  //Serial.println("Entro a visamsd");
-
-  memcpy(&card[0], last, sizeof(last));
-  memcpy(&card[4], token, sizeof(token));
-  memcpy(&card[23], statusapdu, sizeof(statusapdu));
-
-  uint8_t *apdus2[] = {ppsea, visaa, processinga, card, finished, finished};
-  uint8_t apdusLen2 [] = { sizeof(ppsea), sizeof(visaa), sizeof(processinga), sizeof(card), sizeof(finished), sizeof(finished)};
-
   if (flag_send == true) {
     Serial.print("Send:");
     for (int i = 0; i < commandlarge; i++) {
@@ -172,8 +153,6 @@ void visamsd() {
     flag_read = false;
   }
 
-  //for (uint8_t i = 0; i < 6; i++) {
-
   if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
@@ -183,12 +162,12 @@ void visamsd() {
     client.publish(outTopic, Cmd, CmdSize);
     flag_read = true;
 
-  } /*else {
-      i--;
-    }
-  }*/
+  }
 }
 
+/*****************
+       WIFI
+ *****************/
 void setup_wifi() {
 
   // We start by connecting to a WiFi network
@@ -222,11 +201,15 @@ void setup_wifi() {
   }
 }
 
+/*****************
+       MQTT
+ *****************/
 void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   commandlarge = length;
+
   for (int i = 0; i < length; i++) {
     ppsea[i] = payload[i];
     Serial.print(payload[i], HEX);
@@ -260,6 +243,15 @@ void reconnect() {
   }
 }
 
+void blink(int pin, int msdelay, int times) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(pin, HIGH);
+    delay(msdelay);
+    digitalWrite(pin, LOW);
+    delay(msdelay);
+  }
+}
+
 void setup() {
   pinMode(L1, OUTPUT);
   pinMode(L2, OUTPUT);
@@ -268,9 +260,8 @@ void setup() {
 
   Serial.begin(9600);
   //while (!Serial);
-  //mode = 2;
+
   resetMode();
-  //delay(100);
 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -282,17 +273,8 @@ void setup() {
   //blink(L3, 200, 2);
 
   Serial.println("BomberCat, yes Sir!");
+  Serial.println("Host Relay NFC");
 }
-
-void blink(int pin, int msdelay, int times) {
-  for (int i = 0; i < times; i++) {
-    digitalWrite(pin, HIGH);
-    delay(msdelay);
-    digitalWrite(pin, LOW);
-    delay(msdelay);
-  }
-}
-
 
 void loop() { // Main loop
   if (!client.connected()) {
