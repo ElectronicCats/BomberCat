@@ -55,33 +55,22 @@ unsigned long lastMsg = 0;
 #define PN7150_VEN   (8)
 #define PN7150_ADDR  (0x28)
 
-#define KEY_MFC      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF        // Default Mifare Classic key
-
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;
 
 uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
-unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
-
-// Token = data to be use it as track 2
-// 4412345605781234 = card number in this case
-uint8_t token[19] = {0x44, 0x12, 0x34, 0x56, 0x05 , 0x78, 0x12, 0x34, 0xd1, 0x71, 0x12, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x99, 0x1f};
+uint8_t commandlarge = 0;
 
 //Visa MSD emulation variables
 uint8_t apdubuffer[255] = {}, apdulen;
-uint8_t ppsea[] = {0x6F, 0x23, 0x84, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0xA5, 0x11, 0xBF, 0x0C, 0x0E, 0x61, 0x0C, 0x4F, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x87, 0x01, 0x01, 0x90, 0x00};
-uint8_t visaa[] = {0x6F, 0x1E, 0x84, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0xA5, 0x13, 0x50, 0x0B, 0x56, 0x49, 0x53, 0x41, 0x20, 0x43, 0x52, 0x45, 0x44, 0x49, 0x54, 0x9F, 0x38, 0x03, 0x9F, 0x66, 0x02, 0x90, 0x00};
-uint8_t processinga[] = {0x80, 0x06, 0x00, 0x80, 0x08, 0x01, 0x01, 0x00, 0x90, 0x00};
-uint8_t last [4] =  {0x70, 0x15, 0x57, 0x13};
-uint8_t card[25] = {};
-uint8_t statusapdu[2] = {0x90, 0x00};
-uint8_t finished[] = {0x6f, 0x00};
 
-uint8_t ppse[20];
+uint8_t ppse[255];
 boolean detectCardFlag = false;
 
-uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
+/*****************
+       NFC
+ *****************/
 
 void resetMode() { //Reset the configuration mode after each reading
   Serial.println("Reset...");
@@ -119,81 +108,6 @@ void printBuf(const byte * data, const uint32_t numBytes) {
   }
   Serial.println();
 }
-/*
-    treatPDOL function:
-   Make a right format challenge using the card PDOL to extract more data(track 2)
-   Note: This challenge only follows the format, do not use it as real challenge generator
-*/
-uint8_t treatPDOL(uint8_t* apdu) {
-  uint8_t plen = 7;
-  Serial.println("");
-  //PDOL Format: 80 A8 00 00 + (Tamaño del PDOL+2) + 83 + Tamaño del PDOL + PDOL + 00
-  for (uint8_t i = 1; i <= apdu[0]; i++) {
-    if (apdu[i] == 0x9F && apdu[i + 1] == 0x66) {
-      ppdol[plen] = 0xF6;
-      ppdol[plen + 1] = 0x20;
-      ppdol[plen + 2] = 0xC0;
-      ppdol[plen + 3] = 0x00;
-      plen += 4;
-      i += 2;
-    }
-    else if (apdu[i] == 0x9F && apdu[i + 1] == 0x1A) {
-      ppdol[plen] = 0x9F;
-      ppdol[plen + 1] = 0x1A;
-      plen += 2;
-      i += 2;
-    }
-    else if (apdu[i] == 0x5F && apdu[i + 1] == 0x2A) {
-      ppdol[plen] = 0x5F;
-      ppdol[plen + 1] = 0x2A;
-      plen += 2;
-      i += 2;
-    }
-    else if (apdu[i] == 0x9A) {
-      ppdol[plen] = 0x9A;
-      ppdol[plen + 1] = 0x9A;
-      ppdol[plen + 2] = 0x9A;
-      plen += 3;
-      i += 1;
-    }
-    else if (apdu[i] == 0x95) {
-      ppdol[plen] = 0x95;
-      ppdol[plen + 1] = 0x95;
-      ppdol[plen + 2] = 0x95;
-      ppdol[plen + 3] = 0x95;
-      ppdol[plen + 4] = 0x95;
-      plen += 5;
-      i += 1;
-    }
-    else if (apdu[i] == 0x9C) {
-      ppdol[plen] = 0x9C;
-      plen += 1;
-      i += 1;
-    }
-    else if (apdu[i] == 0x9F && apdu[i + 1] == 0x37) {
-      ppdol[plen] = 0x9F;
-      ppdol[plen + 1] = 0x37;
-      ppdol[plen + 2] = 0x9F;
-      ppdol[plen + 3] = 0x37;
-      plen += 4;
-      i += 2;
-    }
-    else {
-      uint8_t u = apdu[i + 2];
-      while (u > 0) {
-        ppdol[plen] = 0;
-        plen += 1;
-        u--;
-      }
-      i += 2;
-    }
-  }
-  ppdol[4] = (plen + 2) - 7; // Length of PDOL + 2
-  ppdol[6] = plen - 7;       // Real length
-  plen++;                    // +1 because the last 0
-  ppdol[plen] = 0x00;        // Add the last 0 to the challenge
-  return plen;
-}
 
 void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   char tmp[1];
@@ -219,24 +133,15 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 
 //Find Track 2 in the NFC reading transaction
 void seekTrack2() {
-  bool chktoken = false, existpdol = false;
   uint8_t apdubuffer[255] = {}, apdulen;
-
-
-  //uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
-  //uint8_t processing [] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
-  //uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
-
-  //uint8_t *apdus[] = {ppse, visa, processing, sfi};
-  //uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
 
   uint8_t pdol[50], plen = 8;
   //blink(L2, 150, 1);
 
-  printData(ppse, sizeof(ppse), 1);
+  printData(ppse, commandlarge, 1);
 
   // aqui mandar el comando recibido por MQTT
-  nfc.CardModeSend(ppse, sizeof(ppse));
+  nfc.CardModeSend(ppse, commandlarge);
 
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
 
@@ -248,8 +153,6 @@ void seekTrack2() {
   else {
     Serial.println("Error reading the card!");
   }
-
-  //}
 }
 
 //Is it a card in range? for Mifare and ISO cards
@@ -321,9 +224,52 @@ void mifarevisa() {
   detectCardFlag = false;
 }
 
-void setup_wifi() {
+/*****************
+       MQTT
+ *****************/
+//Callback MQTT suscribe to inTopic from RelayClient
+void callback(char* topic, byte * payload, unsigned int length) {
+  Serial.print("Host Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  commandlarge = length;
+  for (int i = 0; i < length; i++) {
 
-  delay(10);
+    ppse[i] = payload[i];
+    Serial.print(payload[i], HEX);
+
+  }
+  Serial.println();
+  mifarevisa();
+}
+// Connect and reconnect to MQTT
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESPClient-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str())) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      // ... and resubscribe
+      client.subscribe(inTopic);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+/*****************
+       WIFI
+ *****************/
+void setup_wifi() {
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
@@ -352,44 +298,6 @@ void setup_wifi() {
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
-  }
-}
-
-//
-void callback(char* topic, byte * payload, unsigned int length) {
-  Serial.print("Host Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-
-    ppse[i] = payload[i];
-    Serial.print(payload[i], HEX);
-
-  }
-  Serial.println();
-  mifarevisa();
-}
-
-void reconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESPClient-";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (client.connect(clientId.c_str())) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      // ... and resubscribe
-      client.subscribe(inTopic);
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
   }
 }
 
