@@ -69,10 +69,10 @@ unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 // Token = data to be use it as track 2
 // 4412345605781234 = card number in this case
 uint8_t token[19] = {0x44, 0x12, 0x34, 0x56, 0x05 , 0x78, 0x12, 0x34, 0xd1, 0x71, 0x12, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x99, 0x1f};
-
+uint8_t commandlarge=0;
 //Visa MSD emulation variables
 uint8_t apdubuffer[255] = {}, apdulen;
-uint8_t ppsea[] = {0x6F, 0x23, 0x84, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0xA5, 0x11, 0xBF, 0x0C, 0x0E, 0x61, 0x0C, 0x4F, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x87, 0x01, 0x01, 0x90, 0x00};
+uint8_t ppsea[255] = {};
 uint8_t visaa[] = {0x6F, 0x1E, 0x84, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0xA5, 0x13, 0x50, 0x0B, 0x56, 0x49, 0x53, 0x41, 0x20, 0x43, 0x52, 0x45, 0x44, 0x49, 0x54, 0x9F, 0x38, 0x03, 0x9F, 0x66, 0x02, 0x90, 0x00};
 uint8_t processinga[] = {0x80, 0x06, 0x00, 0x80, 0x08, 0x01, 0x01, 0x00, 0x90, 0x00};
 uint8_t last [4] =  {0x70, 0x15, 0x57, 0x13};
@@ -157,9 +157,13 @@ void visamsd() {
 
   uint8_t *apdus2[] = {ppsea, visaa, processinga, card, finished, finished};
   uint8_t apdusLen2 [] = { sizeof(ppsea), sizeof(visaa), sizeof(processinga), sizeof(card), sizeof(finished), sizeof(finished)};
-
+  
   if(flag_send == true) {
-    
+    Serial.print("Send:");
+    for(int i = 0; i < commandlarge; i++){ 
+    Serial.print(ppsea[i],HEX);
+  }
+  Serial.println();
     nfc.CardModeSend(ppsea, sizeof(ppsea));
     printData(ppsea, sizeof(ppsea), 3);
 
@@ -180,9 +184,6 @@ void visamsd() {
       //printDataMQTT(Cmd, CmdSize, 1);
       client.publish(outTopic, Cmd, CmdSize);
 
-      //nfc.CardModeSend(rapdu, sizeof(rapdu)); // prueba de enviar inmediatamente la respuesta a test_cmd
-
-      //printData(apdus2[i], apdusLen2[i], 3);*/
 
     } /*else {
       i--;
@@ -230,14 +231,13 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  commandlarge=length;
   for(int i = 0; i < length; i++){
     ppsea[i] = payload[i]; 
-    Serial.print((char)payload[i]);
+    Serial.print(payload[i],HEX);
   }
-
+  Serial.println();
   flag_send = true;
-
-  //nfc.CardModeSend(rapdu, sizeof(rapdu));
   
   visamsd();
    
@@ -280,7 +280,7 @@ void setup() {
   //while (!Serial);
   //mode = 2;
   resetMode();
-  delay(100);
+  //delay(100);
 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
