@@ -5,7 +5,7 @@
   Date: 17/05/2022
 
   This example demonstrates how to use BomberCat by Electronic Cats
-  
+
 
   Development environment specifics:
   IDE: Arduino 1.8.19
@@ -63,13 +63,14 @@ RfIntf_t RfInterface;
 uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
 boolean flag_send = false;
+boolean flag_read = false;
 
 unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 
 // Token = data to be use it as track 2
 // 4412345605781234 = card number in this case
 uint8_t token[19] = {0x44, 0x12, 0x34, 0x56, 0x05 , 0x78, 0x12, 0x34, 0xd1, 0x71, 0x12, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x99, 0x1f};
-uint8_t commandlarge=0;
+uint8_t commandlarge = 0;
 //Visa MSD emulation variables
 uint8_t apdubuffer[255] = {}, apdulen;
 uint8_t ppsea[255] = {};
@@ -126,7 +127,7 @@ void printBuf(const byte * data, const uint32_t numBytes) {
 
 void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   char tmp[1];
-  
+
   if (cmd == 1)
     Serial.print("\nCommand: ");
   else if (cmd == 2)
@@ -139,7 +140,7 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   for (uint8_t i = 0; i < lenbuffer; i++) {
     Serial.print("0x");
     Serial.print(buff[i] < 16 ? "0" : "");
-    Serial.print(buff[i],HEX);
+    Serial.print(buff[i], HEX);
     Serial.print(" ");
   }
 
@@ -150,42 +151,39 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 void visamsd() {
 
   //Serial.println("Entro a visamsd");
-  
+
   memcpy(&card[0], last, sizeof(last));
   memcpy(&card[4], token, sizeof(token));
   memcpy(&card[23], statusapdu, sizeof(statusapdu));
 
   uint8_t *apdus2[] = {ppsea, visaa, processinga, card, finished, finished};
   uint8_t apdusLen2 [] = { sizeof(ppsea), sizeof(visaa), sizeof(processinga), sizeof(card), sizeof(finished), sizeof(finished)};
-  
-  if(flag_send == true) {
+
+  if (flag_send == true) {
     Serial.print("Send:");
-    for(int i = 0; i < commandlarge; i++){ 
-    Serial.print(ppsea[i],HEX);
-  }
-  Serial.println();
-    nfc.CardModeSend(ppsea, sizeof(ppsea));
-    printData(ppsea, sizeof(ppsea), 3);
+    for (int i = 0; i < commandlarge; i++) {
+      Serial.print(ppsea[i], HEX);
+    }
+    Serial.println();
+    nfc.CardModeSend(ppsea, commandlarge);
+    printData(ppsea, commandlarge, 3);
 
     flag_send = false;
+    flag_read = false;
   }
-
-
 
   //for (uint8_t i = 0; i < 6; i++) {
 
-    if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
+  if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
 
-      while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
+    while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
-      printData(Cmd, CmdSize, 1);
-      //printData(Cmd, CmdSize, 2);
-      
-      //printDataMQTT(Cmd, CmdSize, 1);
-      client.publish(outTopic, Cmd, CmdSize);
+    printData(Cmd, CmdSize, 2);
 
+    client.publish(outTopic, Cmd, CmdSize);
+    flag_read = true;
 
-    } /*else {
+  } /*else {
       i--;
     }
   }*/
@@ -193,7 +191,6 @@ void visamsd() {
 
 void setup_wifi() {
 
-  delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
@@ -223,28 +220,21 @@ void setup_wifi() {
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
   }
-
-  
 }
 
 void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
-  commandlarge=length;
-  for(int i = 0; i < length; i++){
-    ppsea[i] = payload[i]; 
-    Serial.print(payload[i],HEX);
+  commandlarge = length;
+  for (int i = 0; i < length; i++) {
+    ppsea[i] = payload[i];
+    Serial.print(payload[i], HEX);
   }
   Serial.println();
   flag_send = true;
-  
+
   visamsd();
-   
-  //  Serial.print("Time: ");
-  //  myTime2 = millis();
-  //  result = myTime1 - myTime2;
-  //  Serial.println(result); // prints time since program started
 }
 void reconnect() {
   // Loop until we're reconnected
@@ -290,7 +280,7 @@ void setup() {
   blink(L1, 300, 5);
   //blink(L2, 200, 2);
   //blink(L3, 200, 2);
-  
+
   Serial.println("BomberCat, yes Sir!");
 }
 
@@ -309,5 +299,7 @@ void loop() { // Main loop
     reconnect();
   }
   client.loop();
-  visamsd();
+  if (flag_read == false) {
+    visamsd();
+  }
 }
