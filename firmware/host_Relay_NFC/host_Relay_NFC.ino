@@ -5,7 +5,7 @@
   Date: 17/05/2022
 
   This example demonstrates how to use BomberCat by Electronic Cats
-  
+
 
   Development environment specifics:
   IDE: Arduino 1.8.19
@@ -197,7 +197,7 @@ uint8_t treatPDOL(uint8_t* apdu) {
 
 void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   char tmp[1];
-  
+
   if (cmd == 1)
     Serial.print("\nCommand: ");
   else if (cmd == 2)
@@ -210,7 +210,7 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
   for (uint8_t i = 0; i < lenbuffer; i++) {
     Serial.print("0x");
     Serial.print(buff[i] < 16 ? "0" : "");
-    Serial.print(buff[i],HEX);
+    Serial.print(buff[i], HEX);
     Serial.print(" ");
   }
 
@@ -219,11 +219,10 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 
 //Find Track 2 in the NFC reading transaction
 void seekTrack2() {
-  //Serial.print("\n Init Full challenge: ");
   bool chktoken = false, existpdol = false;
   uint8_t apdubuffer[255] = {}, apdulen;
 
-  
+
   //uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
   //uint8_t processing [] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
   //uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
@@ -232,26 +231,23 @@ void seekTrack2() {
   //uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
 
   uint8_t pdol[50], plen = 8;
-      //Serial.print("\nEnter For: ");
-    //blink(L2, 150, 1);
-    printData(ppse, sizeof(ppse), 1); 
-    
-    // aqui mandar el comando recibido por MQTT o no?
-    nfc.CardModeSend(ppse, sizeof(ppse));
+  //blink(L2, 150, 1);
 
-    while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
+  printData(ppse, sizeof(ppse), 1);
 
-    if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
-      //printData(apdus[i], apdusLen[i], 1);
-      
-      printData(apdubuffer, apdulen, 4);
-      client.publish(outTopic, apdubuffer, apdulen);
+  // aqui mandar el comando recibido por MQTT
+  nfc.CardModeSend(ppse, sizeof(ppse));
 
-      Serial.println("");
-    }
-    else{
-      Serial.println("Error reading the card!");
-    }
+  while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
+
+  if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
+
+    printData(apdubuffer, apdulen, 4);
+    client.publish(outTopic, apdubuffer, apdulen);
+  }
+  else {
+    Serial.println("Error reading the card!");
+  }
 
   //}
 }
@@ -309,8 +305,8 @@ void detectcard() {
       }
 
       //* Wait for card removal
-      nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
-      Serial.println("CARD REMOVED!");
+      //nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
+      //Serial.println("CARD REMOVED!");
 
       nfc.StopDiscovery();
       nfc.StartDiscovery(mode);
@@ -321,9 +317,7 @@ void detectcard() {
 
 //To read Mifare and Visa
 void mifarevisa() {
-  mode = 1;
-  resetMode();
-  detectcard(); //++
+  detectcard();
   detectCardFlag = false;
 }
 
@@ -361,16 +355,16 @@ void setup_wifi() {
   }
 }
 
-// AQUI ***********
+//
 void callback(char* topic, byte * payload, unsigned int length) {
-  Serial.print("HOLA Message arrived [");
+  Serial.print("Host Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
-    
+
     ppse[i] = payload[i];
-    Serial.print((char)payload[i]);
-    
+    Serial.print(payload[i], HEX);
+
   }
   Serial.println();
   mifarevisa();
@@ -399,28 +393,6 @@ void reconnect() {
   }
 }
 
-void setup() {
-  pinMode(L1, OUTPUT);
-  pinMode(L2, OUTPUT);
-  pinMode(L3, OUTPUT);
-  pinMode(NPIN, INPUT_PULLUP);
-
-  Serial.begin(9600);
-  while (!Serial);
-
-  resetMode();
-
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-
-  // blink to show we started up
-  blink(L1, 200, 6);
-  
-  Serial.println("BomberCat, yes Sir!");
-  Serial.println("Host Relay NFC");
-}
-
 void blink(int pin, int msdelay, int times) {
   for (int i = 0; i < times; i++) {
     digitalWrite(pin, HIGH);
@@ -430,6 +402,27 @@ void blink(int pin, int msdelay, int times) {
   }
 }
 
+void setup() {
+  pinMode(L1, OUTPUT);
+  pinMode(L2, OUTPUT);
+  pinMode(L3, OUTPUT);
+  pinMode(NPIN, INPUT_PULLUP);
+
+  Serial.begin(9600);
+  //while (!Serial);
+  mode = 1;
+  resetMode();
+
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+
+  // blink to show we started up
+  blink(L1, 200, 6);
+
+  Serial.println("BomberCat, yes Sir!");
+  Serial.println("Host Relay NFC");
+}
 
 void loop() { // Main loop
   if (!client.connected()) {
