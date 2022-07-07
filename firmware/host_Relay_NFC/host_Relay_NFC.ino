@@ -133,14 +133,14 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 
 //Find Track 2 in the NFC reading transaction
 void seekTrack2() {
+  Serial.println("Send data to Card...");
   uint8_t apdubuffer[255] = {}, apdulen;
 
-  uint8_t pdol[50], plen = 8;
   //blink(L2, 150, 1);
 
   printData(ppse, commandlarge, 1);
 
-  // aqui mandar el comando recibido por MQTT
+  // Send command from terminal to card
   nfc.CardModeSend(ppse, commandlarge);
 
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
@@ -148,6 +148,7 @@ void seekTrack2() {
   if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
 
     printData(apdubuffer, apdulen, 4);
+    
     client.publish(outTopic, apdubuffer, apdulen);
   }
   else {
@@ -180,15 +181,15 @@ void detectcard() {
 
         if (RfInterface.Info.NFC_APP.SelResLen != 0) {
 
-          Serial.print("\tSEL_RES = ");
+          /*Serial.print("\tSEL_RES = ");
           sprintf(tmp, "0x%.2X", RfInterface.Info.NFC_APP.SelRes[0]);
-          Serial.print(tmp); Serial.println(" ");
+          Serial.print(tmp); Serial.println(" ");*/
         }
       }
       switch (RfInterface.Protocol) {
         case PROT_ISODEP:
 
-          Serial.println(" - Found ISODEP card");
+          //Serial.println(" - Found ISODEP card");
 
           seekTrack2();
           break;
@@ -203,16 +204,16 @@ void detectcard() {
       }
 
       //* It can detect multiple cards at the same time if they use the same protocol
-      if (RfInterface.MoreTags) {
+      /*if (RfInterface.MoreTags) {
         nfc.ReaderActivateNext(&RfInterface);
-      }
+      }*/
 
       //* Wait for card removal
       //nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
       //Serial.println("CARD REMOVED!");
 
-      nfc.StopDiscovery();
-      nfc.StartDiscovery(mode);
+      //nfc.StopDiscovery();
+      //nfc.StartDiscovery(mode);
       detectCardFlag = true;
     }
   }
@@ -220,8 +221,13 @@ void detectcard() {
 
 //To read Mifare and Visa
 void mifarevisa() {
-  detectcard();
-  detectCardFlag = false;
+  if(detectCardFlag == false){
+    detectcard();
+  }
+  else{
+    seekTrack2();
+  }
+  //detectCardFlag = false;
 }
 
 /*****************
@@ -229,17 +235,17 @@ void mifarevisa() {
  *****************/
 //Callback MQTT suscribe to inTopic from RelayClient
 void callback(char* topic, byte * payload, unsigned int length) {
-  Serial.print("Host Message arrived [");
+  /*Serial.print("Host Message arrived [");
   Serial.print(topic);
-  Serial.print("] ");
+  Serial.print("] ");*/
   commandlarge = length;
   for (int i = 0; i < length; i++) {
 
     ppse[i] = payload[i];
-    Serial.print(payload[i], HEX);
+    //Serial.print(payload[i], HEX);
 
   }
-  Serial.println();
+  //Serial.println();
   mifarevisa();
 }
 // Connect and reconnect to MQTT
