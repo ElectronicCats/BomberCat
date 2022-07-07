@@ -30,6 +30,8 @@
 #include <PubSubClient.h>
 #include "Electroniccats_PN7150.h"
 
+//#define DEBUG
+
 // Update these with values suitable for your network.
 
 const char* ssid = ssidName;
@@ -73,7 +75,9 @@ boolean detectCardFlag = false;
  *****************/
 
 void resetMode() { //Reset the configuration mode after each reading
+  #ifdef DEBUG
   Serial.println("Reset...");
+  #endif
   if (nfc.connectNCI()) { //Wake up the board
     Serial.println("Error while setting up the mode, check connections!");
     while (1);
@@ -133,12 +137,15 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 
 //Find Track 2 in the NFC reading transaction
 void seekTrack2() {
+  #ifdef DEBUG
   Serial.println("Send data to Card...");
+  #endif
   uint8_t apdubuffer[255] = {}, apdulen;
 
   //blink(L2, 150, 1);
-
+  #ifdef DEBUG
   printData(ppse, commandlarge, 1);
+  #endif
 
   // Send command from terminal to card
   nfc.CardModeSend(ppse, commandlarge);
@@ -146,8 +153,9 @@ void seekTrack2() {
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
 
   if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
-
+    #ifdef DEBUG
     printData(apdubuffer, apdulen, 4);
+    #endif
     
     client.publish(outTopic, apdubuffer, apdulen);
   }
@@ -159,12 +167,14 @@ void seekTrack2() {
 //Is it a card in range? for Mifare and ISO cards
 void detectcard() {
   while (detectCardFlag == false) {
+    #ifdef DEBUG
     Serial.println("wait detect Card...");
+    #endif
     if (!nfc.WaitForDiscoveryNotification(&RfInterface)) { // Waiting to detect cards
 
       if (RfInterface.ModeTech == MODE_POLL || RfInterface.ModeTech == TECH_PASSIVE_NFCA) {
         char tmp[16];
-
+        #ifdef DEBUG
         Serial.print("\tSENS_RES = ");
         sprintf(tmp, "0x%.2X", RfInterface.Info.NFC_APP.SensRes[0]);
         Serial.print(tmp); Serial.print(" ");
@@ -172,6 +182,7 @@ void detectcard() {
         Serial.print(tmp); Serial.println(" ");
         Serial.print("\tNFCID = ");
         printBuf(RfInterface.Info.NFC_APP.NfcId, RfInterface.Info.NFC_APP.NfcIdLen);
+        #endif
 
         if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
 
@@ -180,16 +191,19 @@ void detectcard() {
         }
 
         if (RfInterface.Info.NFC_APP.SelResLen != 0) {
-
-          /*Serial.print("\tSEL_RES = ");
+          #ifdef DEBUG
+          Serial.print("\tSEL_RES = ");
           sprintf(tmp, "0x%.2X", RfInterface.Info.NFC_APP.SelRes[0]);
-          Serial.print(tmp); Serial.println(" ");*/
+          Serial.print(tmp); Serial.println(" ");
+          #endif
         }
       }
       switch (RfInterface.Protocol) {
         case PROT_ISODEP:
 
-          //Serial.println(" - Found ISODEP card");
+          #ifdef DEBUG
+          Serial.println(" - Found ISODEP card");
+          #endif
 
           seekTrack2();
           break;
@@ -235,17 +249,22 @@ void mifarevisa() {
  *****************/
 //Callback MQTT suscribe to inTopic from RelayClient
 void callback(char* topic, byte * payload, unsigned int length) {
-  /*Serial.print("Host Message arrived [");
+  #ifdef DEBUG
+  Serial.print("Host Message arrived [");
   Serial.print(topic);
-  Serial.print("] ");*/
+  Serial.print("] ");
+  #endif
   commandlarge = length;
   for (int i = 0; i < length; i++) {
 
     ppse[i] = payload[i];
-    //Serial.print(payload[i], HEX);
-
+    #ifdef DEBUG
+    Serial.print(payload[i], HEX);
+    #endif
   }
-  //Serial.println();
+  #ifdef DEBUG
+  Serial.println();
+  #endif
   mifarevisa();
 }
 // Connect and reconnect to MQTT
@@ -254,17 +273,19 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESPClient-";
+    String clientId = "BomberCatHost-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
+      client.publish("status", "Hello I'm here RelayHost");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
+      
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
@@ -323,7 +344,9 @@ void setup() {
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  //while (!Serial);
+  #ifdef DEBUG
+  while (!Serial);
+  #endif
   mode = 1;
   resetMode();
 
