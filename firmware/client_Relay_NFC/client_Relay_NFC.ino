@@ -273,7 +273,7 @@ void setup() {
   //blink(L3, 200, 2);
 
   Serial.println("BomberCat, yes Sir!");
-  Serial.println("Host Relay NFC");
+  Serial.println("Client Relay NFC");
 }
 
 void loop() { // Main loop
