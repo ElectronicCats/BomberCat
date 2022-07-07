@@ -30,6 +30,8 @@
 #include <PubSubClient.h>
 #include "Electroniccats_PN7150.h"
 
+//#define DEBUG
+
 // Update these with values suitable for your network.
 
 const char* ssid = ssidName;
@@ -141,13 +143,17 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 void visamsd() {
 
   if (flag_send == true) {
+    #ifdef DEBUG
     Serial.print("Send:");
     for (int i = 0; i < commandlarge; i++) {
       Serial.print(ppsea[i], HEX);
     }
     Serial.println();
+    #endif
     nfc.CardModeSend(ppsea, commandlarge);
+    #ifdef DEBUG
     printData(ppsea, commandlarge, 3);
+    #endif
 
     flag_send = false;
     flag_read = false;
@@ -157,11 +163,11 @@ void visamsd() {
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
-    printData(Cmd, CmdSize, 2);
-
     client.publish(outTopic, Cmd, CmdSize);
+    #ifdef DEBUG
+    printData(Cmd, CmdSize, 2);
+    #endif
     flag_read = true;
-
   }
 }
 
@@ -205,16 +211,24 @@ void setup_wifi() {
        MQTT
  *****************/
 void callback(char* topic, byte * payload, unsigned int length) {
+  #ifdef DEBUG
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  #endif
+  
   commandlarge = length;
-
+  
   for (int i = 0; i < length; i++) {
     ppsea[i] = payload[i];
+    #ifdef DEBUG
     Serial.print(payload[i], HEX);
+    #endif
   }
+  #ifdef DEBUG
   Serial.println();
+  #endif
+  
   flag_send = true;
 
   visamsd();
@@ -224,7 +238,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "BomberCat-";
+    String clientId = "BomberCatClient-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
@@ -259,7 +273,9 @@ void setup() {
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  //while (!Serial);
+  #ifdef DEBUG
+  while (!Serial);
+  #endif
 
   resetMode();
 
