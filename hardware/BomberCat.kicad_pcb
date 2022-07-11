@@ -7654,7 +7654,7 @@
     (property "Sheetname" "")
     (property "manf#" "W25Q16JVUUIQ")
     (path "/8c9c2704-5a46-414d-b716-e6b7297184ed")
-    (attr through_hole)
+    (attr smd)
     (fp_text reference "U6" (at -2.8089 2.49 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp b655e489-7c27-4113-98c1-0a3477428f72)
