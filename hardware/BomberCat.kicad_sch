@@ -6628,7 +6628,7 @@
     (uuid ae267929-5045-405c-9bb8-319a56701526)
     (property "Reference" "JP1" (id 0) (at 150.749 110.998 0))
     (property "Value" "BOOT" (id 1) (at 150.749 113.538 0))
-    (property "Footprint" "" (id 2) (at 150.749 117.348 0)
+    (property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_TrianglePad1.0x1.5mm" (id 2) (at 150.749 117.348 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 150.749 117.348 0)
@@ -8154,7 +8154,7 @@
       (reference "J3") (unit 1) (value "MAGSPOOF") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
     )
     (path "/ae267929-5045-405c-9bb8-319a56701526"
-      (reference "JP1") (unit 1) (value "BOOT") (footprint "")
+      (reference "JP1") (unit 1) (value "BOOT") (footprint "Jumper:SolderJumper-2_P1.3mm_Open_TrianglePad1.0x1.5mm")
     )
     (path "/9a537aef-6cf7-41cb-9cbc-80e780f89c6e"
       (reference "L1") (unit 1) (value "160nH") (footprint "Inductor_SMD:L_0603_1608Metric_Pad1.05x0.95mm_HandSolder")
