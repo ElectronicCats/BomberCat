@@ -1,6 +1,6 @@
 # BomberCat
 
-## ¿Cómo funciona Hunter Cat NFC?
+## ¿Cómo funciona BomberCat NFC?
 BomberCat es la última herramienta de seguridad que suma la tecnologia NFC (Near Field Communication) y de banda magnetica utilizada en control de acceso, identificación y tarjetas bancarias. Especialmente creado para auditar terminales bancarias identificar lectores NFC y herramientas de sniffing, con esta herramienta puedes auditar, leer o emular tarjetas de banda magnitica y NFC. 
 
 Ademas cuenta con un co-procesador ESP32 en modo WIFININA que le permite hacer conexion WiFi para usar protocolos HTTP o MQTT, que permitira probar ataques de relay y spoofing a larga distancia o en webserver locales.
