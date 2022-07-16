@@ -41,6 +41,9 @@ const char* mqtt_server = mqttServ;
 const char* outTopic = "RelayHost";
 const char* inTopic = "RelayClient";
 
+// Create a client ID
+String clientId = "BomberCatHost-CARD01";
+
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 #define L2         (12)  //LED2 indicates the emulation process 
 #define L3         (13)
@@ -272,9 +275,6 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "BomberCatHost-";
-    clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");

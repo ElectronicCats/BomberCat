@@ -41,9 +41,10 @@ const char* mqtt_server = mqttServ;
 const char* outTopic = "RelayClient";
 const char* inTopic = "RelayHost";
 
+// Create a random client ID
+String clientId = "BomberCatClient-001";
+
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
-#define L2         (12)  //LED2 indicates the emulation process 
-#define L3         (13)
 
 #define NPIN       (2) //NFC Button
 
@@ -237,9 +238,6 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "BomberCatClient-";
-    clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
@@ -268,8 +266,8 @@ void blink(int pin, int msdelay, int times) {
 
 void setup() {
   pinMode(L1, OUTPUT);
-  pinMode(L2, OUTPUT);
-  pinMode(L3, OUTPUT);
+  pinMode(PIN_A, OUTPUT);
+  pinMode(PIN_B, OUTPUT);
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
