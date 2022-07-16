@@ -2504,6 +2504,9 @@
   (no_connect (at 111.76 121.92) (uuid 524357b0-b4bf-44ed-b2f3-e4b905a6cba9))
   (no_connect (at 223.266 130.556) (uuid 5560162d-edcc-4a08-b32b-f2ad86cb4749))
   (no_connect (at 223.266 128.016) (uuid 5560162d-edcc-4a08-b32b-f2ad86cb474a))
+  (no_connect (at 111.76 124.46) (uuid 701d4902-2040-4932-85a4-3cd39cf1d90e))
+  (no_connect (at 111.76 132.08) (uuid 701d4902-2040-4932-85a4-3cd39cf1d90e))
+  (no_connect (at 111.76 129.54) (uuid 701d4902-2040-4932-85a4-3cd39cf1d90e))
   (no_connect (at 223.266 161.036) (uuid 86ec5f7e-d5b1-4ffe-8a69-bf526573c1e2))
   (no_connect (at 223.266 163.576) (uuid 86ec5f7e-d5b1-4ffe-8a69-bf526573c1e3))
   (no_connect (at 253.746 158.496) (uuid 86ec5f7e-d5b1-4ffe-8a69-bf526573c1e4))
@@ -2531,6 +2534,7 @@
   (no_connect (at 358.14 59.69) (uuid d2026d3a-086e-4a53-8ab1-d3bc1760ee80))
   (no_connect (at 111.76 195.58) (uuid d553eacd-9803-4103-8e77-19ec21b2b8f0))
   (no_connect (at 111.76 193.04) (uuid d553eacd-9803-4103-8e77-19ec21b2b8f1))
+  (no_connect (at 111.76 182.88) (uuid ed53a50c-571f-4fef-b494-9a66790f6820))
 
   (wire (pts (xy 211.963 61.976) (xy 209.677 61.976))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -4435,6 +4439,9 @@
     (pin "1" (uuid a8e6f530-9ae3-4820-85b5-eca4eb509c6e))
     (pin "2" (uuid 59bc0a59-07c0-40d7-a932-ef32910b4cab))
     (pin "3" (uuid 9ae89b67-b1f9-467f-ba82-a2b3624e9493))
+    (pin "4" (uuid 0b0c441e-45d8-4b14-9ad1-30d4a6d5f349))
+    (pin "5" (uuid 48411781-8018-4dbf-a0f3-f05b350327a6))
+    (pin "6" (uuid 222edb2c-c7f5-4be3-baae-da33ba4f8944))
   )
 
   (symbol (lib_id "Device:C_Small") (at 158.496 151.892 0) (unit 1)
