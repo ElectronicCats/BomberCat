@@ -1,27 +1,30 @@
 # BomberCat
 
-## ¿Cómo funciona BomberCat NFC?
-BomberCat es la última herramienta de seguridad que suma la tecnologia NFC (Near Field Communication) y de banda magnetica utilizada en control de acceso, identificación y tarjetas bancarias. Especialmente creado para auditar terminales bancarias identificar lectores NFC y herramientas de sniffing, con esta herramienta puedes auditar, leer o emular tarjetas de banda magnitica y NFC. 
+<a href="https://electroniccats.com/store/bombercat/">
+  <img src="https://electroniccats.com/wp-content/uploads/badge_store.png" width="200" height="104" />
+</a>
 
-Ademas cuenta con un co-procesador ESP32 en modo WIFININA que le permite hacer conexion WiFi para usar protocolos HTTP o MQTT, que permitira probar ataques de relay y spoofing a larga distancia o en webserver locales.
+## How does BomberCat work?
+BomberCat is the latest security tool that combines the most common card technologies: NFC technology (Near Field Communication) and magnetic stripe technology used in access control, identification, and banking cards.
+Specially created to audit banking terminals, and identify NFC readers and sniffing tools, with this tool you can audit, read or emulate magnetic stripes and NFC cards.
 
-#Aplicaciones 
-BomberCat se puede configurar para que se comporte como un lector de etiquetas NFC o una tarjeta de banda magnetica. 
+It also has an ESP32 co-processor with WiFiNINA firmware that allows it to make WiFi connections to use with HTTP or MQTT protocols, which will allow relay and spoofing attacks to be tested over long distances or on local web servers.
 
-BomberCat cuenta con un MCU RP2040 que funciona junto con el PN7150. La interfaz USB proporcionada por el RP2040 MCU y la funcionalidad NFC está garantizada gracias al PN7150.
+## Applications
+BomberCat features an RP2040 MCU working along with the PN7150 (a recent generation NFC chip). 
+The USB interface provided by the RP2040 MCU and the NFC functionality is guaranteed by the PN7150.
 
-BomberCat está diseñado para ser intuitivo para los usuarios. La comunicación entre dos dispositivos se establece de la forma más sencilla posible: acercándolos entre sí. La interfaz NFC puede operar en tres modos distintos:
+BomberCat is designed to be intuitive for users. Easy to program using frameworks such as Arduino, Ciruitpython, and Micropython.  We have prepared a series of examples with which you can start experimenting, check out the examples folder.
 
-*Modo de emulación de tarjeta:* donde BomberCat se comporta como una tarjeta inteligente o una etiqueta
-En este modo, BomberCat emula una etiqueta NFC. No inicia la comunicación, solo responde a un lector NFC. Una aplicación típica del modo de emulación de tarjeta es cómo las personas usan NFC en sus teléfonos inteligentes para reemplazar varias tarjetas, insignias o etiquetas a la vez (usando el mismo teléfono para controles de acceso RFID, pagos sin contacto, etc.). El modo de emulación de tarjeta, sin embargo, no es útil solo para smartphones, sino para cualquier tipo de dispositivo portátil.
+**Card emulation mode:** in which BomberCat behaves as a smart card or a tag. In this mode, BomberCat emulates an NFC tag. It does not initiate communication, it only responds to the NFC reader. 
+A typical application of the card emulation mode is how people use NFC on their smartphones to replace several cards, badges, or tags at once (using the same smartphone for RFID access controls, contactless payments, etc). 
+However, card emulation mode is not only beneficial for smartphones but any type of portable device.
 
-*Lectura/escritura:* donde BomberCat se comporta como un lector/grabador de NFC
-Aquí, BomberCat se comunica con una etiqueta pasiva, una tarjeta inteligente NFC o un dispositivo NFC que funciona en modo de emulación de tarjeta. Puede leer o escribir en una etiqueta (aunque la lectura es un caso de uso más común porque las etiquetas a menudo estarán protegidas contra escritura). En este modo, HunterCat NFC genera el campo de RF, mientras que una etiqueta o tarjeta solo lo modula.
+**Read/Write:** in which BomberCat behaves as an NFC reader/writer. In this mode, BomberCat communicates with a passive tag, an NFC smart card, or an NFC device operating in the card emulation mode. It can read or write to a tag (although reading is a more common use case because tags will often be write-protected). In this mode, BomberCat generates an RF field, while a tag or card only modulates it.
 
-*Magspoof:* para interacciones más complejas
-El modo Magspoof puede emular tarjetas de banda magnitica emulando los pulsos electromagnitcos de este tipo de tarjetas.
+**Magspoof:** for magnetic stripes interaction.
+Magspoof mode can emulate magnetic stripes cards by emulating the electromagnetic pulses of this type of card.
 
-*WIFI:* El co-procesador ESP32 en modo WIFININA que le permitira hacer conexiones WiFi para usar protocolos HTTP o MQTT, que permitira probar ataques de relay y spoofing a larga distancia o en webserver locales.
 
 ## Characteristics:
 - Procesador Cortex M0+
@@ -47,11 +50,7 @@ El modo Magspoof puede emular tarjetas de banda magnitica emulando los pulsos el
   - ISO/IEC 15693/ICODE VCD mode 
   - Includes NXP ISO/IEC14443-A and Innovatron ISO/IEC14443-B intellectual property licensing rights
 
-<a href="https://electroniccats.com/store/bombercat/">
-  <img src="https://electroniccats.com/wp-content/uploads/badge_store.png" width="200" height="104" />
-</a>
-
-# License
+## License
 
 ![OpenSourceLicense](https://github.com/ElectronicCats/AjoloteBoard/raw/master/OpenSourceLicense.png)
 
@@ -65,4 +64,4 @@ Hardware released under an CERN Open Hardware Licence v1.2. See the LICENSE_HARD
 
 Electronic Cats is a registered trademark, please do not use if you sell these PCBs.
 
-Jul 2021
+Jul 2022
