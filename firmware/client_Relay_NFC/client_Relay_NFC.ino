@@ -30,7 +30,7 @@
 #include <PubSubClient.h>
 #include "Electroniccats_PN7150.h"
 
-//#define DEBUG
+#define DEBUG
 
 // Update these with values suitable for your network.
 
@@ -46,10 +46,14 @@ String clientId = "BomberCatClient-001";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
-#define PIN_A      (18)   //MagSpoof-1   GP19  
-#define PIN_B      (19)   //MagSpoof     GP19 
+#define PN7150_IRQ   (11)
+#define PN7150_VEN   (13)
+#define PN7150_ADDR  (0x28)
 
-#define NPIN       (17) //Button
+#define PIN_A      (6)   //MagSpoof-1  
+#define PIN_B      (7)   //MagSpoof
+
+#define NPIN       (5) //Button
 
 #define CLOCK_US   (500)
 
@@ -78,10 +82,6 @@ int status = WL_IDLE_STATUS;
 
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
-
-#define PN7150_IRQ   (7)
-#define PN7150_VEN   (8)
-#define PN7150_ADDR  (0x28)
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;
@@ -432,10 +432,6 @@ void blink(int pin, int msdelay, int times) {
 }
 
 void setup() {
-  pinMode(L1, OUTPUT);
-  pinMode(PIN_A, OUTPUT);
-  pinMode(PIN_B, OUTPUT);
-  pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
   #ifdef DEBUG
@@ -444,14 +440,17 @@ void setup() {
 
   resetMode();
 
+  pinMode(L1, OUTPUT);
+  pinMode(PIN_A, OUTPUT);
+  pinMode(PIN_B, OUTPUT);
+  pinMode(NPIN, INPUT);
+
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
   // blink to show we started up
   blink(L1, 300, 5);
-  //blink(L2, 200, 2);
-  //blink(L3, 200, 2);
 
   Serial.println("BomberCat, yes Sir!");
   Serial.println("Client Relay NFC");

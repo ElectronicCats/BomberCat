@@ -27,10 +27,6 @@ fp-info-cache
 
 hardware/BomberCat-backups/
 
-firmware/client_Relay_NFC/arduino_secrets.h
-
-firmware/host_Relay_NFC/arduino_secrets.h
-
 .DS_Store
 
 hardware/#auto_saved_files#
