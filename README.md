@@ -27,14 +27,14 @@ Magspoof mode can emulate magnetic stripes cards by emulating the electromagneti
 
 
 ## Characteristics:
-- Procesador Cortex M0+
+- Cortex M0+ processor
 - USB C 2.0
 - NFC Reader, Card and NFC Forum
 - Arduino compatible
 - 100% CircuitPython compatible
 - UF2 Bootloader
-- WIFI 
-- (probably BLE)
+- WIFI (WiFiNINA)
+- BLE (ArduinoBLE)
 - 1 LEDs status
 - Open Hardware
 - Magpoof coil
