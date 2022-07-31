@@ -30,7 +30,7 @@
 #include <PubSubClient.h>
 #include "Electroniccats_PN7150.h"
 
-//#define DEBUG
+#define DEBUG
 
 // Update these with values suitable for your network.
 
@@ -45,10 +45,8 @@ const char* inTopic = "RelayClient";
 String clientId = "BomberCatHost-CARD01";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
-#define L2         (12)  //LED2 indicates the emulation process 
-#define L3         (13)
 
-#define NPIN       (2) //NFC Button
+#define NPIN       (5) //Button
 
 WiFiClient espClient;
 int status = WL_IDLE_STATUS;
@@ -56,8 +54,8 @@ int status = WL_IDLE_STATUS;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 
-#define PN7150_IRQ   (7)
-#define PN7150_VEN   (8)
+#define PN7150_IRQ   (11)
+#define PN7150_VEN   (13)
 #define PN7150_ADDR  (0x28)
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
@@ -339,8 +337,6 @@ void blink(int pin, int msdelay, int times) {
 
 void setup() {
   pinMode(L1, OUTPUT);
-  pinMode(L2, OUTPUT);
-  pinMode(L3, OUTPUT);
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
