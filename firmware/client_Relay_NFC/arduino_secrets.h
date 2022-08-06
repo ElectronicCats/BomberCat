@@ -3,4 +3,4 @@
 #define passWIFI ""
 
 //MQTT Server
-#define mqttServ ""
+#define mqttServ "test.mosquitto.org"

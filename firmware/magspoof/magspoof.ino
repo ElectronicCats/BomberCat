@@ -4,7 +4,7 @@
   Electronic Cats (https://electroniccats.com/)
 
   This example demonstrates how to use Bomber Cat by Electronic Cats
-  https://github.com/ElectronicCats/
+  https://github.com/ElectronicCats/BomberCat
 
   Development environment specifics:
   IDE: Arduino 1.8.9

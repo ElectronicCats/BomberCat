@@ -5,14 +5,16 @@
   by Andres Sabas
   Date: 17/05/2022
   
-  This example demonstrates how to use NFC Copy Cat by Electronic Cats
-  https://github.com/ElectronicCats/NFC-Copy-Cat-WiFi
+  This example demonstrates how to use BomberCat by Electronic Cats
+ https://github.com/ElectronicCats/BomberCat
 
   Development environment specifics:
   IDE: Arduino 1.8.19
   Hardware Platform:
   BomberCat
   - RP2040
+
+  Thanks Wallee for support this project open source https://en.wallee.com/
 
   Electronic Cats invests time and resources providing this open source code,
   please support Electronic Cats and open-source hardware by purchasing

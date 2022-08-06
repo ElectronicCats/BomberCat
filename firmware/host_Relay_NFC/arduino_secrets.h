@@ -3,4 +3,4 @@
 #define passWIFI ""
 
 //MQTT Server
-#define mqttServ "192.168.0.203"
+#define mqttServ "test.mosquitto.org"

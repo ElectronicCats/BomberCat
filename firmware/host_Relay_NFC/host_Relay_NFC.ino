@@ -13,6 +13,8 @@
   BomberCat
   - RP2040
 
+  Thanks Wallee for support this project open source https://en.wallee.com/
+
   Electronic Cats invests time and resources providing this open source code,
   please support Electronic Cats and open-source hardware by purchasing
   products from Electronic Cats!
