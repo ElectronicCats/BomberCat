@@ -5913,7 +5913,7 @@
     (uuid 7941b52a-c063-4364-bd55-27eea150373c)
     (property "Reference" "F1" (id 0) (at 51.054 228.727 0))
     (property "Value" "0.5A" (id 1) (at 51.054 231.0384 0))
-    (property "Footprint" "Fuse:Fuse_0603_1608Metric_Pad1.05x0.95mm_HandSolder" (id 2) (at 51.054 233.426 0)
+    (property "Footprint" "Fuse:Fuse_0805_2012Metric" (id 2) (at 51.054 233.426 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 51.054 233.426 0)
@@ -8263,7 +8263,7 @@
       (reference "D4") (unit 1) (value "MBR120") (footprint "Diode_SMD:D_SOD-123F")
     )
     (path "/7941b52a-c063-4364-bd55-27eea150373c"
-      (reference "F1") (unit 1) (value "0.5A") (footprint "Fuse:Fuse_0603_1608Metric_Pad1.05x0.95mm_HandSolder")
+      (reference "F1") (unit 1) (value "0.5A") (footprint "Fuse:Fuse_0805_2012Metric")
     )
     (path "/3e52c366-4ba8-4bd3-a04e-524d188005fb"
       (reference "H1") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_2.2mm_M2")
