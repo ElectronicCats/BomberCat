@@ -49,6 +49,10 @@ Magspoof mode can emulate magnetic stripes cards by emulating the electromagneti
   - NFC Forum tag 1 to 5 (MIFARE Ultralight, Jewel, Open FeliCa tag, MIFAREDESFire
   - ISO/IEC 15693/ICODE VCD mode 
   - Includes NXP ISO/IEC14443-A and Innovatron ISO/IEC14443-B intellectual property licensing rights
+
+## Wiki and Getting Started
+
+[Getting Started in our Wiki](https://github.com/ElectronicCats/BomberCat/wiki)
   
  ## Supported by
  
