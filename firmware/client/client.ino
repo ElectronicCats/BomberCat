@@ -45,13 +45,14 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayClient#";
+char outTopic[] = "RelayClient1"; //"RelayClient#";
 char inTopic[] = "RelayHost#";
 
 //const char* outTopic = "RelayClient";
 //const char* inTopic = "RelayHost";
 
 boolean host_selected = false;
+int hs = 0; // hosts status
 
 unsigned long time = 0;
 int period = 10000;
@@ -404,6 +405,17 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
   #endif
+
+  //se actualizara el estatus de hs o puede comenzar el pinpong de apdus, se necesita diferenciar
+/* pseudicode
+  if(topic == hosts){
+
+    hs = payload;
+    return;
+  
+  }
+*/
+
   
   commandlarge = length;
   
@@ -432,6 +444,7 @@ void reconnect() {
       client.publish("status", "Hello I'm here RelayClient");
       // ... and resubscribe
       client.subscribe(inTopic);
+      client.subscribe("hosts");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -533,16 +546,25 @@ void set_h(){
   if (arg != NULL){
       switch (host){
         case 0:
-          inTopic[9] = '0';
+          //check for host, assign turn, etc.
+
+          inTopic[9] = '0'; // topic id
           reconnect();
-          host_selected = true;
-          time = 0;
+          host_selected = true; 
+          time = millis();
+          // es necesario obtener el valor de hs primero
+          hs = hs&1;
+          client.publish("hosts", hs);
           Serial.println("Host 1 ready");
           break;
         case 1:
-          inTopic[9] = '1';
+          inTopic[9] = '1'; // topic id
           reconnect();
           host_selected = true;
+          time = millis();
+          // es necesario obtener el valor de hs primero
+          hs = hs&2;
+          client.publish("hosts", hs);
           Serial.println("Host 2 ready");
           break;
  /*       case 2:
