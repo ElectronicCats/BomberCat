@@ -45,17 +45,17 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayClient1"; //"RelayClient#";
+char outTopic[] = "RelayClient0"; //"RelayClient#";
 char inTopic[] = "RelayHost#";
 
 //const char* outTopic = "RelayClient";
 //const char* inTopic = "RelayHost";
 
 boolean host_selected = false;
-int hs = 0; // hosts status
+char hs[] = "0000000000"; // hosts status
 
-unsigned long time = 0;
-int period = 10000;
+unsigned long tiempo = 0;
+int period = 20000;
 
 // Create a random client ID
 String clientId = "BomberCatClient-001";
@@ -356,7 +356,7 @@ void visamsd() {
     printData(Cmd, CmdSize, 2);
     #endif
     flag_read = true;
-    time = millis();
+    tiempo = millis();
   }
 }
 
@@ -406,33 +406,36 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print("] ");
   #endif
 
-  //se actualizara el estatus de hs o puede comenzar el pinpong de apdus, se necesita diferenciar
-/* pseudicode
-  if(topic == hosts){
 
-    hs = payload;
+  //se actualiza el estatus de hs
+  if (strcmp(topic,"hosts") == 0) {
+
+    for (int i = 0; i < 10; i++) {
+      hs[i] = payload[i];
+    }
     return;
-  
   }
-*/
 
-  
-  commandlarge = length;
-  
-  for (int i = 0; i < length; i++) {
-    ppsea[i] = payload[i];
+  if (strcmp(topic,inTopic) == 0) { // mensaje del host
+    
+    commandlarge = length;
+    
+    for (int i = 0; i < length; i++) {
+      ppsea[i] = payload[i];
+      #ifdef DEBUG
+      Serial.print(payload[i], HEX);
+      #endif
+    }
     #ifdef DEBUG
-    Serial.print(payload[i], HEX);
+    Serial.println();
     #endif
-  }
-  #ifdef DEBUG
-  Serial.println();
-  #endif
+    
+    flag_send = true;
   
-  flag_send = true;
-
-  visamsd();
+    visamsd();
+  }
 }
+
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -441,7 +444,7 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here RelayClient");
+      client.publish("status", "Hello I'm here Client 0");
       // ... and resubscribe
       client.subscribe(inTopic);
       client.subscribe("hosts");
@@ -504,9 +507,9 @@ void setup() {
 
 // Main loop
 void loop() { 
-  if (!client.connected()) {
-    reconnect();
-  }
+  //if (!client.connected()) {
+  //  reconnect();
+  //}
   
   // procesa comandos seriales
   SCmd.readSerial();
@@ -518,9 +521,16 @@ void loop() {
     visamsd();
   }
 
-  if((millis() - time) > period && host_selected){
+  if((millis() - tiempo) > period && host_selected){
     // RESET host connection
-    host_selected = false;
+    host_selected = false;   
+    // *************************************
+    // poner cero en el arreglo del host que termina la conexion
+    hs[inTopic[9] - 48] = '0'; 
+    inTopic[9] = '#';
+    // actualizar hosts, poner un 0 en el host que acaba de terminar...
+    client.publish("hosts", (char*)hs);
+    
     Serial.println("The host connection is terminated.");
   }
 }
@@ -538,35 +548,141 @@ void help(){
   Serial.println("..help");
 }
 
+// validar que no haya un host seleccionado
+
 void set_h(){
   char *arg;  
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
   int host;
   host = atoi(arg);
+
+  if(host_selected){
+    Serial.println("Wait for the current process to finish");  
+    return;
+  }
+  
   if (arg != NULL){
       switch (host){
         case 0:
           //check for host, assign turn, etc.
-
-          inTopic[9] = '0'; // topic id
+          inTopic[9] = '0'; // topic host id
           reconnect();
           host_selected = true; 
-          time = millis();
+          tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs = hs&1;
-          client.publish("hosts", hs);
-          Serial.println("Host 1 ready");
+          hs[0] = '1';
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 0 ready");
           break;
         case 1:
           inTopic[9] = '1'; // topic id
           reconnect();
           host_selected = true;
-          time = millis();
+          tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs = hs&2;
-          client.publish("hosts", hs);
+          hs[1] = '1';
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 1 ready");
+          break;
+        case 2:
+          inTopic[9] = '2'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[2] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
           Serial.println("Host 2 ready");
           break;
+        case 3:
+          inTopic[9] = '3'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[3] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 3 ready");
+          break;
+        case 4:
+          inTopic[9] = '4'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[4] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 4 ready");
+          break;
+        case 5:
+          inTopic[9] = '5'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[5] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 5 ready");
+          break;
+        case 6:
+          inTopic[9] = '6'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[6] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 6 ready");
+          break;
+        case 7:
+          inTopic[9] = '7'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[7] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 7 ready");
+          break;
+        case 8:
+          inTopic[9] = '8'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[8] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 8 ready");
+          break;
+        case 9:
+          inTopic[9] = '9'; // topic id
+          reconnect();
+          host_selected = true;
+          tiempo = millis();
+          // es necesario obtener el valor de hs primero
+          hs[9] = '1';
+          
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 9 ready");
+          break;
+                    
  /*       case 2:
           LoRa.setSignalBandwidth(15.6E3);
           rx_status = false;
@@ -594,12 +710,14 @@ void free_h(){
           //inTopic[9] = '0';
           //reconnect();
           host_selected = false;
+          inTopic[9] = '#';
           Serial.println("Host 1 free");
           break;
         case 1:
           //inTopic[9] = '1';
           //reconnect();
           host_selected = false;
+          inTopic[9] = '#';
           Serial.println("Host 2 free");
           break;
  /*       case 2:

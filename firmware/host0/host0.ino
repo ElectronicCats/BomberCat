@@ -40,7 +40,7 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayHost1";
+char outTopic[] = "RelayHost0";
 char inTopic[] = "RelayClient0";//"RelayClient#";
 
 //const char* outTopic = "RelayHost";
@@ -48,7 +48,7 @@ char inTopic[] = "RelayClient0";//"RelayClient#";
 
 
 // Create a client ID
-String clientId = "BomberCatHost-CARD01";
+String clientId = "BomberCatHost-CARD00";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -283,7 +283,7 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here Host 1");
+      client.publish("status", "Hello I'm here Host 0");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {

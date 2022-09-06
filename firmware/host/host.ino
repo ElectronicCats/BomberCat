@@ -32,7 +32,7 @@
 #include <PubSubClient.h>
 #include "Electroniccats_PN7150.h"
 
-//#define DEBUG
+#define DEBUG
 
 // Update these with values suitable for your network.
 
@@ -40,12 +40,8 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayHost1";
-char inTopic[] = "RelayClient0";//"RelayClient#";
-
-//const char* outTopic = "RelayHost";
-//const char* inTopic = "RelayClient";
-
+const char* outTopic = "RelayHost";
+const char* inTopic = "RelayClient";
 
 // Create a client ID
 String clientId = "BomberCatHost-CARD01";
@@ -283,7 +279,7 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here Host 1");
+      client.publish("status", "Hello I'm here RelayHost");
       // ... and resubscribe
       client.subscribe(inTopic);
     } else {
