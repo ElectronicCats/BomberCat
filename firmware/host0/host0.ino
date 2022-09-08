@@ -33,6 +33,8 @@
 #include "Electroniccats_PN7150.h"
 
 //#define DEBUG
+#define PERIOD 20000
+#define HOST 0
 
 // Update these with values suitable for your network.
 
@@ -40,15 +42,16 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayHost0";
-char inTopic[] = "RelayClient0";//"RelayClient#";
+char outTopic[] = "RelayHost#";
+char inTopic[] = "RelayClient#";
 
-//const char* outTopic = "RelayHost";
-//const char* inTopic = "RelayClient";
+char buf[] = "Hello I'm here Host #";
 
+boolean host_selected = false;
+unsigned long tiempo = 0;
 
 // Create a client ID
-String clientId = "BomberCatHost-CARD00";
+String clientId = "BomberCatHost-CARD01";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -165,6 +168,7 @@ void seekTrack2() {
     #endif
     
     client.publish(outTopic, apdubuffer, apdulen);
+    tiempo = millis();  // da mas tiempo antes de cerrar la conexión
   }
   else {
     Serial.println("Error reading the card!");
@@ -261,18 +265,35 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
   #endif
-  commandlarge = length;
-  for (int i = 0; i < length; i++) {
 
-    ppse[i] = payload[i];
-    #ifdef DEBUG
-    Serial.print(payload[i], HEX);
-    #endif
+  // update host status check if there is a client requesting
+  if (strcmp(topic,"hosts") == 0) {
+    if(payload[HOST] != '#'){          // the host is requested
+      inTopic[11] = payload[HOST];     // change client number
+      host_selected = true;
+      tiempo = millis();            // reset time
+      client.subscribe(inTopic);
+            
+      Serial.println(inTopic);
+      
+      return;
+    }
   }
-  #ifdef DEBUG
-  Serial.println();
-  #endif
-  mifarevisa();
+
+  if (strcmp(topic,inTopic) == 0 && host_selected) {
+    commandlarge = length;
+    for (int i = 0; i < length; i++) {
+  
+      ppse[i] = payload[i];
+      #ifdef DEBUG
+      Serial.print(payload[i], HEX);
+      #endif
+    }
+    #ifdef DEBUG
+    Serial.println();
+    #endif
+    mifarevisa();
+  }
 }
 // Connect and reconnect to MQTT
 void reconnect() {
@@ -281,11 +302,14 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
-      Serial.println("connected");
+      Serial.println(" connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here Host 0");
+      //client.publish("status", "Hello I'm here Host ");
+      buf[20] = HOST + 48;
+      client.publish("status", buf);
       // ... and resubscribe
-      client.subscribe(inTopic);
+      client.subscribe("hosts");
+      Serial.println("Subscribed to the hosts topic");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -361,11 +385,28 @@ void setup() {
 
   Serial.println("BomberCat, yes Sir!");
   Serial.println("Host Relay NFC");
+
+  outTopic[9] = HOST + 48;
+  
+  Serial.println(outTopic);
+  reconnect();
 }
 
 void loop() { // Main loop
+/*
   if (!client.connected()) {
     reconnect();
   }
+*/
   client.loop();
+
+  if((millis() - tiempo) > PERIOD && host_selected){
+    // RESET host connection
+    host_selected = false;
+    client.unsubscribe(inTopic);
+    Serial.println("The host connection is terminated.");
+    apdubuffer[0] = NULL;
+    apdulen = 0;
+    reconnect();
+  }
 }

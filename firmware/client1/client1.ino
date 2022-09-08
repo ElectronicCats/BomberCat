@@ -32,8 +32,10 @@
 #include <SerialCommand.h>
 #include "Electroniccats_PN7150.h"
 
-#define DEBUG
+//#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
+#define PERIOD 20000
+#define CLIENT 1
  
 SerialCommand SCmd;
 
@@ -45,20 +47,21 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-char outTopic[] = "RelayClient0"; //"RelayClient#";
+char outTopic[] = "RelayClient#"; //"RelayClient#";
 char inTopic[] = "RelayHost#";
 
 //const char* outTopic = "RelayClient";
 //const char* inTopic = "RelayHost";
 
+char buf[] = "Hello I'm here Client #";
+
 boolean host_selected = false;
 char hs[] = "##########"; // hosts status
 
 unsigned long tiempo = 0;
-int period = 20000;
 
 // Create a random client ID
-String clientId = "BomberCatClient-001";
+char clientId[] = "BomberCatClient-0#";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -439,14 +442,18 @@ void callback(char* topic, byte * payload, unsigned int length) {
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("Attempting MQTT connection... ");
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    clientId[17] = CLIENT + 48;
+    //Serial.println(clientId);
+    if (client.connect(clientId)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here Client 0");
+      //client.publish("status", "Hello I'm here Client 0");
+      buf[22] = CLIENT + 48;
+      client.publish("status", buf);      
       // ... and resubscribe
-      client.subscribe(inTopic);
+      //client.subscribe(inTopic);
       client.subscribe("hosts");
     } else {
       Serial.print("failed, rc=");
@@ -488,6 +495,10 @@ void setup() {
   // blink to show we started up
   blink(L1, 300, 5);
 
+  outTopic[11] = CLIENT + 48;
+  Serial.println(outTopic);
+  reconnect();
+
   Serial.println("BomberCat, yes Sir!");
   Serial.println("Client Relay NFC");
   Serial.println("Welcome to the BomberCat CLI " + String(fwVersion,1) + "v\n");
@@ -506,10 +517,10 @@ void setup() {
 }
 
 // Main loop
-void loop() { 
-  //if (!client.connected()) {
-  //  reconnect();
-  //}
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
   
   // procesa comandos seriales
   SCmd.readSerial();
@@ -521,16 +532,16 @@ void loop() {
     visamsd();
   }
 
-  if((millis() - tiempo) > period && host_selected){
+  if((millis() - tiempo) > PERIOD && host_selected){
     // RESET host connection
     host_selected = false;   
     // *************************************
     // poner cero en el arreglo del host que termina la conexion
-    hs[inTopic[9] - 48] = '0'; 
+    hs[inTopic[9] - 48] = '#'; 
     inTopic[9] = '#';
     // actualizar hosts, poner un 0 en el host que acaba de terminar...
     client.publish("hosts", (char*)hs);
-    
+    client.unsubscribe(inTopic);
     Serial.println("The host connection is terminated.");
   }
 }
@@ -565,130 +576,183 @@ void set_h(){
       switch (host){
         case 0:
           //check for host, assign turn, etc.
+          Serial.println(hs);
+          if(hs[0] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
           inTopic[9] = '0'; // topic host id
-          reconnect();
+          client.subscribe(inTopic); //reconnect();
+          //Serial.println(inTopic);
           host_selected = true; 
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[0] = '0';
+          hs[0] = CLIENT + 48;
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 0 ready");
           break;
         case 1:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+          if(hs[1] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }        
           inTopic[9] = '1'; // topic id
-          reconnect();
+          client.subscribe(inTopic); //reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[1] = '0';
+          hs[1] = CLIENT + 48;
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 1 ready");
           break;
-        case 2:
+ /*       case 2:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[2] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }        
           inTopic[9] = '2'; // topic id
-          reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[2] = '0';
-          
+          hs[2] = CLIENT + 48;;         
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 2 ready");
           break;
         case 3:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[3] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }        
           inTopic[9] = '3'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[3] = '0';
-          
+          hs[3] = CLIENT + 48;         
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 3 ready");
           break;
         case 4:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[4] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '4'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[4] = '0';
-          
+          hs[4] = CLIENT + 48;       
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 4 ready");
           break;
         case 5:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[5] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '5'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[5] = '0';
-          
+          hs[5] = CLIENT + 48;          
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 5 ready");
           break;
         case 6:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[6] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '6'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[6] = '0';
-          
+          hs[6] = CLIENT + 48;         
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 6 ready");
           break;
         case 7:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[7] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '7'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[7] = '0';
-          
+          hs[7] = CLIENT + 48;         
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 7 ready");
           break;
         case 8:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[8] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '8'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[8] = '0';
-          
+          hs[8] = CLIENT + 48;          
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 8 ready");
           break;
         case 9:
+          //check for host, assign turn, etc.
+          Serial.println(hs);
+
+          if(hs[9] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }                
           inTopic[9] = '9'; // topic id
           reconnect();
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero
-          hs[9] = '0';
-          
+          hs[9] = CLIENT + 48;          
           client.publish("hosts", (char*)hs);
           Serial.println(inTopic);
           Serial.println("Host 9 ready");
           break;
-                    
- /*       case 2:
-          LoRa.setSignalBandwidth(15.6E3);
-          rx_status = false;
-          Serial.println("Bandwidth set to 15.6 kHz");
-          break;
-*/
+*/                    
         default:
           Serial.println("Error setting the host value must be between 0-9");
           break;
