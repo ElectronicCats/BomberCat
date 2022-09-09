@@ -475,6 +475,16 @@ void blink(int pin, int msdelay, int times) {
   }
 }
 
+void clean(){
+  for(int i = 0; i < 256; i++){
+    Cmd[i] = 0;  
+    apdubuffer[i] = 0;
+    ppsea[i] = 0; 
+  } 
+  Cmd[256] = 0;
+  commandlarge = 0;
+}
+
 void setup() {
 
   Serial.begin(9600);
@@ -519,11 +529,13 @@ void setup() {
 
 // Main loop
 void loop() {
-
-
+  
   // procesa comandos seriales
   SCmd.readSerial();
-
+  
+  // procesa mensajes MQTT
+  client.loop();
+  
   if((millis() - tiempo) > PERIOD && host_selected){
     // RESET host connection
     host_selected = false;   
@@ -533,7 +545,12 @@ void loop() {
     inTopic[9] = '#';
     // actualizar hosts, poner un 0 en el host que acaba de terminar...
     client.publish("hosts", (char*)hs);
-    client.unsubscribe(inTopic);
+    boolean success;
+    success = client.unsubscribe(inTopic);
+    Serial.println("Unsubscribe succes: ");
+    Serial.println(success);
+
+    clean();
     Serial.println("The host connection is terminated.");
   }
 
@@ -544,8 +561,7 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  // procesa mensajes MQTT
-  client.loop();
+
 }
 
 void help(){
@@ -574,6 +590,8 @@ void set_h(){
     return;
   }
   
+  boolean success;
+  
   if (arg != NULL){
       switch (host){
         case 0:
@@ -585,8 +603,11 @@ void set_h(){
           }
           */
           inTopic[9] = '0'; // topic host id
-          client.subscribe(inTopic); //reconnect();
-          //Serial.println(inTopic);
+          Serial.println(inTopic);
+          success = client.subscribe(inTopic); //reconnect();
+          Serial.println("Subscribe to host 0 success: ");
+          Serial.println(success);
+          
           host_selected = true; 
           tiempo = millis();
           // es necesario obtener el valor de hs primero
@@ -604,7 +625,10 @@ void set_h(){
             return;
           }  */      
           inTopic[9] = '1'; // topic id
-          client.subscribe(inTopic); //reconnect();
+          success = client.subscribe(inTopic); //reconnect();
+          Serial.println("Subscribe to host 1 success: ");
+          Serial.println(success);
+          
           host_selected = true;
           tiempo = millis();
           // es necesario obtener el valor de hs primero

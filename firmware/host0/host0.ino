@@ -51,7 +51,7 @@ boolean host_selected = false;
 unsigned long tiempo = 0;
 
 // Create a client ID
-String clientId = "BomberCatHost-CARD01";
+String clientId = "BomberCatHost-CARD00";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
