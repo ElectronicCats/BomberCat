@@ -29,9 +29,17 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <PubSubClient.h>
+#include <SerialCommand.h>
 #include "Electroniccats_PN7150.h"
 
-#define DEBUG
+//#define DEBUG
+#define SERIALCOMMAND_HARDWAREONLY
+#define PERIOD 5000
+#define CLIENT 1
+ 
+SerialCommand SCmd;
+
+float fwVersion= 0.1;
 
 // Update these with values suitable for your network.
 
@@ -39,11 +47,21 @@ const char* ssid = ssidName;
 const char* password = passWIFI;
 const char* mqtt_server = mqttServ;
 
-const char* outTopic = "RelayClient";
-const char* inTopic = "RelayHost";
+char outTopic[] = "RelayClient#"; //"RelayClient#";
+char inTopic[] = "RelayHost#";
+
+//const char* outTopic = "RelayClient";
+//const char* inTopic = "RelayHost";
+
+char buf[] = "Hello I'm here Client #";
+
+boolean host_selected = false;
+char hs[] = "##########"; // hosts status
+
+unsigned long tiempo = 0;
 
 // Create a random client ID
-String clientId = "BomberCatClient-001";
+char clientId[] = "BomberCatClient-0#";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -332,11 +350,16 @@ void visamsd() {
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
+// *****************************************************
+// Aquí publico mis mensajes para que el host pueda verlos (el host debe estar suscrito a mi topico)
     client.publish(outTopic, Cmd, CmdSize);
+
+    
     #ifdef DEBUG
     printData(Cmd, CmdSize, 2);
     #endif
     flag_read = true;
+    tiempo = millis();
   }
 }
 
@@ -385,34 +408,54 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
   #endif
-  
-  commandlarge = length;
-  
-  for (int i = 0; i < length; i++) {
-    ppsea[i] = payload[i];
-    #ifdef DEBUG
-    Serial.print(payload[i], HEX);
-    #endif
-  }
-  #ifdef DEBUG
-  Serial.println();
-  #endif
-  
-  flag_send = true;
 
-  visamsd();
+
+  //se actualiza el estatus de hs
+  if (strcmp(topic,"hosts") == 0) {
+
+    for (int i = 0; i < 10; i++) {
+      hs[i] = payload[i];
+    }
+    return;
+  }
+
+  if (strcmp(topic,inTopic) == 0) { // mensaje del host
+    
+    commandlarge = length;
+    
+    for (int i = 0; i < length; i++) {
+      ppsea[i] = payload[i];
+      #ifdef DEBUG
+      Serial.print(payload[i], HEX);
+      #endif
+    }
+    #ifdef DEBUG
+    Serial.println();
+    #endif
+    
+    flag_send = true;
+  
+    visamsd();
+  }
 }
+
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("Attempting MQTT connection... ");
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    clientId[17] = CLIENT + 48;
+    if (client.connect(clientId)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("status", "Hello I'm here RelayClient");
+      //client.publish("status", "Hello I'm here Client 0");
+      buf[22] = CLIENT + 48;
+      client.publish("status", buf);      
       // ... and resubscribe
-      client.subscribe(inTopic);
+      
+      //client.subscribe(inTopic);
+      
+      client.subscribe("hosts");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -430,6 +473,16 @@ void blink(int pin, int msdelay, int times) {
     digitalWrite(pin, LOW);
     delay(msdelay);
   }
+}
+
+void clean(){
+  for(int i = 0; i < 256; i++){
+    Cmd[i] = 0;  
+    apdubuffer[i] = 0;
+    ppsea[i] = 0; 
+  } 
+  Cmd[256] = 0;
+  commandlarge = 0;
 }
 
 void setup() {
@@ -453,16 +506,303 @@ void setup() {
   // blink to show we started up
   blink(L1, 300, 5);
 
+  outTopic[11] = CLIENT + 48;
+  Serial.println(outTopic);
+  reconnect();
+
   Serial.println("BomberCat, yes Sir!");
   Serial.println("Client Relay NFC");
+  Serial.println("Welcome to the BomberCat CLI " + String(fwVersion,1) + "v\n");
+  Serial.println("Type help to get the available commands.");
+  Serial.println("Electronic Cats ® 2022");
+
+  // Setup callbacks for SerialCommand commands 
+  SCmd.addCommand("help",help); 
+  SCmd.addCommand("set_h",set_h);
+  SCmd.addCommand("free_h",free_h);
+  SCmd.addCommand("mode_nfc",mode_nfc);
+  SCmd.addCommand("mode_ms",mode_mb);
+  SCmd.addCommand("get_hs",get_hs);
+
+  SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?") 
 }
 
-void loop() { // Main loop
+// Main loop
+void loop() {
+  
+  // procesa comandos seriales
+  SCmd.readSerial();
+  
+  // procesa mensajes MQTT
+  client.loop();
+  
+  if((millis() - tiempo) > PERIOD && host_selected){
+    // RESET host connection
+    host_selected = false;   
+    // poner # para el host que termina la conexion
+    hs[inTopic[9] - 48] = '#';
+    client.publish("hosts", (char*)hs);
+    inTopic[9] = '#';
+    client.unsubscribe(inTopic);
+    clean();
+    flag_read = false;
+    Serial.println("The host connection is terminated.");
+  }
+
+  if (flag_read == false && host_selected) {
+    visamsd();
+  }
+
   if (!client.connected()) {
     reconnect();
   }
-  client.loop();
-  if (flag_read == false) {
-    visamsd();
+
+}
+
+void help(){
+  Serial.println("Fw version: " + String(fwVersion,1)+"v");
+  Serial.println("\tConfiguration commands:");
+  Serial.println("\tset_h");
+  Serial.println("\tfree_h");
+  Serial.println("\tmode_nfc");
+  Serial.println("\tmode_mb");
+
+  Serial.println("Monitor commands:");
+  Serial.println("\tget_hs");
+  Serial.println("..help");
+}
+
+// validar que no haya un host seleccionado
+
+void set_h(){
+  char *arg;  
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  int host;
+  host = atoi(arg);
+
+  if(host_selected){
+    Serial.println("Wait for the current process to finish");  
+    return;
   }
+  
+  boolean success;
+  
+  if (arg != NULL){
+      switch (host){
+        case 0:
+          Serial.println(hs);
+          if(hs[0] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '0'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[0] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 0 ready");
+          break;
+        case 1:
+          Serial.println(hs);
+          if(hs[1] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '1'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[1] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 1 ready");
+          break;
+        case 2:
+          Serial.println(hs);
+          if(hs[2] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '2'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[2] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 2 ready");
+          break;
+        case 3:
+          Serial.println(hs);
+          if(hs[3] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '3'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[3] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 3 ready");
+          break;
+        case 4:
+          Serial.println(hs);
+          if(hs[4] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '4'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[4] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 4 ready");
+          break;
+        case 5:
+          Serial.println(hs);
+          if(hs[5] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '5'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[5] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 5 ready");
+          break;
+        case 6:
+          Serial.println(hs);
+          if(hs[6] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '6'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[6] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 6 ready");
+          break;
+        case 7:
+          Serial.println(hs);
+          if(hs[7] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '7'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[7] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 7 ready");
+          break;
+        case 8:
+          Serial.println(hs);
+          if(hs[8] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '8'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[8] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 8 ready");
+          break;
+        case 9:
+          Serial.println(hs);
+          if(hs[9] != '#'){           
+            Serial.println("Busy host, try again later.");
+            return;
+          }
+          inTopic[9] = '9'; // topic host id
+          client.subscribe(inTopic);    
+          host_selected = true; 
+          tiempo = millis();
+          hs[9] = CLIENT + 48;
+          client.publish("hosts", (char*)hs);
+          Serial.println(inTopic);
+          Serial.println("Host 9 ready");
+          break;
+                    
+        default:
+          Serial.println("Error setting the host value must be between 0-9");
+          break;
+      }
+  } 
+  else {
+    Serial.println("No argument"); 
+  }
+}
+
+void free_h(){
+  char *arg;  
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  int host;
+  host = atoi(arg);
+  if (arg != NULL){
+      switch (host){
+        case 0:
+          //inTopic[9] = '0';
+          //reconnect();
+          host_selected = false;
+          inTopic[9] = '#';
+          Serial.println("Host 1 free");
+          break;
+        case 1:
+          //inTopic[9] = '1';
+          //reconnect();
+          host_selected = false;
+          inTopic[9] = '#';
+          Serial.println("Host 2 free");
+          break;
+ /*       case 2:
+          LoRa.setSignalBandwidth(15.6E3);
+          rx_status = false;
+          Serial.println("Bandwidth set to 15.6 kHz");
+          break;
+*/
+        default:
+          Serial.println("Error setting the host value must be between 0-9");
+          break;
+      }
+  } 
+  else {
+    Serial.println("No argument"); 
+  }
+}
+
+void mode_nfc(){
+  Serial.print("Mode NFC ");
+  Serial.println("HELL");
+}
+
+void mode_mb(){
+  Serial.print("Mode magnetic band ");
+  Serial.println("HELL");
+}
+
+void get_hs(){
+  Serial.print("Hosts status: ");
+  Serial.println("HELL");
+}
+
+// This gets set as the default handler, and gets called when no other command matches. 
+void unrecognized(const char *command) {
+  Serial.println("Command not found, type help to get the valid commands"); 
 }
