@@ -34,7 +34,7 @@
 
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
-#define PERIOD 20000
+#define PERIOD 5000
 #define CLIENT 1
  
 SerialCommand SCmd;
