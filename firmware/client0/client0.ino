@@ -445,7 +445,6 @@ void reconnect() {
     Serial.print("Attempting MQTT connection... ");
     // Attempt to connect
     clientId[17] = CLIENT + 48;
-    //Serial.println(clientId);
     if (client.connect(clientId)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
@@ -453,7 +452,9 @@ void reconnect() {
       buf[22] = CLIENT + 48;
       client.publish("status", buf);      
       // ... and resubscribe
+      
       //client.subscribe(inTopic);
+      
       client.subscribe("hosts");
     } else {
       Serial.print("failed, rc=");
@@ -518,19 +519,10 @@ void setup() {
 
 // Main loop
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  
+
+
   // procesa comandos seriales
   SCmd.readSerial();
-
-  // procesa mensajes MQTT
-  client.loop();
-
-  if (flag_read == false && host_selected) {
-    visamsd();
-  }
 
   if((millis() - tiempo) > PERIOD && host_selected){
     // RESET host connection
@@ -544,6 +536,16 @@ void loop() {
     client.unsubscribe(inTopic);
     Serial.println("The host connection is terminated.");
   }
+
+  if (flag_read == false && host_selected) {
+    visamsd();
+  }
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  // procesa mensajes MQTT
+  client.loop();
 }
 
 void help(){
@@ -575,12 +577,13 @@ void set_h(){
   if (arg != NULL){
       switch (host){
         case 0:
-          //check for host, assign turn, etc.
+/*          //check for host, assign turn, etc.
           Serial.println(hs);
           if(hs[0] != '#'){           
             Serial.println("Busy host, try again later.");
             return;
           }
+          */
           inTopic[9] = '0'; // topic host id
           client.subscribe(inTopic); //reconnect();
           //Serial.println(inTopic);
@@ -593,12 +596,13 @@ void set_h(){
           Serial.println("Host 0 ready");
           break;
         case 1:
+        /*
           //check for host, assign turn, etc.
           Serial.println(hs);
           if(hs[1] != '#'){           
             Serial.println("Busy host, try again later.");
             return;
-          }        
+          }  */      
           inTopic[9] = '1'; // topic id
           client.subscribe(inTopic); //reconnect();
           host_selected = true;
