@@ -545,6 +545,7 @@ void loop() {
     inTopic[9] = '#';
     client.unsubscribe(inTopic);
     clean();
+    flag_read = false;
     Serial.println("The host connection is terminated.");
   }
 
