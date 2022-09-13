@@ -53,7 +53,7 @@ unsigned long myTime2;
 unsigned long result;
 
 // consts get stored in ram as we don't adjust them
-char tracks[128][2];
+char tracks[2][128];
 
 char revTrack[41];
 
