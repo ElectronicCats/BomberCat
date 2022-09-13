@@ -64,7 +64,7 @@ USBMSD MassStorage(&bd);
 
 FILE *f = nullptr;
 
-char buf[64] { 0 };
+char buf[255] { 0 };
 
 const char *fname = "/fs/data.csv";
 
@@ -261,11 +261,24 @@ void setup() {
   
   f = fopen(fname, "r");
   if (f != nullptr) {
-    while (std::fgets(buf, sizeof buf, f) != nullptr)
-      //strcpy(tracks[0],buf);
+    while (std::fgets(buf, sizeof buf, f) != nullptr){
+      Serial.print("Track from CSV: ");
       Serial.write(buf);
+      Serial.println();
+      
+      tracks[0] = strtok(buf, ",");
+      tracks[1] = strtok(NULL, ",");
+      
+      Serial.print("Track1:");
+      Serial.write(tracks[0]);
+      Serial.println();
+      
+      Serial.print("Track2:");
+      Serial.write(tracks[1]);
+      Serial.println();
       magspoof();
       blink(L1, 200, 2);
+    }
   }
   fclose(f);
   Serial.println("MagSpoof Attack End!!");
