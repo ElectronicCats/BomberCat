@@ -620,6 +620,9 @@ void setup() {
 }
 
 void loop() { // Main loop
+
+  // procesa comandos seriales
+  SCmd.readSerial();
 /*
   if (flagMqtt == true) {
     if (!client.connected()) {
