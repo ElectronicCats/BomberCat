@@ -771,7 +771,9 @@ void help() {
   Serial.println("\tset_h");
   Serial.println("\tfree_h");
   Serial.println("\tmode_nfc");
-  Serial.println("\tmode_mb");
+  Serial.println("\tmode_ms");
+  Serial.println("\tsetup_wifi");
+  Serial.println("\tsetup_mqtt");
 
   Serial.println("Monitor commands:");
   Serial.println("\tget_hs");
