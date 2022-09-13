@@ -1,6 +1,6 @@
 // WiFi Access
-#define ssidName ""
-#define passWIFI ""
+#define SECRET_SSID ""
+#define SECRET_PASS ""
 
 //MQTT Server
 #define mqttServ "test.mosquitto.org"
