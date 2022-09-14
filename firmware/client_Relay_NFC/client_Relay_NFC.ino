@@ -579,8 +579,21 @@ void callback(char* topic, byte * payload, unsigned int length) {
     
     // leer ms de la tarjeta
     if(ms_selected){
-      tracks[0] = strtok(payload, ",");
-      tracks[1] = strtok(NULL, ",");
+      
+      int i,j;
+      j = 0;
+      for(i = 0; i < 255; i++) {
+          if(payload[i] == '?' && j == 0) {
+              tracks[0][i] = payload[i];
+              j = i;
+          }
+          if(j == 0) {
+              tracks[0][i] = payload[i];
+          }
+          else
+              tracks[1][i-j] = payload[i+1];
+      }
+      
       ms_ok = true;           
       return;
     }
