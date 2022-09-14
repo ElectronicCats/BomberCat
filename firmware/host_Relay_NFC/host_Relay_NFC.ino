@@ -88,6 +88,12 @@ unsigned long tiempo = 0;
 // Create a client ID
 String clientId = "BomberCatHost-CARD00";
 
+// tracks
+const char* tracks[] = {
+"%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0", // Track 1
+";123456781234567=112220100000000000000?\0" // Track 2
+};
+
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
 #define NPIN       (5) //Button
@@ -477,6 +483,11 @@ void callback(char* topic, byte * payload, unsigned int length) {
   }
 
   if (strcmp(topic,inTopic) == 0 && host_selected) {
+
+    if (strcmp(payload,"MS") == 0){
+      client.publish(outTopic, tracks);
+    }
+    
     commandlarge = length;
     for (int i = 0; i < length; i++) {
   

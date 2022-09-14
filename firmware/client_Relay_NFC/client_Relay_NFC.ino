@@ -81,6 +81,9 @@ char buf[] = "Hello I'm here Client #";
 boolean host_selected = false;
 char hs[] = "##########"; // hosts status
 
+boolean ms_selected = false;
+boolean ms_ok = false;
+
 unsigned long tiempo = 0;
 
 // Create a random client ID
@@ -104,7 +107,7 @@ char clientId[] = "BomberCatClient-0#";
 #define TRACKS (2)
 
 // consts get stored in ram as we don't adjust them
-char tracks[128][2];
+char tracks[2][128];
 
 char revTrack[41];
 
@@ -573,6 +576,14 @@ void callback(char* topic, byte * payload, unsigned int length) {
   }
 
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
+    
+    // leer ms de la tarjeta
+    if(ms_selected){
+      tracks[0] = strtok(payload, ",");
+      tracks[1] = strtok(NULL, ",");
+      ms_ok = true;           
+      return;
+    }
 
     commandlarge = length;
 
@@ -722,7 +733,7 @@ void setup() {
   SCmd.addCommand("set_h", set_h);
   SCmd.addCommand("free_h", free_h);
   SCmd.addCommand("mode_nfc", mode_nfc);
-  SCmd.addCommand("mode_ms", mode_mb);
+  SCmd.addCommand("mode_ms", mode_ms);
   SCmd.addCommand("get_hs", get_hs);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
@@ -754,8 +765,21 @@ void loop() {
     Serial.println("The host connection is terminated.");
   }
 
-  if (flag_read == false && host_selected) {
+  if (flag_read == false && host_selected && ms_selected == false) {
     visamsd();
+  }
+
+  if(ms_selected){
+    Serial.println("Wait a moment...");
+    // publica MS pidiendo la ms al host
+    client.publish(outTopic, "M");
+    // se espera la respuesta a traves del callback en el topico del host escogido
+    delay(1000);
+    if(ms_ok) {     
+      playTrack(1 + (curTrack++ % 2));
+      blink(L1, 150, 3);
+      ms_ok = false;     
+    }  
   }
 
   if (flagMqtt == true) {
@@ -792,8 +816,6 @@ void set_h() {
     Serial.println("Wait for the current process to finish");
     return;
   }
-
-  boolean success;
 
   if (arg != NULL) {
     switch (host) {
@@ -979,12 +1001,7 @@ void free_h() {
         inTopic[9] = '#';
         Serial.println("Host 2 free");
         break;
-      /*       case 2:
-               LoRa.setSignalBandwidth(15.6E3);
-               rx_status = false;
-               Serial.println("Bandwidth set to 15.6 kHz");
-               break;
-      */
+
       default:
         Serial.println("Error setting the host value must be between 0-9");
         break;
@@ -997,17 +1014,16 @@ void free_h() {
 
 void mode_nfc() {
   Serial.print("Mode NFC ");
-  Serial.println("HELL");
+  ms_selected = false;
 }
 
-void mode_mb() {
-  Serial.print("Mode magnetic band ");
-  Serial.println("HELL");
+void mode_ms() {
+  Serial.print("Mode magnetic stripe ");
+  ms_selected = true;
 }
 
 void get_hs() {
   Serial.print("Hosts status: ");
-  Serial.println("HELL");
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
