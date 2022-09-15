@@ -261,23 +261,28 @@ void setup() {
   
   f = fopen(fname, "r");
   if (f != nullptr) {
-    while (std::fgets(buf, sizeof buf, f) != nullptr){
-      Serial.print("Track from CSV: ");
+    while (std::fgets(buf, 255 , f) != nullptr){
+      Serial.print("Buf: ");
       Serial.write(buf);
       Serial.println();
-      
-      tracks[0] = strtok(buf, ",");
-      tracks[1] = strtok(NULL, ",");
-      
-      Serial.print("Track1:");
-      Serial.write(tracks[0]);
-      Serial.println();
-      
-      Serial.print("Track2:");
-      Serial.write(tracks[1]);
-      Serial.println();
+      int i,j;
+      j = 0;
+      for(i = 0; i < 255; i++) {
+          if(buf[i] == '?' && j == 0) {
+              tracks[0][i] = buf[i];
+              j = i;
+          }
+          if(j == 0) {
+              tracks[0][i] = buf[i];
+          }
+          else
+              tracks[1][i-j] = buf[i+1];
+      }
+       Serial.print("Track 0: ");
+      Serial.println(tracks[0]);
+      Serial.print("Track 1: ");
+      Serial.println(tracks[1]);
       magspoof();
-      blink(L1, 200, 2);
     }
   }
   fclose(f);
