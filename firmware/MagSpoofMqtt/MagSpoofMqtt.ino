@@ -221,9 +221,6 @@ void playTrack(int track) {
   dir = 0;
   track--; // index 0
 
-  // enable H-bridge and LED
-  //digitalWrite(ENABLE_PIN, HIGH);
-
   // First put out a bunch of leading zeros.
   for (int i = 0; i < 25; i++)
     playBit(0);
