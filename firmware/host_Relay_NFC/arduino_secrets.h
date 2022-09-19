@@ -3,4 +3,4 @@
 #define SECRET_PASS ""
 
 //MQTT Server
-#define mqttServ "test.mosquitto.org"
+#define mqttServ ""

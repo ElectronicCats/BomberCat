@@ -417,7 +417,6 @@ void setup_wifi() {
  *****************/
 
 void setup_mqtt() {
-  if (!flagStore) {
     char *arg;
     arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
     if (arg != NULL) {    // As long as it existed, take it
@@ -427,8 +426,10 @@ void setup_mqtt() {
     }
     else {
       Serial.println("No arguments for MQTTServer");
+      result = getSketchStats(statsKey, &previousStats);
+    strcpy(mqtt_server, previousStats.mqttStore);
     }
-  }
+  
   Serial.print("Connecting MQTT to ");
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
