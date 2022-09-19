@@ -516,18 +516,19 @@ void setup_wifi() {
  *****************/
 
 void setup_mqtt() {
-  if (!flagStore) {
     char *arg;
     arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
     if (arg != NULL) {    // As long as it existed, take it
       strcpy(mqtt_server, arg);
       Serial.print("MQTT Server: ");
       Serial.println(mqtt_server);
+      flagStore=false;
     }
     else {
-      Serial.println("No arguments for MQTTServer");
+      Serial.println("No arguments for MQTTServer, get value from store");
+      result = getSketchStats(statsKey, &previousStats);
+      strcpy(mqtt_server, previousStats.mqttStore);
     }
-  }
   Serial.print("Connecting MQTT to ");
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
@@ -760,9 +761,13 @@ void loop() {
   // procesa comandos seriales
   SCmd.readSerial();
 
-  if (flagMqtt == 1) {
+  if (flagMqtt == true) {
     // procesa mensajes MQTT
     client.loop();
+    
+    if (!client.connected()) {
+      reconnect();
+    }
   }
 
   if ((millis() - tiempo) > PERIOD && host_selected) {
@@ -782,24 +787,21 @@ void loop() {
     visamsd();
   }
 
-  if(ms_selected){
+  if(ms_selected && host_selected){
     Serial.println("Wait a moment...");
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
     // se espera la respuesta a traves del callback en el topico del host escogido
     delay(1000);
-    if(ms_ok) {     
+    if(ms_ok) { 
+      Serial.println("Activating MagSpoof...");    
       playTrack(1 + (curTrack++ % 2));
       blink(L1, 150, 3);
       ms_ok = false;     
     }  
   }
 
-  if (flagMqtt == true) {
-    if (!client.connected()) {
-      reconnect();
-    }
-  }
+  
 }
 
 void help() {
