@@ -516,19 +516,19 @@ void setup_wifi() {
  *****************/
 
 void setup_mqtt() {
-    char *arg;
-    arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-    if (arg != NULL) {    // As long as it existed, take it
-      strcpy(mqtt_server, arg);
-      Serial.print("MQTT Server: ");
-      Serial.println(mqtt_server);
-      flagStore=false;
-    }
-    else {
-      Serial.println("No arguments for MQTTServer, get value from store");
-      result = getSketchStats(statsKey, &previousStats);
-      strcpy(mqtt_server, previousStats.mqttStore);
-    }
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) {    // As long as it existed, take it
+    strcpy(mqtt_server, arg);
+    Serial.print("MQTT Server: ");
+    Serial.println(mqtt_server);
+    flagStore = false;
+  }
+  else {
+    Serial.println("No arguments for MQTTServer, get value from store");
+    result = getSketchStats(statsKey, &previousStats);
+    strcpy(mqtt_server, previousStats.mqttStore);
+  }
   Serial.print("Connecting MQTT to ");
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
@@ -577,25 +577,25 @@ void callback(char* topic, byte * payload, unsigned int length) {
   }
 
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
-    
+
     // leer ms de la tarjeta
-    if(ms_selected){
-      
-      int i,j;
+    if (ms_selected) {
+
+      int i, j;
       j = 0;
-      for(i = 0; i < 255; i++) {
-          if(payload[i] == '?' && j == 0) {
-              tracks[0][i] = payload[i];
-              j = i;
-          }
-          if(j == 0) {
-              tracks[0][i] = payload[i];
-          }
-          else
-              tracks[1][i-j] = payload[i+1];
+      for (i = 0; i < 255; i++) {
+        if (payload[i] == '?' && j == 0) {
+          tracks[0][i] = payload[i];
+          j = i;
+        }
+        if (j == 0) {
+          tracks[0][i] = payload[i];
+        }
+        else
+          tracks[1][i - j] = payload[i + 1];
       }
-      
-      ms_ok = true;           
+
+      ms_ok = true;
       return;
     }
 
@@ -635,7 +635,7 @@ void reconnect() {
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
+      delay(1000);
     }
   }
 }
@@ -761,17 +761,10 @@ void loop() {
   // procesa comandos seriales
   SCmd.readSerial();
 
-  if (flagMqtt == true) {
-    // procesa mensajes MQTT
-    client.loop();
-    
-    if (!client.connected()) {
-      reconnect();
-    }
-  }
-
   if ((millis() - tiempo) > PERIOD && host_selected) {
+    setup_mqtt();
     // RESET host connection
+    client.subscribe("hosts");
     host_selected = false;
     // poner # para el host que termina la conexion
     hs[inTopic[9] - 48] = '#';
@@ -787,21 +780,29 @@ void loop() {
     visamsd();
   }
 
-  if(ms_selected && host_selected){
+  if (ms_selected && host_selected) {
     Serial.println("Wait a moment...");
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
     // se espera la respuesta a traves del callback en el topico del host escogido
     delay(1000);
-    if(ms_ok) { 
-      Serial.println("Activating MagSpoof...");    
+    if (ms_ok) {
+      Serial.println("Activating MagSpoof...");
       playTrack(1 + (curTrack++ % 2));
       blink(L1, 150, 3);
-      ms_ok = false;     
-    }  
+      ms_ok = false;
+    }
+  }
+  if (flagMqtt == true) {
+    if (!client.connected()) {
+      reconnect();
+    }
+  }
+  if (flagMqtt == true) {
+    // procesa mensajes MQTT
+    client.loop();
   }
 
-  
 }
 
 void help() {
@@ -841,11 +842,13 @@ void set_h() {
           return;
         }
         inTopic[9] = '0'; // topic host id
+
         client.subscribe(inTopic);
         host_selected = true;
         tiempo = millis();
         hs[0] = CLIENT + 48;
         client.publish("hosts", (char*)hs);
+        client.unsubscribe("hosts");
         Serial.println(inTopic);
         Serial.println("Host 0 ready");
         break;
@@ -861,6 +864,7 @@ void set_h() {
         tiempo = millis();
         hs[1] = CLIENT + 48;
         client.publish("hosts", (char*)hs);
+        client.unsubscribe("hosts");
         Serial.println(inTopic);
         Serial.println("Host 1 ready");
         break;
