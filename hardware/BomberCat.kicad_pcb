@@ -1814,7 +1814,7 @@
     (property "provedor" "LCSC")
     (path "/97c6029d-c28a-435a-8e24-ceedc003f3eb")
     (attr smd)
-    (fp_text reference "R12" (at 0.08 -2.83) (layer "F.SilkS")
+    (fp_text reference "R12" (at 0.07 1.024) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 3fcd3c12-d2f4-49f7-b56b-af0d84ef584c)
     )
@@ -7230,7 +7230,7 @@
     (property "provedor" "LCSC")
     (path "/5b4e360d-ba34-4e84-bf13-c216e272db9a")
     (attr smd)
-    (fp_text reference "R5" (at 0.045 -2.35) (layer "F.SilkS")
+    (fp_text reference "R5" (at 0 1.316) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp a91214a7-f1e1-4b79-be90-cd49baa510e8)
     )
@@ -11603,7 +11603,7 @@
     (zone (net 0) (net_name "") (layers *.Cu) (tstamp 49d20d6e-0419-4c9f-808c-b9a8f44fce5e) (hatch full 0.508)
       (connect_pads (clearance 0))
       (min_thickness 0.254)
-      (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed ) (copperpour not_allowed) (footprints not_allowed))
+      (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed) (copperpour not_allowed) (footprints not_allowed))
       (fill (thermal_gap 0.508) (thermal_bridge_width 0.508))
       (polygon
         (pts
@@ -28519,7 +28519,7 @@
   (zone (net 0) (net_name "") (layers F&B.Cu) (tstamp b1136af0-375f-4066-8d60-cdac626ff894) (hatch edge 0.508)
     (connect_pads (clearance 0))
     (min_thickness 0.254)
-    (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed ) (copperpour not_allowed) (footprints allowed))
+    (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed) (copperpour not_allowed) (footprints allowed))
     (fill (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
