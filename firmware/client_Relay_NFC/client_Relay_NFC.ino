@@ -47,7 +47,7 @@ TDBStore store(&blockDevice);
 
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
-#define PERIOD 5000
+#define PERIOD 10000
 #define CLIENT 1
 
 SerialCommand SCmd;
@@ -81,7 +81,7 @@ char buf[] = "Hello I'm here Client #";
 boolean host_selected = false;
 char hs[] = "##########"; // hosts status
 
-boolean ms_selected = false;
+
 boolean ms_ok = false;
 
 unsigned long tiempo = 0;
@@ -105,6 +105,8 @@ char clientId[] = "BomberCatClient-0#";
 #define BETWEEN_ZERO (53) // 53 zeros between track1 & 2
 
 #define TRACKS (2)
+
+int msflag = 0;
 
 // consts get stored in ram as we don't adjust them
 char tracks[2][128];
@@ -579,7 +581,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
 
     // leer ms de la tarjeta
-    if (ms_selected) {
+    if (msflag== 1) {
 
       int i, j;
       j = 0;
@@ -776,11 +778,11 @@ void loop() {
     Serial.println("The host connection is terminated.");
   }
 
-  if (flag_read == false && host_selected && ms_selected == false) {
+  if (flag_read == false && host_selected==true && msflag == 0) {
     visamsd();
   }
 
-  if (ms_selected && host_selected) {
+  if (msflag == 1 && host_selected==true) {
     Serial.println("Wait a moment...");
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
@@ -1033,12 +1035,12 @@ void free_h() {
 
 void mode_nfc() {
   Serial.print("Mode NFC ");
-  ms_selected = false;
+  msflag = 0;
 }
 
 void mode_ms() {
   Serial.print("Mode magnetic stripe ");
-  ms_selected = true;
+  msflag = 1;
 }
 
 void get_hs() {
