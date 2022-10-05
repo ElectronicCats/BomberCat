@@ -45,7 +45,7 @@ FlashIAPBlockDevice blockDevice(iapLimits.start_address, iapLimits.available_siz
 // Create a key-value store on the Flash IAP block device
 TDBStore store(&blockDevice);
 
-//#define DEBUG
+#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
 #define CLIENT 1
@@ -621,6 +621,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
 }
 
 void reconnect() {
+  setup_mqtt();
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection... ");
@@ -638,7 +639,7 @@ void reconnect() {
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(1000);
+      delay(5000);
     }
   }
 }
@@ -764,8 +765,7 @@ void loop() {
   // procesa comandos seriales
   SCmd.readSerial();
 
-  if ((millis() - tiempo) > PERIOD && host_selected) {
-    setup_mqtt();
+  if ((millis() - tiempo) > PERIOD && host_selected == true) {
     // RESET host connection
     client.subscribe("hosts");
     host_selected = false;
@@ -774,6 +774,7 @@ void loop() {
     client.publish("hosts", (char*)hs);
     inTopic[9] = '#';
     client.unsubscribe(inTopic);
+    once_time = false;
     clean();
     once_time = false;
     flag_read = false;
@@ -784,7 +785,7 @@ void loop() {
     visamsd();
   }
 
-  if (ms_selected && host_selected && once_time) {
+  if (msflag == 1 && host_selected==true && once_time == true) {
     Serial.println("Wait a moment...");
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
@@ -798,11 +799,13 @@ void loop() {
       ms_ok = false;
     }
   }
+
   if (flagMqtt == true) {
-    if (!client.connected()) {
+  if (!client.connected()) {
       reconnect();
     }
   }
+  
   if (flagMqtt == true) {
     // procesa mensajes MQTT
     client.loop();
