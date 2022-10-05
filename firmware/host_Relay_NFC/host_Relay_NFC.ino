@@ -34,7 +34,7 @@
 
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
-#define PERIOD 20000
+#define PERIOD 10000
 #define HOST 0
 
 #include <FlashIAPBlockDevice.h>
@@ -316,13 +316,18 @@ void detectcard() {
 
 //To read Mifare and Visa
 void mifarevisa() {
+  
   if(detectCardFlag == false){
+    Serial.println("Mode 1 Read/Writre");
+    mode = 1;
+    Serial.print("Mode 1 Read/Write");
+    Serial.println(mode);
+    resetMode();
     detectcard();
   }
   else{
     seekTrack2();
   }
-  //detectCardFlag = false;
 }
 /*****************
        WIFI
@@ -466,6 +471,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   Serial.print("Host Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  Serial.println();
   #endif
 
   // update host status check if there is a client requesting
@@ -474,8 +480,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
       inTopic[11] = payload[HOST];     // change client number
       host_selected = true;
       tiempo = millis();            // reset time
-      client.subscribe(inTopic);
-            
+      client.subscribe(inTopic); 
       Serial.println(inTopic);
       
       return;
@@ -546,8 +551,9 @@ void setup() {
   #ifdef DEBUG
   while (!Serial);
   #endif
-  
-  mode = 1;
+
+  Serial.print("Mode 1 Read/Writre");
+  Serial.println(mode);
   resetMode();
 
   // Get limits of the the internal flash of the microcontroller
@@ -604,9 +610,6 @@ void setup() {
     setup_mqtt();
   }
 
-  // blink to show we started up
-  blink(L1, 200, 6);
-
   Serial.println("BomberCat, yes Sir!");
   Serial.println("Host Relay NFC");
 
@@ -629,12 +632,13 @@ void setup() {
   SCmd.addCommand("setup_mqtt", setup_mqtt);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
+
+  // blink to show we started up
+  blink(L1, 200, 6);
 }
 
 void loop() { // Main loop
 
-  // procesa comandos seriales
-  SCmd.readSerial();
 /*
   if (flagMqtt == true) {
     if (!client.connected()) {
@@ -650,11 +654,23 @@ void loop() { // Main loop
   if((millis() - tiempo) > PERIOD && host_selected){
     // RESET host connection
     host_selected = false;
+    detectCardFlag = false;
+    mode = 2;
+    Serial.print("Mode 1 Read/Write");
+    Serial.println(mode);
+    //nfc.StopDiscovery();
+    resetMode();
     client.unsubscribe(inTopic);
     Serial.println("The host connection is terminated.");
     apdubuffer[0] = NULL;
     apdulen = 0;
     reconnect();
+  }
+
+    // procesa comandos seriales
+  if(host_selected==false){
+    SCmd.readSerial();
+    blink(L1, 100, 10);
   }
 }
 
