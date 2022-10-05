@@ -83,6 +83,7 @@ char hs[] = "##########"; // hosts status
 
 
 boolean ms_ok = false;
+boolean once_time = false;
 
 unsigned long tiempo = 0;
 
@@ -774,6 +775,7 @@ void loop() {
     inTopic[9] = '#';
     client.unsubscribe(inTopic);
     clean();
+    once_time = false;
     flag_read = false;
     Serial.println("The host connection is terminated.");
   }
@@ -782,12 +784,13 @@ void loop() {
     visamsd();
   }
 
-  if (msflag == 1 && host_selected==true) {
+  if (ms_selected && host_selected && once_time) {
     Serial.println("Wait a moment...");
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
     // se espera la respuesta a traves del callback en el topico del host escogido
     delay(1000);
+    once_time = false;
     if (ms_ok) {
       Serial.println("Activating MagSpoof...");
       playTrack(1 + (curTrack++ % 2));
@@ -836,6 +839,7 @@ void set_h() {
   }
 
   if (arg != NULL) {
+    once_time = true;
     switch (host) {
       case 0:
         Serial.println(hs);
