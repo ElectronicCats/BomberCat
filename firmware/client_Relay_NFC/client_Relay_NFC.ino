@@ -581,6 +581,15 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
 
+    if (payload[0] == 'N' && length == 1){
+      Serial.println();      
+      Serial.println("****************");
+      Serial.println("Card no detected");
+      Serial.println("****************");
+      Serial.println();
+      return;
+    }    
+    
     // leer ms de la tarjeta
     if (msflag== 1) {
 
@@ -755,6 +764,7 @@ void setup() {
   SCmd.addCommand("get_hs", get_hs);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
+  SCmd.addCommand("get_config",get_config);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 }
@@ -825,6 +835,7 @@ void help() {
 
   Serial.println("Monitor commands:");
   Serial.println("\tget_hs");
+  Serial.println("\tget_config");
   Serial.println("..help");
 }
 
@@ -1052,6 +1063,39 @@ void mode_ms() {
 
 void get_hs() {
   Serial.print("Hosts status: ");
+}
+
+void get_config(){
+  Serial.println("\nBomberCat configurations: ");
+  
+  // Get previous run stats from the key-value store
+  Serial.println("Retrieving Sketch Stats");
+  result = getSketchStats(statsKey, &previousStats);
+
+  if (result == MBED_SUCCESS) {
+    Serial.println("Previous Setup Stats WiFi and MQTT");
+    Serial.print("\tSSID: ");
+    Serial.println(previousStats.ssidStore);
+    Serial.print("\tWiFiPass: ");
+    Serial.println(previousStats.passwordStore);
+    Serial.print("\tMQTT Server: ");
+    Serial.println(previousStats.mqttStore);
+    flagStore = true;
+  } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
+    Serial.println("No previous data for wifi and mqtt was found.");
+    Serial.println("Run setup_wifi command.");
+    Serial.println("Run setup_mqtt command.");
+  } else {
+    Serial.println("Error reading from key-value store.");
+  }
+
+  Serial.print("\tRelay: ");
+  Serial.println(outTopic);
+  Serial.print("\tID: ");
+  Serial.println(clientId);
+  Serial.print("\tMode: ");
+  Serial.println(msflag?"Magnetic Strip":"NFC");
+  
 }
 
 // This gets set as the default handler, and gets called when no other command matches.

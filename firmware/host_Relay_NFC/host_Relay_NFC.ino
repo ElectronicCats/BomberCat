@@ -247,6 +247,7 @@ void seekTrack2() {
 
 //Is it a card in range? for Mifare and ISO cards
 void detectcard() {
+  int attempts = 0;
   while (detectCardFlag == false) {
     #ifdef DEBUG
     Serial.println("wait detect Card...");
@@ -301,6 +302,11 @@ void detectcard() {
     }
     else{
         Serial.println("No Detect");
+        attempts++;
+        if(attempts > 4) {
+          client.publish(outTopic, "N");
+          return;
+        }
         blink(L1, 100, 10);
       }
   }
@@ -622,7 +628,7 @@ void setup() {
   SCmd.addCommand("help", help);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
-
+  SCmd.addCommand("get_config",get_config);
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
   // blink to show we started up
@@ -672,8 +678,41 @@ void help() {
 
   Serial.println("Monitor commands:");
   Serial.println("\tget_hs");
+  Serial.println("\tget_config");
   Serial.println("..help");
 }
+
+void get_config(){
+  Serial.println("\nBomberCat configurations: ");
+  
+  // Get previous run stats from the key-value store
+  Serial.println("Retrieving Sketch Stats");
+  result = getSketchStats(statsKey, &previousStats);
+
+  if (result == MBED_SUCCESS) {
+    Serial.println("Previous Setup Stats WiFi and MQTT");
+    Serial.print("\tSSID: ");
+    Serial.println(previousStats.ssidStore);
+    Serial.print("\tWiFiPass: ");
+    Serial.println(previousStats.passwordStore);
+    Serial.print("\tMQTT Server: ");
+    Serial.println(previousStats.mqttStore);
+    flagStore = true;
+  } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
+    Serial.println("No previous data for wifi and mqtt was found.");
+    Serial.println("Run setup_wifi command.");
+    Serial.println("Run setup_mqtt command.");
+  } else {
+    Serial.println("Error reading from key-value store.");
+  }
+
+  Serial.print("\tHost: ");
+  Serial.println(outTopic);
+  Serial.print("\tID: ");
+  Serial.println(clientId);
+  
+}
+
 // This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {
   Serial.println("Command not found, type help to get the valid commands");
