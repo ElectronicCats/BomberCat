@@ -251,7 +251,7 @@ void detectcard() {
     #ifdef DEBUG
     Serial.println("wait detect Card...");
     #endif
-    if (!nfc.WaitForDiscoveryNotification(&RfInterface)) { // Waiting to detect cards
+    if (!nfc.WaitForDiscoveryNotification(&RfInterface,5000)) { // Waiting to detect cards
 
       if (RfInterface.ModeTech == MODE_POLL || RfInterface.ModeTech == TECH_PASSIVE_NFCA) {
         char tmp[16];
@@ -297,20 +297,12 @@ void detectcard() {
           Serial.println(" - Not a valid card");
           break;
       }
-
-      //* It can detect multiple cards at the same time if they use the same protocol
-      /*if (RfInterface.MoreTags) {
-        nfc.ReaderActivateNext(&RfInterface);
-      }*/
-
-      //* Wait for card removal
-      //nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
-      //Serial.println("CARD REMOVED!");
-
-      //nfc.StopDiscovery();
-      //nfc.StartDiscovery(mode);
       detectCardFlag = true;
     }
+    else{
+        Serial.println("No Detect");
+        blink(L1, 100, 10);
+      }
   }
 }
 
@@ -658,7 +650,6 @@ void loop() { // Main loop
     mode = 2;
     Serial.print("Mode 1 Read/Write");
     Serial.println(mode);
-    //nfc.StopDiscovery();
     resetMode();
     client.unsubscribe(inTopic);
     Serial.println("The host connection is terminated.");
@@ -670,7 +661,6 @@ void loop() { // Main loop
     // procesa comandos seriales
   if(host_selected==false){
     SCmd.readSerial();
-    blink(L1, 100, 10);
   }
 }
 
