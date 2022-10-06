@@ -45,7 +45,7 @@ FlashIAPBlockDevice blockDevice(iapLimits.start_address, iapLimits.available_siz
 // Create a key-value store on the Flash IAP block device
 TDBStore store(&blockDevice);
 
-#define DEBUG
+//#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
 #define CLIENT 1
@@ -400,7 +400,9 @@ void visamsd() {
     }
     Serial.println();
 #endif
+    delay(100); 
     nfc.CardModeSend(ppsea, commandlarge);
+
 #ifdef DEBUG
     printData(ppsea, commandlarge, 3);
 #endif
@@ -424,6 +426,9 @@ void visamsd() {
     flag_read = true;
     tiempo = millis();
   }
+  for (int i = 0; i < commandlarge; i++) {
+      ppsea[i] = 0;
+    }
 }
 
 /*****************
