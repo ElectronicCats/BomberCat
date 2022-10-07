@@ -90,7 +90,7 @@ unsigned long tiempo = 0;
 
 // tracks
 const char* tracks = {
-"%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0,;123456781234567=112220100000000000000?\0" // Track 1 y 2
+  "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0,;123456781234567=112220100000000000000?\0" // Track 1 y 2
 };
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
@@ -155,9 +155,9 @@ int setSketchStats(const char* key, SketchStats stats)
        NFC
  *****************/
 void resetMode() { //Reset the configuration mode after each reading
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Reset...");
-  #endif
+#endif
   if (nfc.connectNCI()) { //Wake up the board
     Serial.println("Error while setting up the mode, check connections!");
     while (1);
@@ -217,15 +217,15 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 
 //Find Track 2 in the NFC reading transaction
 void seekTrack2() {
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Send data to Card...");
-  #endif
+#endif
   uint8_t apdubuffer[255] = {}, apdulen;
 
   //blink(L2, 150, 1);
-  #ifdef DEBUG
+#ifdef DEBUG
   printData(ppse, commandlarge, 1);
-  #endif
+#endif
 
   // Send command from terminal to card
   nfc.CardModeSend(ppse, commandlarge);
@@ -233,10 +233,10 @@ void seekTrack2() {
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
 
   if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
-    #ifdef DEBUG
+#ifdef DEBUG
     printData(apdubuffer, apdulen, 4);
-    #endif
-    
+#endif
+
     client.publish(outTopic, apdubuffer, apdulen);
     tiempo = millis();  // da mas tiempo antes de cerrar la conexión
   }
@@ -249,14 +249,14 @@ void seekTrack2() {
 void detectcard() {
   int attempts = 0;
   while (detectCardFlag == false) {
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("wait detect Card...");
-    #endif
-    if (!nfc.WaitForDiscoveryNotification(&RfInterface,5000)) { // Waiting to detect cards
+#endif
+    if (!nfc.WaitForDiscoveryNotification(&RfInterface, 5000)) { // Waiting to detect cards
 
       if (RfInterface.ModeTech == MODE_POLL || RfInterface.ModeTech == TECH_PASSIVE_NFCA) {
         char tmp[16];
-        #ifdef DEBUG
+#ifdef DEBUG
         Serial.print("\tSENS_RES = ");
         sprintf(tmp, "0x%.2X", RfInterface.Info.NFC_APP.SensRes[0]);
         Serial.print(tmp); Serial.print(" ");
@@ -264,33 +264,33 @@ void detectcard() {
         Serial.print(tmp); Serial.println(" ");
         Serial.print("\tNFCID = ");
         printBuf(RfInterface.Info.NFC_APP.NfcId, RfInterface.Info.NFC_APP.NfcIdLen);
-        #endif
+#endif
 
         if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
           attempts++;
-        if(attempts > 4) {
-          client.publish(outTopic, "N");
-          return;
-        }
+          if (attempts > 4) {
+            client.publish(outTopic, "N");
+            return;
+          }
           Serial.println("Ooops ... this doesn't seem to be a Mifare Classic card!");
           blink(L1, 100, 10);
           return;
         }
 
         if (RfInterface.Info.NFC_APP.SelResLen != 0) {
-          #ifdef DEBUG
+#ifdef DEBUG
           Serial.print("\tSEL_RES = ");
           sprintf(tmp, "0x%.2X", RfInterface.Info.NFC_APP.SelRes[0]);
           Serial.print(tmp); Serial.println(" ");
-          #endif
+#endif
         }
       }
       switch (RfInterface.Protocol) {
         case PROT_ISODEP:
 
-          #ifdef DEBUG
+#ifdef DEBUG
           Serial.println(" - Found ISODEP card");
-          #endif
+#endif
 
           seekTrack2();
           break;
@@ -301,37 +301,37 @@ void detectcard() {
 
         default:
           attempts++;
-        if(attempts > 4) {
-          client.publish(outTopic, "N");
-          return;
-        }
+          if (attempts > 4) {
+            client.publish(outTopic, "N");
+            return;
+          }
           Serial.println(" - Not a valid card");
           blink(L1, 100, 10);
           break;
       }
       detectCardFlag = true;
     }
-    else{
-        Serial.println("No Detect");
-        attempts++;
-        if(attempts > 4) {
-          client.publish(outTopic, "N");
-          return;
-        }
-        blink(L1, 100, 10);
+    else {
+      Serial.println("No Detect");
+      attempts++;
+      if (attempts > 4) {
+        client.publish(outTopic, "N");
+        return;
       }
+      blink(L1, 100, 10);
+    }
   }
 }
 
 //To read Mifare and Visa
 void mifarevisa() {
-  
-  if(detectCardFlag == false){
+
+  if (detectCardFlag == false) {
     mode = 1;
     resetMode();
     detectcard();
   }
-  else{
+  else {
     seekTrack2();
   }
 }
@@ -428,19 +428,19 @@ void setup_wifi() {
  *****************/
 
 void setup_mqtt() {
-    char *arg;
-    arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-    if (arg != NULL) {    // As long as it existed, take it
-      strcpy(mqtt_server, arg);
-      Serial.print("MQTT Server: ");
-      Serial.println(mqtt_server);
-    }
-    else {
-      Serial.println("No arguments for MQTTServer");
-      result = getSketchStats(statsKey, &previousStats);
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) {    // As long as it existed, take it
+    strcpy(mqtt_server, arg);
+    Serial.print("MQTT Server: ");
+    Serial.println(mqtt_server);
+  }
+  else {
+    Serial.println("No arguments for MQTTServer");
+    result = getSketchStats(statsKey, &previousStats);
     strcpy(mqtt_server, previousStats.mqttStore);
-    }
-  
+  }
+
   Serial.print("Connecting MQTT to ");
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
@@ -473,44 +473,44 @@ void setup_mqtt() {
 
 //Callback MQTT suscribe to inTopic from RelayClient
 void callback(char* topic, byte * payload, unsigned int length) {
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.print("Host Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   Serial.println();
-  #endif
+#endif
 
   // update host status check if there is a client requesting
-  if (strcmp(topic,"hosts") == 0) {
-    if(payload[HOST] != '#'){          // the host is requested
+  if (strcmp(topic, "hosts") == 0) {
+    if (payload[HOST] != '#') {        // the host is requested
       inTopic[11] = payload[HOST];     // change client number
       host_selected = true;
       tiempo = millis();            // reset time
-      client.subscribe(inTopic); 
+      client.subscribe(inTopic);
       Serial.println(inTopic);
-      
+
       return;
     }
   }
 
-  if (strcmp(topic,inTopic) == 0 && host_selected) {
+  if (strcmp(topic, inTopic) == 0 && host_selected) {
 
-    if (payload[0] == 'M' && length == 1){
+    if (payload[0] == 'M' && length == 1) {
       client.publish(outTopic, tracks);
       return;
     }
-    
+
     commandlarge = length;
     for (int i = 0; i < length; i++) {
-  
+
       ppse[i] = payload[i];
-      #ifdef DEBUG
+#ifdef DEBUG
       Serial.print(payload[i], HEX);
-      #endif
+#endif
     }
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.println();
-    #endif
+#endif
     mifarevisa();
   }
 }
@@ -533,7 +533,7 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      
+
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
@@ -555,9 +555,9 @@ void setup() {
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  #ifdef DEBUG
+#ifdef DEBUG
   while (!Serial);
-  #endif
+#endif
 
   Serial.print("Mode 1 Read/Writre");
   Serial.println(mode);
@@ -621,7 +621,7 @@ void setup() {
   Serial.println("Host Relay NFC");
 
   outTopic[9] = HOST + 48;
-  
+
   Serial.println(outTopic);
   if (flagMqtt == 1) {
     reconnect();
@@ -637,7 +637,7 @@ void setup() {
   SCmd.addCommand("help", help);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
-  SCmd.addCommand("get_config",get_config);
+  SCmd.addCommand("get_config", get_config);
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
   // blink to show we started up
@@ -646,19 +646,19 @@ void setup() {
 
 void loop() { // Main loop
 
-/*
-  if (flagMqtt == true) {
-    if (!client.connected()) {
-      reconnect();
+  /*
+    if (flagMqtt == true) {
+      if (!client.connected()) {
+        reconnect();
+      }
     }
-  }
-*/
+  */
   if (flagMqtt == 1) {
     // procesa mensajes MQTT
     client.loop();
   }
 
-  if((millis() - tiempo) > PERIOD && host_selected){
+  if ((millis() - tiempo) > PERIOD && host_selected) {
     // RESET host connection
     host_selected = false;
     detectCardFlag = false;
@@ -673,8 +673,8 @@ void loop() { // Main loop
     reconnect();
   }
 
-    // procesa comandos seriales
-  if(host_selected==false){
+  // procesa comandos seriales
+  if (host_selected == false) {
     SCmd.readSerial();
   }
 }
@@ -691,9 +691,9 @@ void help() {
   Serial.println("..help");
 }
 
-void get_config(){
+void get_config() {
   Serial.println("\nBomberCat configurations: ");
-  
+
   // Get previous run stats from the key-value store
   Serial.println("Retrieving Sketch Stats");
   result = getSketchStats(statsKey, &previousStats);
@@ -720,7 +720,7 @@ void get_config(){
   Serial.print("\tID: ");
   Serial.println(hostId);
   blink(L1, 300, 3);
-  
+
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
