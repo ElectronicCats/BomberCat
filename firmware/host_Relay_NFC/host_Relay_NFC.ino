@@ -37,6 +37,9 @@
 #define PERIOD 10000
 #define HOST 0
 
+// Create a client ID
+char hostId[] = "BomberCatHost-CARD0#";
+
 #include <FlashIAPBlockDevice.h>
 #include <TDBStore.h>
 
@@ -84,9 +87,6 @@ char buf[] = "Hello I'm here Host #";
 
 boolean host_selected = false;
 unsigned long tiempo = 0;
-
-// Create a client ID
-String clientId = "BomberCatHost-CARD00";
 
 // tracks
 const char* tracks = {
@@ -316,10 +316,7 @@ void detectcard() {
 void mifarevisa() {
   
   if(detectCardFlag == false){
-    Serial.println("Mode 1 Read/Writre");
     mode = 1;
-    Serial.print("Mode 1 Read/Write");
-    Serial.println(mode);
     resetMode();
     detectcard();
   }
@@ -512,7 +509,8 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    hostId[19] = HOST + 48;
+    if (client.connect(hostId)) {
       Serial.println(" connected");
       // Once connected, publish an announcement...
       //client.publish("status", "Hello I'm here Host ");
@@ -709,7 +707,8 @@ void get_config(){
   Serial.print("\tHost: ");
   Serial.println(outTopic);
   Serial.print("\tID: ");
-  Serial.println(clientId);
+  Serial.println(hostId);
+  blink(L1, 300, 3);
   
 }
 
