@@ -267,8 +267,13 @@ void detectcard() {
         #endif
 
         if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
-
+          attempts++;
+        if(attempts > 4) {
+          client.publish(outTopic, "N");
+          return;
+        }
           Serial.println("Ooops ... this doesn't seem to be a Mifare Classic card!");
+          blink(L1, 100, 10);
           return;
         }
 
@@ -295,7 +300,13 @@ void detectcard() {
           break;
 
         default:
+          attempts++;
+        if(attempts > 4) {
+          client.publish(outTopic, "N");
+          return;
+        }
           Serial.println(" - Not a valid card");
+          blink(L1, 100, 10);
           break;
       }
       detectCardFlag = true;
