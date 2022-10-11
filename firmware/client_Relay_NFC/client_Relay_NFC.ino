@@ -447,6 +447,7 @@ void setup_wifi() {
       strcpy(pass, arg);
       Serial.print("Second argument was: ");
       Serial.println(pass);
+      flagStore=false;
     }
     else {
       Serial.println("No second argument for pass");

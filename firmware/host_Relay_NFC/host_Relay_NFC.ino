@@ -356,6 +356,7 @@ void setup_wifi() {
       strcpy(pass, arg);
       Serial.print("Second argument was: ");
       Serial.println(pass);
+      flagStore = false;
     }
     else {
       Serial.println("No second argument for pass");
@@ -434,6 +435,7 @@ void setup_mqtt() {
     strcpy(mqtt_server, arg);
     Serial.print("MQTT Server: ");
     Serial.println(mqtt_server);
+    flagStore = false;
   }
   else {
     Serial.println("No arguments for MQTTServer");
