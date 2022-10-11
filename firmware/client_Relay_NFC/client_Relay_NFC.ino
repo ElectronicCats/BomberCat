@@ -606,10 +606,15 @@ void callback(char* topic, byte * payload, unsigned int length) {
         if (j == 0) {
           tracks[0][i] = payload[i];
         }
-        else
+        else {
           tracks[1][i - j] = payload[i + 1];
+          if (payload[i + 1] == '?') {
+          tracks[1][i - j + 1] = NULL;
+          break;
+          }
+        }
       }
-      tracks[1][i-j+1] = NULL;
+      
       Serial.println("TRACKS");
       Serial.println((char *)tracks[0]);
       Serial.println((char *)tracks[1]);
