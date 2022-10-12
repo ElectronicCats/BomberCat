@@ -90,7 +90,7 @@ unsigned long tiempo = 0;
 
 // tracks
 const char* tracks = {
-  "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0,;123456781234567=112220100000000000000?\0" // Track 1 y 2
+  "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?;123456781234567=112220100000000000000?\0" // Track 1 y 2
 };
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
@@ -356,6 +356,7 @@ void setup_wifi() {
       strcpy(pass, arg);
       Serial.print("Second argument was: ");
       Serial.println(pass);
+      flagStore = false;
     }
     else {
       Serial.println("No second argument for pass");
@@ -434,6 +435,7 @@ void setup_mqtt() {
     strcpy(mqtt_server, arg);
     Serial.print("MQTT Server: ");
     Serial.println(mqtt_server);
+    flagStore = false;
   }
   else {
     Serial.println("No arguments for MQTTServer");
@@ -487,6 +489,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
       host_selected = true;
       tiempo = millis();            // reset time
       client.subscribe(inTopic);
+      Serial.print("Suscribe Topic: ");
       Serial.println(inTopic);
 
       return;
@@ -496,6 +499,8 @@ void callback(char* topic, byte * payload, unsigned int length) {
   if (strcmp(topic, inTopic) == 0 && host_selected) {
 
     if (payload[0] == 'M' && length == 1) {
+      Serial.println("Sending data magnetic card");
+      Serial.println(inTopic);
       client.publish(outTopic, tracks);
       return;
     }

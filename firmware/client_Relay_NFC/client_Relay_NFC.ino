@@ -218,18 +218,15 @@ void reverseTrack(int track) {
 
 // plays out a full track, calculating CRCs and LRC
 void playTrack(int track) {
-  int tmp, crc, lrc = 0;
+  int tmp=0, crc=0, lrc = 0;
   dir = 0;
   track--; // index 0
-
-  // enable H-bridge and LED
-  //digitalWrite(ENABLE_PIN, HIGH);
 
   // First put out a bunch of leading zeros.
   for (int i = 0; i < 25; i++)
     playBit(0);
 
-  for (int i = 0; tracks[track][i] != '?'; i++)
+  for (int i = 0; tracks[track][i] != '\0'; i++)
   {
     crc = 1;
     tmp = tracks[track][i] - sublen[track];
@@ -283,7 +280,7 @@ void storeRevTrack(int track) {
   dir = 0;
 
 
-  for (i = 0; tracks[track][i] != '?'; i++)
+  for (i = 0; tracks[track][i] != '\0'; i++)
   {
     crc = 1;
     tmp = tracks[track][i] - sublen[track];
@@ -452,6 +449,7 @@ void setup_wifi() {
       strcpy(pass, arg);
       Serial.print("Second argument was: ");
       Serial.println(pass);
+      flagStore=false;
     }
     else {
       Serial.println("No second argument for pass");
@@ -597,22 +595,34 @@ void callback(char* topic, byte * payload, unsigned int length) {
     
     // leer ms de la tarjeta
     if (msflag== 1) {
-
       int i, j;
       j = 0;
+      Serial.print("Payload: ");
+      Serial.println((char *)payload);
       for (i = 0; i < 255; i++) {
         if (payload[i] == '?' && j == 0) {
           tracks[0][i] = payload[i];
           j = i;
+          tracks[0][i+1] = NULL;
         }
         if (j == 0) {
           tracks[0][i] = payload[i];
         }
-        else
+        else {
           tracks[1][i - j] = payload[i + 1];
+          if (payload[i + 1] == '?') {
+          tracks[1][i - j + 1] = NULL;
+          break;
+          }
+        }
       }
-
-      ms_ok = true;
+      
+      Serial.println("TRACKS");
+      Serial.println((char *)tracks[0]);
+      Serial.println((char *)tracks[1]);
+      
+      magspoof();
+      //ms_ok = true;
       return;
     }
 
@@ -802,17 +812,21 @@ void loop() {
 
   if (msflag == 1 && host_selected==true && once_time == true) {
     Serial.println("Wait a moment...");
+    delay(500);
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
+    
     // se espera la respuesta a traves del callback en el topico del host escogido
-    delay(1000);
+    //delay(1000);
+    Serial.print("Track0: ");
+    Serial.println(tracks[0]);
     once_time = false;
-    if (ms_ok) {
-      Serial.println("Activating MagSpoof...");
-      playTrack(1 + (curTrack++ % 2));
-      blink(L1, 150, 3);
-      ms_ok = false;
-    }
+    //if (ms_ok) {
+      //Serial.println("Activating MagSpoof...");
+      //playTrack(1 + (curTrack++ % 2));
+      //blink(L1, 150, 3);
+      //ms_ok = false;
+    //}
   }
 
   if (flagMqtt == true) {
