@@ -83,6 +83,8 @@ boolean flagWifi, flagMqtt, flagStore = false;
 char outTopic[] = "RelayHost#";
 char inTopic[] = "RelayClient#";
 
+char dhost[] = "h#c#";
+
 char buf[] = "Hello I'm here Host #";
 
 boolean host_selected = false;
@@ -672,6 +674,14 @@ void loop() { // Main loop
     Serial.println(mode);
     resetMode();
     client.unsubscribe(inTopic);
+
+    dhost[3] = inTopic[11];
+    dhost[1] = HOST + 48;
+    client.publish("queue", dhost);
+
+    dhost[3] = '#';
+    dhost[1] = '#';
+    
     Serial.println("The host connection is terminated.");
     apdubuffer[0] = NULL;
     apdulen = 0;

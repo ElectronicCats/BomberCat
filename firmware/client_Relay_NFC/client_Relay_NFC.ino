@@ -76,6 +76,8 @@ SketchStats previousStats;
 char outTopic[] = "RelayClient#"; //"RelayClient#";
 char inTopic[] = "RelayHost#";
 
+char shost[] = "c#h#";
+
 char buf[] = "Hello I'm here Client #";
 
 boolean host_selected = false;
@@ -794,12 +796,19 @@ void loop() {
     // RESET host connection
     client.subscribe("hosts");
     host_selected = false;
+
+    // ahora el host se encarga de terminar la conexion
+    
     // poner # para el host que termina la conexion
-    hs[inTopic[9] - 48] = '#';
-    client.publish("hosts", (char*)hs);
+    //hs[inTopic[9] - 48] = '#';
+    //client.publish("hosts", (char*)hs);
+    
     inTopic[9] = '#';
+
+    shost[3] = '#';
+    shost[1] = '#';
+    
     client.unsubscribe(inTopic);
-    once_time = false;
     clean();
     once_time = false;
     flag_read = false;
@@ -858,7 +867,36 @@ void help() {
   Serial.println("..help");
 }
 
-// validar que no haya un host seleccionado
+void select_h(int host) {
+  
+  if(host < 0 || host > 9) {
+    Serial.println("Error setting the host value must be between 0-9");
+    return;
+  }
+  
+  Serial.println(hs);
+  if (hs[host] != '#') {
+    Serial.println("Busy host, try again later.");
+    return;
+  }
+  inTopic[9] = host + 48; // topic host id
+
+  client.subscribe(inTopic);
+  host_selected = true;
+  tiempo = millis();
+  hs[host] = CLIENT + 48;
+ 
+  shost[1] = CLIENT + 48; // publica en queue
+  shost[3] = inTopic[9];
+  client.publish("queue", shost);
+  
+  //client.publish("hosts", (char*)hs);
+  //client.unsubscribe("hosts");
+  Serial.println(inTopic);
+  Serial.print("Host ");
+  Serial.print(host);
+  Serial.println(" ready");
+}
 
 void set_h() {
   char *arg;
@@ -873,165 +911,7 @@ void set_h() {
 
   if (arg != NULL) {
     once_time = true;
-    switch (host) {
-      case 0:
-        Serial.println(hs);
-        if (hs[0] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '0'; // topic host id
-
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[0] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        client.unsubscribe("hosts");
-        Serial.println(inTopic);
-        Serial.println("Host 0 ready");
-        break;
-      case 1:
-        Serial.println(hs);
-        if (hs[1] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '1'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[1] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        client.unsubscribe("hosts");
-        Serial.println(inTopic);
-        Serial.println("Host 1 ready");
-        break;
-      case 2:
-        Serial.println(hs);
-        if (hs[2] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '2'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[2] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 2 ready");
-        break;
-      case 3:
-        Serial.println(hs);
-        if (hs[3] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '3'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[3] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 3 ready");
-        break;
-      case 4:
-        Serial.println(hs);
-        if (hs[4] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '4'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[4] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 4 ready");
-        break;
-      case 5:
-        Serial.println(hs);
-        if (hs[5] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '5'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[5] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 5 ready");
-        break;
-      case 6:
-        Serial.println(hs);
-        if (hs[6] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '6'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[6] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 6 ready");
-        break;
-      case 7:
-        Serial.println(hs);
-        if (hs[7] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '7'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[7] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 7 ready");
-        break;
-      case 8:
-        Serial.println(hs);
-        if (hs[8] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '8'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[8] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 8 ready");
-        break;
-      case 9:
-        Serial.println(hs);
-        if (hs[9] != '#') {
-          Serial.println("Busy host, try again later.");
-          return;
-        }
-        inTopic[9] = '9'; // topic host id
-        client.subscribe(inTopic);
-        host_selected = true;
-        tiempo = millis();
-        hs[9] = CLIENT + 48;
-        client.publish("hosts", (char*)hs);
-        Serial.println(inTopic);
-        Serial.println("Host 9 ready");
-        break;
-
-      default:
-        Serial.println("Error setting the host value must be between 0-9");
-        break;
-    }
+    select_h(host);
   }
   else {
     Serial.println("No argument");
