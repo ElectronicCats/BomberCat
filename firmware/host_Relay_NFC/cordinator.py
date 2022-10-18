@@ -3,10 +3,10 @@ import time
 
 # Initializing a queue
 queue = []
-status = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
 shosts = ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#']
 
-############
+########################################
+
 def on_message(client, userdata, message):
     command = str(message.payload.decode("utf-8"))
     print(str(message.payload.decode("utf-8")))
@@ -16,15 +16,8 @@ def on_message(client, userdata, message):
         # Adding elements to the queue
         queue.append(command)
     
-    # se ha recibido una petición, se guarda en la cola
-    	
-    
-    #if('G' in command):
-    #	client.publish("hosts","########")#publish
-    
-    #print("message topic=",message.topic)
-    #print("message qos =",message.qos)
-    #print("message retain flag=",message.retain)
+    # a request has been received, it is queued
+
 ########################################
 
 broker_address="192.168.1.9"
@@ -43,19 +36,18 @@ while True:
 
     time.sleep(1) # wait
 
-    #print("Saca la cola: ")
-    # se procesan las peticiones
+    # host requests are processed
     while True:
         if queue:
             result = queue.pop(0)
             print(result)
 
             if result[0] == 'c':
-                # se revisa si el host esta ocupado
+                # check if the host is busy
                 if shosts[ord(result[3]) - 48] == '#':
-                    print("Host desocupado")
+                    print("Host vacant")
            
-                    # se actualiza el estatus y se publican mensajes necesarios
+                    # status is updated and required messages are published
  
             
                     shosts[ord(result[3]) - 48] = result[1]
@@ -66,12 +58,10 @@ while True:
                     client.publish("hosts",s)
                 
                 else:
-                    print("Host ocupado")
+                    print("Busy host")
                       
-            elif result[0] == 'h':
-                print("HELL")
-                
-                # se actualiza el estatus y se publican mensajes necesarios
+            elif result[0] == 'h':        
+                # status is updated and required messages are published
             
                 shosts[ord(result[1]) - 48] = '#'
                 s = "".join(shosts)
@@ -82,7 +72,7 @@ while True:
             
         else:
             break
-    #print("Termina")   
+    #print("Finish")   
      
 client.loop_stop() #stop the loop
 
