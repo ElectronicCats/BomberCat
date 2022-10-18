@@ -4,9 +4,9 @@
   by Salvador Mendoza (salmg.net)
   by Andres Sabas
   Date: 17/05/2022
-  
+
   This example demonstrates how to use BomberCat by Electronic Cats
- https://github.com/ElectronicCats/BomberCat
+  https://github.com/ElectronicCats/BomberCat
 
   Development environment specifics:
   IDE: Arduino 1.8.19
@@ -53,7 +53,7 @@ unsigned long myTime2;
 unsigned long result;
 
 // consts get stored in ram as we don't adjust them
-char tracks[128][2];
+char tracks[2][128];
 
 char revTrack[41];
 
@@ -114,38 +114,27 @@ void setup_wifi() {
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  //define the size for the JsonDocument.
-  // Use https://arduinojson.org/v6/assistant to compute the capacity.
-  
-  StaticJsonDocument<128> doc;
-  // StaticJsonDocument<N> allocates memory on the stack, it can be
-  // replaced by DynamicJsonDocument which allocates in the heap.
-  //DynamicJsonDocument doc(128);
-  
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, payload, length);
 
-  // Test if parsing succeeds.
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.f_str());
-    return;
+  int i, j;
+  j = 0;
+  for (i = 0; i < 255; i++) {
+    if (payload[i] == '?' && j == 0) {
+      tracks[0][i] = payload[i];
+      j = i;
+    }
+    if (j == 0) {
+      tracks[0][i] = payload[i];
+      Serial.print("Track1: ");
+      Serial.println(tracks[0]);
+    }
+    else
+      tracks[1][i - j] = payload[i + 1];
+    Serial.print("Track2: ");
+    Serial.println(tracks[1]);
   }
 
-  // Fetch values.
-  char track1 = doc["track1"];
-  char track2 = doc["track2"];
-
-  // Print values.
-//  Serial.print("Track1");
-//  Serial.println(track1);
-//  Serial.print("Track2");
-//  Serial.println(track2);
-
-  tracks[track1 + track2][2];
-  
   magspoof();
-  
+
 }
 void reconnect() {
   // Loop until we're reconnected
@@ -231,9 +220,6 @@ void playTrack(int track) {
   int tmp, crc, lrc = 0;
   dir = 0;
   track--; // index 0
-
-  // enable H-bridge and LED
-  //digitalWrite(ENABLE_PIN, HIGH);
 
   // First put out a bunch of leading zeros.
   for (int i = 0; i < 25; i++)
@@ -332,10 +318,10 @@ void storeRevTrack(int track) {
 }
 
 void magspoof() {
-    Serial.println("Activating MagSpoof...");
-    playTrack(1 + (curTrack++ % 2));
-    blink(L1, 150, 3);
-    delay(400);
+  Serial.println("Activating MagSpoof...");
+  playTrack(1 + (curTrack++ % 2));
+  blink(L1, 150, 3);
+  delay(400);
 }
 
 void loop() {
