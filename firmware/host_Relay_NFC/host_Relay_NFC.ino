@@ -65,6 +65,9 @@ char mqtt_server[] = mqttServ;
 char ssid[255] = SECRET_SSID;        // your network SSID (name)
 char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 
+// tracks
+char tracks[255];
+
 auto result = 0;
 // An example key name for the stats on the store
 const char statsKey[] { "stats" };
@@ -74,6 +77,7 @@ struct SketchStats {
   char ssidStore[255];
   char passwordStore[255];
   char mqttStore[255];
+  char trackStore[255];
 };
 
 // Previous stats
@@ -90,11 +94,6 @@ char buf[] = "Hello I'm here Host #";
 
 boolean host_selected = false;
 unsigned long tiempo = 0;
-
-// tracks
-const char* tracks = {
-  "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?;123456781234567=112220100000000000000?\0" // Track 1 y 2
-};
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -599,6 +598,11 @@ void setup() {
     setup_mqtt();
   }
 
+  if (flagStore == true) {
+    result = getSketchStats(statsKey, &previousStats);
+    strcpy(tracks,previousStats.trackStore);
+  }
+
   outTopic[9] = HOST + 48;
 
   Serial.println(outTopic);
@@ -617,6 +621,7 @@ void setup() {
   SCmd.addCommand("help", help);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
+  SCmd.addCommand("setup_track", setup_track);
   SCmd.addCommand("get_config", get_config);
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
@@ -662,6 +667,7 @@ void help() {
   Serial.println("\tConfiguration commands:");
   Serial.println("\tsetup_wifi");
   Serial.println("\tsetup_mqtt");
+  Serial.println("\tsetup_track");
 
   Serial.println("Monitor commands:");
   Serial.println("\tget_hs");
@@ -684,11 +690,14 @@ void get_config() {
     Serial.println(previousStats.passwordStore);
     Serial.print("\tMQTT Server: ");
     Serial.println(previousStats.mqttStore);
+    Serial.print("\tTracks: ");
+    Serial.println(previousStats.trackStore);
     flagStore = true;
   } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
     Serial.println("No previous data for wifi and mqtt was found.");
     Serial.println("Run setup_wifi command.");
     Serial.println("Run setup_mqtt command.");
+    Serial.println("Run setup_track command.");
   } else {
     Serial.println("Error reading from key-value store.");
   }
@@ -699,6 +708,46 @@ void get_config() {
   Serial.println(hostId);
   blink(L1, 300, 3);
 
+}
+
+void setup_track() {
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) {    // As long as it existed, take it
+    strcpy(tracks, arg);
+    Serial.print("Tracks: ");
+    Serial.println(tracks);
+    flagStore = false;
+  }
+  else {
+    Serial.println("No arguments for Tracks");
+    result = getSketchStats(statsKey, &previousStats);
+    strcpy(tracks, previousStats.trackStore);
+  }
+
+  if (!flagStore) {
+    result = getSketchStats(statsKey, &previousStats);
+
+    strcpy(previousStats.trackStore, tracks);
+
+
+    result = setSketchStats(statsKey, previousStats);
+
+    if (result == MBED_SUCCESS) {
+      Serial.println("Save MQTTSetup in Stats Flash");
+      Serial.print("\tSSID: ");
+      Serial.println(previousStats.ssidStore);
+      Serial.print("\tWiFiPass: ");
+      Serial.println(previousStats.passwordStore);
+      Serial.print("\tMQTT Server: ");
+      Serial.println(previousStats.mqttStore);
+      Serial.print("\tTracks: ");
+      Serial.println(previousStats.trackStore);
+    } else {
+      Serial.println("Error while saving to key-value store");
+      while (true);
+    }
+  }
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
