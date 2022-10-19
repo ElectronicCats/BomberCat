@@ -1,6 +1,7 @@
 /************************************************************
   Example for read NFC card via MQTT version for BomberCat
   by Andres Sabas, Electronic Cats (https://electroniccats.com/)
+  by Raul Vargas
   by Salvador Mendoza (salmg.net)
   Date: 17/05/2022
 
@@ -223,8 +224,6 @@ void seekTrack2() {
   Serial.println("Send data to Card...");
 #endif
   uint8_t apdubuffer[255] = {}, apdulen;
-
-  //blink(L2, 150, 1);
 #ifdef DEBUG
   printData(ppse, commandlarge, 1);
 #endif
@@ -531,7 +530,6 @@ void reconnect() {
     if (client.connect(hostId)) {
       Serial.println(" connected");
       // Once connected, publish an announcement...
-      //client.publish("status", "Hello I'm here Host ");
       buf[20] = HOST + 48;
       client.publish("status", buf);
       // ... and resubscribe
@@ -565,9 +563,6 @@ void setup() {
 #ifdef DEBUG
   while (!Serial);
 #endif
-
-  Serial.print("Mode 1 Read/Writre");
-  Serial.println(mode);
   resetMode();
 
   // Get limits of the the internal flash of the microcontroller
@@ -595,27 +590,7 @@ void setup() {
   if (result != MBED_SUCCESS)
     while (true); // Stop the sketch if an error occurs
 
-  // Get previous run stats from the key-value store
-  Serial.println("Retrieving Sketch Stats");
-  result = getSketchStats(statsKey, &previousStats);
-
-  if (result == MBED_SUCCESS) {
-    Serial.println("Previous Setup Stats WiFi and MQTT");
-    Serial.print("\tSSID: ");
-    Serial.println(previousStats.ssidStore);
-    Serial.print("\tWiFiPass: ");
-    Serial.println(previousStats.passwordStore);
-    Serial.print("\tMQTT Server: ");
-    Serial.println(previousStats.mqttStore);
-    flagStore = true;
-  } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
-    Serial.println("No previous data for wifi and mqtt was found.");
-    Serial.println("Run setup_wifi command.");
-    Serial.println("Run setup_mqtt command.");
-  } else {
-    Serial.println("Error reading from key-value store.");
-    while (true);
-  }
+  get_config();
 
   if (flagStore == true) {
     setup_wifi();
@@ -624,12 +599,10 @@ void setup() {
     setup_mqtt();
   }
 
-  Serial.println("BomberCat, yes Sir!");
-  Serial.println("Host Relay NFC");
-
   outTopic[9] = HOST + 48;
 
   Serial.println(outTopic);
+  
   if (flagMqtt == 1) {
     reconnect();
   }
@@ -652,14 +625,6 @@ void setup() {
 }
 
 void loop() { // Main loop
-
-  /*
-    if (flagMqtt == true) {
-      if (!client.connected()) {
-        reconnect();
-      }
-    }
-  */
   if (flagMqtt == 1) {
     // procesa mensajes MQTT
     client.loop();
@@ -670,8 +635,6 @@ void loop() { // Main loop
     host_selected = false;
     detectCardFlag = false;
     mode = 2;
-    Serial.print("Mode 1 Read/Write");
-    Serial.println(mode);
     resetMode();
     client.unsubscribe(inTopic);
 
