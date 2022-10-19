@@ -321,12 +321,9 @@ void storeRevTrack(int track) {
 }
 
 void magspoof() {
-  //if (digitalRead(MPIN) == 0) {
   Serial.println("Activating MagSpoof...");
   playTrack(1 + (curTrack++ % 2));
   blink(L1, 150, 3);
-  delay(400);
-  // }
 }
 
 void resetMode() { //Reset the configuration mode after each reading
@@ -624,7 +621,6 @@ void callback(char* topic, byte * payload, unsigned int length) {
       Serial.println((char *)tracks[1]);
       
       magspoof();
-      //ms_ok = true;
       return;
     }
 
@@ -821,21 +817,10 @@ void loop() {
 
   if (msflag == 1 && host_selected==true && once_time == true) {
     Serial.println("Wait a moment...");
-    delay(500);
+    delay(1500);
     // publica MS pidiendo la ms al host
     client.publish(outTopic, "M");
-    
-    // se espera la respuesta a traves del callback en el topico del host escogido
-    //delay(1000);
-    Serial.print("Track0: ");
-    Serial.println(tracks[0]);
     once_time = false;
-    //if (ms_ok) {
-      //Serial.println("Activating MagSpoof...");
-      //playTrack(1 + (curTrack++ % 2));
-      //blink(L1, 150, 3);
-      //ms_ok = false;
-    //}
   }
 
   if (flagMqtt == true) {
