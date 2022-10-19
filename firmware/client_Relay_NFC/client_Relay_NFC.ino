@@ -325,6 +325,7 @@ void magspoof() {
   Serial.println("Activating MagSpoof...");
   playTrack(1 + (curTrack++ % 2));
   blink(L1, 150, 3);
+  tiempo = -10000;
 }
 
 void resetMode() { //Reset the configuration mode after each reading

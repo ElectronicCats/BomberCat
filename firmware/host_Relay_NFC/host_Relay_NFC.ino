@@ -503,6 +503,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
       Serial.println("Sending data magnetic card");
       Serial.println(inTopic);
       client.publish(outTopic, tracks);
+      tiempo = -10000;
       return;
     }
 
@@ -631,6 +632,13 @@ void setup() {
   SCmd.addCommand("setup_track", setup_track);
   SCmd.addCommand("get_config", get_config);
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
+
+  dhost[3] = inTopic[11];
+  dhost[1] = HOST + 48;
+  client.publish("queue", dhost);
+
+  dhost[3] = '#';
+  dhost[1] = '#';
 
   // blink to show we started up
   blink(L1, 200, 6);
