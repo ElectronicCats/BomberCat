@@ -602,7 +602,7 @@ void setup() {
   outTopic[9] = HOST + 48;
 
   Serial.println(outTopic);
-  
+
   if (flagMqtt == 1) {
     reconnect();
   }
@@ -644,7 +644,7 @@ void loop() { // Main loop
 
     dhost[3] = '#';
     dhost[1] = '#';
-    
+
     Serial.println("The host connection is terminated.");
     apdubuffer[0] = NULL;
     apdulen = 0;
