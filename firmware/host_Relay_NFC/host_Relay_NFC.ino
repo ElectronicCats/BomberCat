@@ -36,7 +36,7 @@
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define HOST 0
+#define HOST 1
 
 // Create a client ID
 char hostId[] = "BomberCatHost-CARD0#";
@@ -339,31 +339,31 @@ void mifarevisa() {
        WIFI
  *****************/
 void setup_wifi() {
-    char *arg;
-    arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-    if (arg != NULL) {
-      strcpy(ssid, arg);
-      Serial.print("First argument was: ");
-      Serial.println(ssid);
-    }
-    else {
-      Serial.println("No arguments for WiFi");
-    }
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) {
+    strcpy(ssid, arg);
+    Serial.print("First argument was: ");
+    Serial.println(ssid);
+  }
+  else {
+    Serial.println("No arguments for WiFi");
+  }
 
-    arg = SCmd.next();
-    if (arg != NULL) {
-      strcpy(pass, arg);
-      Serial.print("Second argument was: ");
-      Serial.println(pass);
-      flagStore = false;
-    }
-    else {
-      Serial.println("No second argument for pass, get value from store");
-      result = getSketchStats(statsKey, &previousStats);
+  arg = SCmd.next();
+  if (arg != NULL) {
+    strcpy(pass, arg);
+    Serial.print("Second argument was: ");
+    Serial.println(pass);
+    flagStore = false;
+  }
+  else {
+    Serial.println("No second argument for pass, get value from store");
+    result = getSketchStats(statsKey, &previousStats);
 
     strcpy(ssid, previousStats.ssidStore);
     strcpy(pass, previousStats.passwordStore);
-    }
+  }
 
   // We start by connecting to a WiFi network
   Serial.println();
@@ -381,20 +381,25 @@ void setup_wifi() {
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
     Serial.println("Please upgrade the firmware");
   }
-
+  int cont = 0;
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
-
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    if(status == WL_CONNECTED){
+      flagWifi = true;
+    }
+    cont++;
+    if (cont > 5) {
+      break;
+    }
   }
-
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
 
@@ -417,7 +422,7 @@ void setup_wifi() {
       while (true);
     }
   }
-  flagWifi = true;
+  
 }
 
 /*****************
@@ -517,6 +522,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
 }
 // Connect and reconnect to MQTT
 void reconnect() {
+  int cont = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -531,12 +537,17 @@ void reconnect() {
       client.subscribe("hosts");
       Serial.println("Subscribed to the hosts topic");
     } else {
+      cont++;
       Serial.print("failed, rc=");
       Serial.print(client.state());
 
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" try again in 1 seconds");
+      // Wait 1 seconds before retrying
+      delay(1000);
+    }
+    if (cont > 3) {
+      flagMqtt = false;
+      break;
     }
   }
 }
@@ -596,7 +607,7 @@ void setup() {
 
   if (flagStore == true) {
     result = getSketchStats(statsKey, &previousStats);
-    strcpy(tracks,previousStats.trackStore);
+    strcpy(tracks, previousStats.trackStore);
   }
 
   outTopic[9] = HOST + 48;
