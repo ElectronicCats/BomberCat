@@ -432,7 +432,6 @@ void visamsd() {
        WIFI
  *****************/
 void setup_wifi() {
-  if (!flagStore) {
     char *arg;
     arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
     if (arg != NULL) {
@@ -452,15 +451,12 @@ void setup_wifi() {
       flagStore = false;
     }
     else {
-      Serial.println("No second argument for pass");
-    }
-  }
-  else {
-    result = getSketchStats(statsKey, &previousStats);
+      Serial.println("No second argument for pass, get value from store");
+      result = getSketchStats(statsKey, &previousStats);
 
     strcpy(ssid, previousStats.ssidStore);
     strcpy(pass, previousStats.passwordStore);
-  }
+    }
 
   // We start by connecting to a WiFi network
   Serial.println();
