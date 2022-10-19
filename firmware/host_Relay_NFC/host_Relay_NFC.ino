@@ -339,7 +339,6 @@ void mifarevisa() {
        WIFI
  *****************/
 void setup_wifi() {
-  if (!flagStore) {
     char *arg;
     arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
     if (arg != NULL) {
@@ -359,15 +358,12 @@ void setup_wifi() {
       flagStore = false;
     }
     else {
-      Serial.println("No second argument for pass");
-    }
-  }
-  else {
-    result = getSketchStats(statsKey, &previousStats);
+      Serial.println("No second argument for pass, get value from store");
+      result = getSketchStats(statsKey, &previousStats);
 
     strcpy(ssid, previousStats.ssidStore);
     strcpy(pass, previousStats.passwordStore);
-  }
+    }
 
   // We start by connecting to a WiFi network
   Serial.println();
@@ -438,7 +434,7 @@ void setup_mqtt() {
     flagStore = false;
   }
   else {
-    Serial.println("No arguments for MQTTServer");
+    Serial.println("No arguments for MQTTServer, get value from store");
     result = getSketchStats(statsKey, &previousStats);
     strcpy(mqtt_server, previousStats.mqttStore);
   }
@@ -631,12 +627,12 @@ void setup() {
 
 void loop() { // Main loop
   if (flagMqtt == 1) {
-    // procesa mensajes MQTT
+    //MQTT Loop
     client.loop();
   }
 
   if ((millis() - tiempo) > PERIOD && host_selected) {
-    // RESET host connection
+    // Reset host connection
     host_selected = false;
     detectCardFlag = false;
     mode = 2;
