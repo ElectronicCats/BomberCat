@@ -49,7 +49,7 @@ TDBStore store(&blockDevice);
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define CLIENT 1
+#define CLIENT 15
 
 SerialCommand SCmd;
 
@@ -74,15 +74,15 @@ struct SketchStats {
 // Previous stats
 SketchStats previousStats;
 
-char outTopic[] = "RelayClient#"; //"RelayClient#";
-char inTopic[] = "RelayHost#";
+char outTopic[] = "RelayClient##";
+char inTopic[] = "RelayHost##";
 
-char shost[] = "c#h#";
+char shost[] = "c##h##";
 
-char buf[] = "Hello I'm here Client #";
+char buf[] = "Hello I'm here Client ##";
 
 boolean host_selected = false;
-char hs[] = "##########"; // hosts status
+char hs[] = "########################################"; // hosts status
 
 
 boolean ms_ok = false;
@@ -91,7 +91,7 @@ boolean once_time = false;
 unsigned long tiempo = 0;
 
 // Create a random client ID
-char clientId[] = "BomberCatClient-0#";
+char clientId[] = "BomberCatClient-##";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
 
@@ -578,7 +578,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   //Update status Host
   if (strcmp(topic, "hosts") == 0) {
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 40; i++) {
       hs[i] = payload[i];
     }
     return;
@@ -655,11 +655,13 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection... ");
     // Attempt to connect
-    clientId[17] = CLIENT + 48;
+    clientId[16] = CLIENT/10 + 48;
+    clientId[17] = CLIENT%10 + 48;
     if (client.connect(clientId)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      buf[22] = CLIENT + 48;
+      buf[22] = CLIENT/10 + 48;
+      buf[23] = CLIENT%10 + 48;
       client.publish("status", buf);
       client.subscribe("hosts");
     } else {
@@ -746,7 +748,9 @@ void setup() {
   // blink to show we started up
   blink(L1, 300, 5);
 
-  outTopic[11] = CLIENT + 48;
+  outTopic[11] = CLIENT/10 + 48;
+  outTopic[12] = CLIENT%10 + 48;
+  
   Serial.println(outTopic);
 
   if (flagMqtt == 1) {
@@ -785,10 +789,13 @@ void loop() {
     host_selected = false;
 
     inTopic[9] = '#';
+    inTopic[10] = '#';
 
-    shost[3] = '#';
     shost[1] = '#';
-
+    shost[2] = '#';
+    shost[4] = '#';
+    shost[5] = '#';
+    
     client.unsubscribe(inTopic);
     clean();
     once_time = false;
@@ -839,25 +846,33 @@ void help() {
 
 void select_h(int host) {
 
-  if (host < 0 || host > 9) {
+  if (host < 0 || host > 20) {
     Serial.println("Error setting the host value must be between 0-9");
     return;
   }
 
   Serial.println(hs);
-  if (hs[host] != '#') {
+  if (hs[2*host+1] != '#') {
     Serial.println("Busy host, try again later.");
     return;
   }
-  inTopic[9] = host + 48; // topic host id
-
+  
+  inTopic[9] = host/10 + 48; // topic host id
+  inTopic[9] = host%10 + 48;
+  
   client.subscribe(inTopic);
   host_selected = true;
   tiempo = millis();
-  hs[host] = CLIENT + 48;
+  
+  hs[2*host] = CLIENT/10 + 48;
+  hs[2*host+1] = CLIENT%10 + 48;
 
-  shost[1] = CLIENT + 48; // publica en queue
-  shost[3] = inTopic[9];
+  shost[1] = CLIENT/10 + 48; // publica en queue
+  shost[2] = CLIENT%10 + 48;
+  
+  shost[4] = inTopic[9];
+  shost[5] = inTopic[10];
+  
   client.publish("queue", shost);
 
   Serial.println(inTopic);
@@ -895,12 +910,12 @@ void free_h() {
     switch (host) {
       case 0:
         host_selected = false;
-        inTopic[9] = '#';
+        //inTopic[9] = '#';
         Serial.println("Host 1 free");
         break;
       case 1:
         host_selected = false;
-        inTopic[9] = '#';
+        //inTopic[9] = '#';
         Serial.println("Host 2 free");
         break;
 

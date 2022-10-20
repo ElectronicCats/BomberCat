@@ -36,10 +36,10 @@
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define HOST 1
+#define HOST 17
 
 // Create a client ID
-char hostId[] = "BomberCatHost-CARD0#";
+char hostId[] = "BomberCatHost-CARD##";
 
 #include <FlashIAPBlockDevice.h>
 #include <TDBStore.h>
@@ -85,12 +85,12 @@ SketchStats previousStats;
 
 boolean flagWifi, flagMqtt, flagStore = false;
 
-char outTopic[] = "RelayHost#";
-char inTopic[] = "RelayClient#";
+char outTopic[] = "RelayHost##";
+char inTopic[] = "RelayClient##";
 
-char dhost[] = "h#c#";
+char dhost[] = "h##c##";
 
-char buf[] = "Hello I'm here Host #";
+char buf[] = "Hello I'm here Host ##";
 
 boolean host_selected = false;
 unsigned long tiempo = 0;
@@ -485,8 +485,9 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   // update host status check if there is a client requesting
   if (strcmp(topic, "hosts") == 0) {
-    if (payload[HOST] != '#') {        // the host is requested
+    if (payload[2*HOST+1] != '#') {        // the host is requested
       inTopic[11] = payload[HOST];     // change client number
+      inTopic[12] = payload[2*HOST+1];
       host_selected = true;
       tiempo = millis();            // reset time
       client.subscribe(inTopic);
@@ -528,11 +529,13 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    hostId[19] = HOST + 48;
+    hostId[18] = HOST/10 + 48;
+    hostId[19] = HOST%10 + 48;
     if (client.connect(hostId)) {
       Serial.println(" connected");
       // Once connected, publish an announcement...
-      buf[20] = HOST + 48;
+      buf[20] = HOST/10 + 48;
+      buf[21] = HOST%10 + 48;
       client.publish("status", buf);
       // ... and resubscribe
       client.subscribe("hosts");
@@ -611,7 +614,8 @@ void setup() {
     strcpy(tracks, previousStats.trackStore);
   }
 
-  outTopic[9] = HOST + 48;
+  outTopic[9] = HOST/10 + 48;
+  outTopic[10] = HOST%10 + 48;
 
   Serial.println(outTopic);
 
@@ -633,12 +637,16 @@ void setup() {
   SCmd.addCommand("get_config", get_config);
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
-  dhost[3] = inTopic[11];
-  dhost[1] = HOST + 48;
+  dhost[4] = inTopic[11];
+  dhost[5] = inTopic[12];
+  dhost[1] = HOST/10 + 48;
+  dhost[2] = HOST%10 + 48;
   client.publish("queue", dhost);
 
-  dhost[3] = '#';
+  dhost[4] = '#';
+  dhost[5] = '#';
   dhost[1] = '#';
+  dhost[2] = '#';
 
   // blink to show we started up
   blink(L1, 200, 6);
@@ -658,12 +666,16 @@ void loop() { // Main loop
     resetMode();
     client.unsubscribe(inTopic);
 
-    dhost[3] = inTopic[11];
-    dhost[1] = HOST + 48;
+    dhost[4] = inTopic[11];
+    dhost[5] = inTopic[12];
+    dhost[1] = HOST/10 + 48;
+    dhost[2] = HOST%10 + 48;
     client.publish("queue", dhost);
-
-    dhost[3] = '#';
+  
+    dhost[4] = '#';
+    dhost[5] = '#';
     dhost[1] = '#';
+    dhost[2] = '#';
 
     Serial.println("The host connection is terminated.");
     apdubuffer[0] = NULL;
