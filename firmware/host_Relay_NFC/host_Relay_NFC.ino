@@ -486,7 +486,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   // update host status check if there is a client requesting
   if (strcmp(topic, "hosts") == 0) {
     if (payload[2*HOST+1] != '#') {        // the host is requested
-      inTopic[11] = payload[HOST];     // change client number
+      inTopic[11] = payload[2*HOST];     // change client number
       inTopic[12] = payload[2*HOST+1];
       host_selected = true;
       tiempo = millis();            // reset time

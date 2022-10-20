@@ -858,7 +858,7 @@ void select_h(int host) {
   }
   
   inTopic[9] = host/10 + 48; // topic host id
-  inTopic[9] = host%10 + 48;
+  inTopic[10] = host%10 + 48;
   
   client.subscribe(inTopic);
   host_selected = true;
