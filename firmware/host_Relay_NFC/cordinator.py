@@ -32,8 +32,7 @@ import time
 
 # Initializing a queue
 queue = []
-shosts = ['#'] * 40 
-
+shosts = ['#'] * 84 # 42 hosts max
 
 ########################################
 
@@ -64,7 +63,7 @@ client.subscribe("queue")
 
 while True:
 
-    time.sleep(1) # wait
+    time.sleep(0.5) # wait
 
     # host requests are processed
     while True:
@@ -75,12 +74,23 @@ while True:
             if result[0] == 'c':
                 # check if the host is busy
                 
+                # check if there is another client instance
+                
+                for i in range(0,len(shosts),2):
+                    #print(shosts[i])
+                    #print(shosts[i+1])
+                    if shosts[i] == result[1] and shosts[i+1] == result[2]:
+                        shosts[i] = '#'
+                        shosts[i+1] = '#'
+                               
+                if ((ord(result[5]) - 48) + (ord(result[4]) - 48)*10) > 41:
+                    continue  
+                
                 if shosts[2*((ord(result[4]) - 48)*10 + ord(result[5]) - 48) + 1] == '#':
                     print("Host vacant")
            
                     # status is updated and required messages are published
                     
- 
                     shosts[2*((ord(result[4]) - 48)*10 + ord(result[5]) - 48) + 1] = result[2]
                     shosts[2*((ord(result[4]) - 48)*10 + ord(result[5]) - 48)] = result[1]
                     s = "".join(shosts)
@@ -91,6 +101,7 @@ while True:
                 
                 else:
                     print("Busy host")
+                    
                       
             elif result[0] == 'h': # release the host        
                 # status is updated and required messages are published
