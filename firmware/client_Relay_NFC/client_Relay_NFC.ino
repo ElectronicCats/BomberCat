@@ -414,6 +414,9 @@ void visamsd() {
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
     // *****************************************************
+    if (flag_send == false) {
+      delay(1500);
+    }
     // Publish messages for host (the host should be subscribed to the topic)
     client.publish(outTopic, Cmd, CmdSize);
 
