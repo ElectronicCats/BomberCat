@@ -266,17 +266,6 @@ void detectcard() {
         printBuf(RfInterface.Info.NFC_APP.NfcId, RfInterface.Info.NFC_APP.NfcIdLen);
 #endif
 
-        if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
-          attempts++;
-          if (attempts > 4) {
-            client.publish(outTopic, "N");
-            return;
-          }
-          Serial.println("Ooops ... this doesn't seem to be a Mifare Classic card!");
-          blink(L1, 100, 10);
-          return;
-        }
-
         if (RfInterface.Info.NFC_APP.SelResLen != 0) {
 #ifdef DEBUG
           Serial.print("\tSEL_RES = ");
