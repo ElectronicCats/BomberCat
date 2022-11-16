@@ -51,6 +51,8 @@ TDBStore store(&blockDevice);
 #define PERIOD 10000
 #define CLIENT 15
 
+#define HMAX 42
+
 SerialCommand SCmd;
 
 float fwVersion = 0.2;
@@ -82,7 +84,7 @@ char shost[] = "c##h##";
 char buf[] = "Hello I'm here Client ##";
 
 boolean host_selected = false;
-char hs[] = "########################################"; // hosts status
+char hs[2*HMAX];// = "####################################################################################"; // hosts status 42 host max
 
 
 boolean ms_ok = false;
@@ -581,7 +583,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
   //Update status Host
   if (strcmp(topic, "hosts") == 0) {
 
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 2*HMAX; i++) {
       hs[i] = payload[i];
     }
     return;
@@ -849,11 +851,6 @@ void help() {
 
 void select_h(int host) {
 
-  if (host < 0 || host > 20) {
-    Serial.println("Error setting the host value must be between 0-9");
-    return;
-  }
-
   Serial.println(hs);
   if (hs[2*host+1] != '#') {
     Serial.println("Busy host, try again later.");
@@ -887,15 +884,23 @@ void select_h(int host) {
 void set_h() {
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-  int host;
-  host = atoi(arg);
-
-  if (host_selected) {
-    Serial.println("Wait for the current process to finish");
-    return;
-  }
 
   if (arg != NULL) {
+
+    int host;
+    host = atoi(arg);
+  
+    if (host_selected) {
+      Serial.println("Wait for the current process to finish");
+      return;
+    }
+    
+    if (host < 0 || host > HMAX) {
+      Serial.print("Error setting the host value must be between 0-");
+      Serial.println(HMAX);
+      return;
+    }
+
     once_time = true;
     select_h(host);
   }
