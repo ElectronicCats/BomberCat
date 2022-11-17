@@ -302,12 +302,25 @@ void detectcard() {
     }
     else {
       Serial.println("No Detect");
+
       attempts++;
       if (attempts > 4) {
         client.publish(outTopic, "N");
         return;
       }
       blink(L1, 100, 10);
+
+      dhost[4] = inTopic[11];
+      dhost[5] = inTopic[12];
+      dhost[1] = HOST / 10 + 48;
+      dhost[2] = HOST % 10 + 48;
+
+      client.publish("queue", dhost);
+
+      dhost[4] = '#';
+      dhost[5] = '#';
+      dhost[1] = '#';
+      dhost[2] = '#';
     }
   }
 }
