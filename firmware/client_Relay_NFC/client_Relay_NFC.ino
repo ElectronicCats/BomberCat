@@ -572,7 +572,31 @@ void setup_mqtt() {
   Serial.println("connected MQTT");
 }
 
+
+void printh(uint8_t n, uint8_t base)
+{
+  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char *str = &buf[sizeof(buf) - 1];
+
+  *str = '\0';
+
+  // prevent crash if called with base == 1
+  if (base < 2) base = 10;
+
+  do {
+    char c = n % base;
+    n /= base;
+
+    *--str = c < 10 ? c + '0' : c + 'A' - 10;
+  } while(n);
+
+  //Serial.write(str);
+  delay(1);
+}
+
+
 void callback(char* topic, byte * payload, unsigned int length) {
+
 #ifdef DEBUG
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -639,10 +663,16 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
     for (int i = 0; i < length; i++) {
       ppsea[i] = payload[i];
+
+      printh(payload[i], HEX);
+      
 #ifdef DEBUG
-      Serial.print(payload[i], HEX);
+      Serial.print(payload[i], HEX);     
 #endif
+
     }
+    
+  
 #ifdef DEBUG
     Serial.println();
 #endif
