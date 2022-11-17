@@ -810,6 +810,16 @@ void setup() {
   SCmd.addCommand("get_config", get_config);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
+
+  shost[1] = CLIENT/10 + 48; // publica en queue
+  shost[2] = CLIENT%10 + 48;
+  
+  shost[4] = inTopic[9];
+  shost[5] = inTopic[10];
+  
+  client.publish("queue", shost);
+
+
 }
 
 // Main loop
