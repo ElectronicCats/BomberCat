@@ -61,6 +61,10 @@ client.loop_start() #start the loop
 print("Subscribing to topic","queue")
 client.subscribe("queue")
 
+s = "".join(shosts)
+print(s)
+client.publish("hosts",s)
+
 while True:
 
     time.sleep(0.5) # wait
@@ -73,6 +77,13 @@ while True:
 
             if result[0] == 'c':
                 # check if the host is busy
+                if result[4] == '#' and result[5] == '#':
+                    print("New client added")
+                    s = "".join(shosts)
+                    print(s)            
+                    client.publish("hosts",s)
+                    continue
+
                 
                 # check if there is another client instance
                 
