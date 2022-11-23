@@ -3,7 +3,7 @@
   by Andres Sabas, Electronic Cats (https://electroniccats.com/)
   by Raul Vargas
   by Salvador Mendoza (salmg.net)
-  Date: 17/05/2022
+  Date: 22/11/2022
 
   This example demonstrates how to use BomberCat by Electronic Cats
 
@@ -23,7 +23,8 @@
   member) at the local, and you've found our code helpful,
   please buy us a round!
   Distributed as-is; no warranty is given.
-  /************************************************************/
+
+************************************************************/
 
 #include "arduino_secrets.h"
 #include <SPI.h>
@@ -49,7 +50,7 @@ TDBStore store(&blockDevice);
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define CLIENT 15
+#define CLIENT 02
 
 #define HMAX 42
 
@@ -80,6 +81,7 @@ char outTopic[] = "RelayClient##";
 char inTopic[] = "RelayHost##";
 
 char shost[] = "c##h##";
+char dhost[] = "h##c##"; 
 
 char buf[] = "Hello I'm here Client ##";
 
@@ -393,6 +395,7 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 void visamsd() {
 
   if (flag_send == true) {
+
 #ifdef DEBUG
     Serial.print("Send:");
     for (int i = 0; i < commandlarge; i++) {
@@ -400,6 +403,7 @@ void visamsd() {
     }
     Serial.println();
 #endif
+
     delay(100);
     nfc.CardModeSend(ppsea, commandlarge);
 
@@ -422,10 +426,10 @@ void visamsd() {
     // Publish messages for host (the host should be subscribed to the topic)
     client.publish(outTopic, Cmd, CmdSize);
 
-
 #ifdef DEBUG
     printData(Cmd, CmdSize, 2);
 #endif
+
     flag_read = true;
     tiempo = millis();
   }
@@ -500,6 +504,7 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.println("OK");
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
 
@@ -516,6 +521,7 @@ void setup_wifi() {
       Serial.println(previousStats.passwordStore);
       Serial.print("\tMQTT Server: ");
       Serial.println(previousStats.mqttStore);
+      Serial.println("OK");
 
     } else {
       Serial.println("Error while saving to key-value store");
@@ -546,6 +552,7 @@ void setup_mqtt() {
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+  Serial.println("OK");
 
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
@@ -563,6 +570,7 @@ void setup_mqtt() {
       Serial.println(previousStats.passwordStore);
       Serial.print("\tMQTT Server: ");
       Serial.println(previousStats.mqttStore);
+      Serial.println("OK");
     } else {
       Serial.println("Error while saving to key-value store");
       while (true);
@@ -628,10 +636,12 @@ void callback(char* topic, byte * payload, unsigned int length) {
     if (msflag == 1) {
       int i, j;
       j = 0;
+           
 #ifdef DEBUG
       Serial.print("Payload: ");
       Serial.println((char *)payload);
 #endif
+
       for (i = 0; i < 255; i++) {
         if (payload[i] == '?' && j == 0) {
           tracks[0][i] = payload[i];
@@ -648,12 +658,14 @@ void callback(char* topic, byte * payload, unsigned int length) {
             break;
           }
         }
-      }
+      }     
+    
 #ifdef DEBUG
       Serial.println("TRACKS");
       Serial.println((char *)tracks[0]);
       Serial.println((char *)tracks[1]);
 #endif
+
 
       magspoof();
       return;
@@ -736,9 +748,11 @@ void clean() {
 void setup() {
 
   Serial.begin(9600);
+  
 #ifdef DEBUG
   while (!Serial);
 #endif
+
   pinMode(L1, OUTPUT);
   pinMode(PIN_A, OUTPUT);
   pinMode(PIN_B, OUTPUT);
@@ -804,22 +818,18 @@ void setup() {
   SCmd.addCommand("free_h", free_h);
   SCmd.addCommand("mode_nfc", mode_nfc);
   SCmd.addCommand("mode_ms", mode_ms);
-  SCmd.addCommand("get_hs", get_hs);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
   SCmd.addCommand("get_config", get_config);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
-  shost[1] = CLIENT/10 + 48; // publica en queue
+  shost[1] = CLIENT/10 + 48; // publish on queue
   shost[2] = CLIENT%10 + 48;
-  
-  shost[4] = inTopic[9];
-  shost[5] = inTopic[10];
-  
   client.publish("queue", shost);
-
-
+  
+  dhost[4] = CLIENT/10 + 48;
+  dhost[5] = CLIENT%10 + 48;
 }
 
 // Main loop
@@ -884,7 +894,6 @@ void help() {
   Serial.println("\tsetup_mqtt");
 
   Serial.println("Monitor commands:");
-  Serial.println("\tget_hs");
   Serial.println("\tget_config");
   Serial.println("..help");
 }
@@ -907,7 +916,7 @@ void select_h(int host) {
   hs[2*host] = CLIENT/10 + 48;
   hs[2*host+1] = CLIENT%10 + 48;
 
-  shost[1] = CLIENT/10 + 48; // publica en queue
+  shost[1] = CLIENT/10 + 48; // to publish on queue
   shost[2] = CLIENT%10 + 48;
   
   shost[4] = inTopic[9];
@@ -919,6 +928,7 @@ void select_h(int host) {
   Serial.print("Host ");
   Serial.print(host);
   Serial.println(" ready");
+  Serial.println("OK");
 }
 
 void set_h() {
@@ -952,43 +962,47 @@ void set_h() {
 void free_h() {
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-  int host;
-  host = atoi(arg);
-  if (arg != NULL) {
-    switch (host) {
-      case 0:
-        host_selected = false;
-        //inTopic[9] = '#';
-        Serial.println("Host 1 free");
-        break;
-      case 1:
-        host_selected = false;
-        //inTopic[9] = '#';
-        Serial.println("Host 2 free");
-        break;
 
-      default:
-        Serial.println("Error setting the host value must be between 0-9");
-        break;
-    }
+  if (arg != NULL) {
+
+    int host;
+    host = atoi(arg);
+  
+    host_selected = false;
+
+    if (host < 0 || host > HMAX) {
+      Serial.print("Error setting the host value must be between 0-");
+      Serial.println(HMAX);
+      return;
+    } 
+  
+    dhost[1] = inTopic[9];;
+    dhost[2] = inTopic[10];
+    
+    client.publish("queue", dhost);
+  
+    dhost[1] = '#';
+    dhost[2] = '#';
+
+  
+  Serial.println("OK");
+
   }
   else {
     Serial.println("No argument");
-  }
+  }  
 }
 
 void mode_nfc() {
   Serial.print("Mode NFC ");
   msflag = 0;
+  Serial.println("OK");
 }
 
 void mode_ms() {
   Serial.println("\nMode magnetic stripe ");
   msflag = 1;
-}
-
-void get_hs() {
-  Serial.println("\nHosts status: ");
+  Serial.println("OK");
 }
 
 void get_config() {
@@ -1021,6 +1035,7 @@ void get_config() {
   Serial.println(clientId);
   Serial.print("\tMode: ");
   Serial.println(msflag ? "Magnetic Strip" : "NFC");
+  Serial.println("OK");
 
 }
 

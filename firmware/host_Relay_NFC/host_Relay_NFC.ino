@@ -36,7 +36,7 @@
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define HOST 17
+#define HOST 9
 
 // Create a client ID
 char hostId[] = "BomberCatHost-CARD##";
@@ -390,7 +390,7 @@ void setup_wifi() {
     Serial.println(ssid);
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
-    if(status == WL_CONNECTED){
+    if (status == WL_CONNECTED) {
       flagWifi = true;
     }
     cont++;
@@ -402,6 +402,7 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.println("OK");
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
 
@@ -418,13 +419,14 @@ void setup_wifi() {
       Serial.println(previousStats.passwordStore);
       Serial.print("\tMQTT Server: ");
       Serial.println(previousStats.mqttStore);
+      Serial.println("OK");
 
     } else {
       Serial.println("Error while saving to key-value store");
       while (true);
     }
   }
-  
+
 }
 
 /*****************
@@ -450,6 +452,7 @@ void setup_mqtt() {
   Serial.println(mqtt_server);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+  Serial.println("OK");
 
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
@@ -467,6 +470,7 @@ void setup_mqtt() {
       Serial.println(previousStats.passwordStore);
       Serial.print("\tMQTT Server: ");
       Serial.println(previousStats.mqttStore);
+      Serial.println("OK");
     } else {
       Serial.println("Error while saving to key-value store");
       while (true);
@@ -487,9 +491,9 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   // update host status check if there is a client requesting
   if (strcmp(topic, "hosts") == 0) {
-    if (payload[2*HOST+1] != '#') {        // the host is requested
-      inTopic[11] = payload[2*HOST];     // change client number
-      inTopic[12] = payload[2*HOST+1];
+    if (payload[2 * HOST + 1] != '#') {    // the host is requested
+      inTopic[11] = payload[2 * HOST];   // change client number
+      inTopic[12] = payload[2 * HOST + 1];
       host_selected = true;
       tiempo = millis();            // reset time
       client.subscribe(inTopic);
@@ -531,13 +535,13 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    hostId[18] = HOST/10 + 48;
-    hostId[19] = HOST%10 + 48;
+    hostId[18] = HOST / 10 + 48;
+    hostId[19] = HOST % 10 + 48;
     if (client.connect(hostId)) {
       Serial.println(" connected");
       // Once connected, publish an announcement...
-      buf[20] = HOST/10 + 48;
-      buf[21] = HOST%10 + 48;
+      buf[20] = HOST / 10 + 48;
+      buf[21] = HOST % 10 + 48;
       client.publish("status", buf);
       // ... and resubscribe
       client.subscribe("hosts");
@@ -616,8 +620,8 @@ void setup() {
     strcpy(tracks, previousStats.trackStore);
   }
 
-  outTopic[9] = HOST/10 + 48;
-  outTopic[10] = HOST%10 + 48;
+  outTopic[9] = HOST / 10 + 48;
+  outTopic[10] = HOST % 10 + 48;
 
   Serial.println(outTopic);
 
@@ -641,8 +645,8 @@ void setup() {
 
   dhost[4] = inTopic[11];
   dhost[5] = inTopic[12];
-  dhost[1] = HOST/10 + 48;
-  dhost[2] = HOST%10 + 48;
+  dhost[1] = HOST / 10 + 48;
+  dhost[2] = HOST % 10 + 48;
   client.publish("queue", dhost);
 
   dhost[4] = '#';
@@ -670,10 +674,10 @@ void loop() { // Main loop
 
     dhost[4] = inTopic[11];
     dhost[5] = inTopic[12];
-    dhost[1] = HOST/10 + 48;
-    dhost[2] = HOST%10 + 48;
+    dhost[1] = HOST / 10 + 48;
+    dhost[2] = HOST % 10 + 48;
     client.publish("queue", dhost);
-  
+
     dhost[4] = '#';
     dhost[5] = '#';
     dhost[1] = '#';
@@ -699,7 +703,6 @@ void help() {
   Serial.println("\tsetup_track");
 
   Serial.println("Monitor commands:");
-  Serial.println("\tget_hs");
   Serial.println("\tget_config");
   Serial.println("..help");
 }
@@ -721,6 +724,7 @@ void get_config() {
     Serial.println(previousStats.mqttStore);
     Serial.print("\tTracks: ");
     Serial.println(previousStats.trackStore);
+    Serial.println("OK");
     flagStore = true;
   } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
     Serial.println("No previous data for wifi and mqtt was found.");
@@ -741,9 +745,9 @@ void get_config() {
 
 void setup_track() {
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-  if (arg != NULL) {    // As long as it existed, take it
-    strcpy(tracks, arg);
+  arg = SCmd.next();     // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) {     // As long as it existed, take it
+    strcpy(tracks, arg); // Mod arg size in SCmd library for full tracks
     Serial.print("Tracks: ");
     Serial.println(tracks);
     flagStore = false;
@@ -752,6 +756,7 @@ void setup_track() {
     Serial.println("No arguments for Tracks");
     result = getSketchStats(statsKey, &previousStats);
     strcpy(tracks, previousStats.trackStore);
+    Serial.println("OK");
   }
 
   if (!flagStore) {
@@ -772,6 +777,7 @@ void setup_track() {
       Serial.println(previousStats.mqttStore);
       Serial.print("\tTracks: ");
       Serial.println(previousStats.trackStore);
+      Serial.println("OK");
     } else {
       Serial.println("Error while saving to key-value store");
       while (true);

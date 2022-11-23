@@ -4,7 +4,7 @@
 //  by Andres Sabas, Electronic Cats (https://electroniccats.com/)
 //  by Raul Vargas
 //  by Salvador Mendoza (salmg.net)
-//  Date: 19/10/2022
+//  Date: 22/11/2022
 //
 //  This script receives requests from BomberCat clients that want 
 //  to connect to a given BomberCat host, it also takes care of releasing 
@@ -49,7 +49,7 @@ def on_message(client, userdata, message):
 
 ########################################
 
-broker_address="192.168.1.9"
+broker_address=""
 
 print("Creating new instance.")
 client = mqtt.Client("CORDINATOR") #create new instance
