@@ -161,17 +161,26 @@ void resetMode() { //Reset the configuration mode after each reading
   Serial.println("Reset...");
 #endif
   if (nfc.connectNCI()) { //Wake up the board
-    Serial.println("Error while setting up the mode, check connections!");
+    #ifdef DEBUG
+      Serial.println("Error while setting up the mode, check connections!");
+    #endif  
+    Serial.println("ERROR");
     while (1);
   }
 
   if (nfc.ConfigureSettings()) {
-    Serial.println("The Configure Settings failed!");
+    #ifdef DEBUG
+      Serial.println("The Configure Settings failed!");
+    #endif
+    Serial.println("ERROR");  
     while (1);
   }
 
   if (nfc.ConfigMode(mode)) { //Set up the configuration mode
-    Serial.println("The Configure Mode failed!!");
+    #ifdef DEBUG
+      Serial.println("The Configure Mode failed!!");
+    #endif
+    Serial.println("ERROR");  
     while (1);
   }
 
@@ -238,10 +247,12 @@ void seekTrack2() {
 #endif
 
     client.publish(outTopic, apdubuffer, apdulen);
-    tiempo = millis();  // da mas tiempo antes de cerrar la conexión
-  }
+    tiempo = millis();  // more time before close the connection
   else {
-    Serial.println("Error reading the card!");
+    #ifdef DEBUG
+      Serial.println("Error reading the card!");
+    #endif
+    Serial.println("ERROR");  
   }
 }
 
@@ -285,7 +296,9 @@ void detectcard() {
           break;
 
         case PROT_MIFARE:
-          Serial.println(" - Found MIFARE card");
+          #ifdef DEBUG
+            Serial.println(" - Found MIFARE card");
+          #endif  
           break;
 
         default:
@@ -294,14 +307,20 @@ void detectcard() {
             client.publish(outTopic, "N");
             return;
           }
-          Serial.println(" - Not a valid card");
+          #ifdef DEBUG
+           Serial.println(" - Not a valid card");
+          #endif
+          Serial.println("ERROR"); 
           blink(L1, 100, 10);
           break;
       }
       detectCardFlag = true;
     }
     else {
-      Serial.println("No Detect");
+      #ifdef DEBUG
+        Serial.println("No Detect");
+      #endif
+      Serial.println("ERROR");  
 
       attempts++;
       if (attempts > 4) {
@@ -345,22 +364,32 @@ void setup_wifi() {
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {
     strcpy(ssid, arg);
-    Serial.print("First argument was: ");
-    Serial.println(ssid);
+    #ifdef DEBUG
+      Serial.print("First argument was: ");
+      Serial.println(ssid);
+    #endif
+    Serial.println("OK");  
   }
   else {
-    Serial.println("No arguments for WiFi");
+    #ifdef DEBUG
+      Serial.println("No arguments for WiFi");
+    #endif
+    Serial.println("ERROR");  
   }
 
   arg = SCmd.next();
   if (arg != NULL) {
     strcpy(pass, arg);
-    Serial.print("Second argument was: ");
-    Serial.println(pass);
+    #ifdef DEBUG
+      Serial.print("Second argument was: ");
+      Serial.println(pass);
+    #endif
     flagStore = false;
   }
   else {
-    Serial.println("No second argument for pass, get value from store");
+    #ifdef DEBUG
+      Serial.println("No second argument for pass, get value from store");
+    #endif
     result = getSketchStats(statsKey, &previousStats);
 
     strcpy(ssid, previousStats.ssidStore);
@@ -368,26 +397,36 @@ void setup_wifi() {
   }
 
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  #ifdef DEBUG
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+  #endif  
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
+    #ifdef DEBUG
+      Serial.println("Communication with WiFi module failed!");
+    #endif
+    Serial.println("ERROR");  
     // don't continue
     while (true);
   }
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
+    #ifdef DEBUG
+      Serial.println("Please upgrade the firmware");
+    #endif
+    Serial.println("ERROR");  
   }
   int cont = 0;
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
+    #ifdef DEBUG
+      Serial.print("Attempting to connect to SSID: ");
+      Serial.println(ssid);
+    #endif  
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
     if (status == WL_CONNECTED) {
@@ -398,10 +437,12 @@ void setup_wifi() {
       break;
     }
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  #ifdef DEBUG
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  #endif  
   Serial.println("OK");
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
@@ -412,17 +453,22 @@ void setup_wifi() {
     result = setSketchStats(statsKey, previousStats);
 
     if (result == MBED_SUCCESS) {
-      Serial.println("Save WiFiSetup in Stats Flash");
-      Serial.print("\tSSID: ");
-      Serial.println(previousStats.ssidStore);
-      Serial.print("\tWiFiPass: ");
-      Serial.println(previousStats.passwordStore);
-      Serial.print("\tMQTT Server: ");
-      Serial.println(previousStats.mqttStore);
+      #ifdef DEBUG
+        Serial.println("Save WiFiSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+      #endif  
       Serial.println("OK");
 
     } else {
-      Serial.println("Error while saving to key-value store");
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");  
       while (true);
     }
   }
@@ -438,18 +484,23 @@ void setup_mqtt() {
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {    // As long as it existed, take it
     strcpy(mqtt_server, arg);
-    Serial.print("MQTT Server: ");
-    Serial.println(mqtt_server);
+    #ifdef DEBUG
+      Serial.print("MQTT Server: ");
+      Serial.println(mqtt_server);
+    #endif  
     flagStore = false;
   }
   else {
-    Serial.println("No arguments for MQTTServer, get value from store");
+    #ifdef DEBUG
+      Serial.println("No arguments for MQTTServer, get value from store");
+    #endif  
     result = getSketchStats(statsKey, &previousStats);
     strcpy(mqtt_server, previousStats.mqttStore);
   }
-
-  Serial.print("Connecting MQTT to ");
-  Serial.println(mqtt_server);
+  #ifdef DEBUG
+    Serial.print("Connecting MQTT to ");
+    Serial.println(mqtt_server);
+  #endif  
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   Serial.println("OK");
@@ -463,21 +514,27 @@ void setup_mqtt() {
     result = setSketchStats(statsKey, previousStats);
 
     if (result == MBED_SUCCESS) {
-      Serial.println("Save MQTTSetup in Stats Flash");
-      Serial.print("\tSSID: ");
-      Serial.println(previousStats.ssidStore);
-      Serial.print("\tWiFiPass: ");
-      Serial.println(previousStats.passwordStore);
-      Serial.print("\tMQTT Server: ");
-      Serial.println(previousStats.mqttStore);
+      #ifdef DEBUG
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+      #endif  
       Serial.println("OK");
     } else {
-      Serial.println("Error while saving to key-value store");
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif  
       while (true);
     }
   }
   flagMqtt = true;
-  Serial.println("connected MQTT");
+  #ifdef DEBUG
+    Serial.println("connected MQTT");
+  #endif  
 }
 
 //Callback MQTT suscribe to inTopic from RelayClient
@@ -497,9 +554,10 @@ void callback(char* topic, byte * payload, unsigned int length) {
       host_selected = true;
       tiempo = millis();            // reset time
       client.subscribe(inTopic);
-      Serial.print("Suscribe Topic: ");
-      Serial.println(inTopic);
-
+      #ifdef DEBUG
+        Serial.print("Suscribe Topic: ");
+        Serial.println(inTopic);
+      #endif  
       return;
     }
   }
@@ -507,8 +565,10 @@ void callback(char* topic, byte * payload, unsigned int length) {
   if (strcmp(topic, inTopic) == 0 && host_selected) {
 
     if (payload[0] == 'M' && length == 1) {
-      Serial.println("Sending data magnetic card");
-      Serial.println(inTopic);
+      #ifdef DEBUG
+        Serial.println("Sending data magnetic card");
+        Serial.println(inTopic);
+      #endif  
       client.publish(outTopic, tracks);
       tiempo = -10000;
       return;
@@ -533,25 +593,33 @@ void reconnect() {
   int cont = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    #ifdef DEBUG
+      Serial.print("Attempting MQTT connection...");
+    #endif  
     // Attempt to connect
     hostId[18] = HOST / 10 + 48;
     hostId[19] = HOST % 10 + 48;
     if (client.connect(hostId)) {
-      Serial.println(" connected");
+      #ifdef DEBUG
+        Serial.println(" connected");
+      #endif  
       // Once connected, publish an announcement...
       buf[20] = HOST / 10 + 48;
       buf[21] = HOST % 10 + 48;
       client.publish("status", buf);
       // ... and resubscribe
       client.subscribe("hosts");
-      Serial.println("Subscribed to the hosts topic");
+      #ifdef DEBUG
+        Serial.println("Subscribed to the hosts topic");
+      #endif  
     } else {
       cont++;
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
+      #ifdef DEBUG
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
 
-      Serial.println(" try again in 1 seconds");
+        Serial.println(" try again in 1 seconds");
+      #endif  
       // Wait 1 seconds before retrying
       delay(1000);
     }
@@ -583,15 +651,16 @@ void setup() {
 
   // Get limits of the the internal flash of the microcontroller
   auto [flashSize, startAddress, iapSize] = getFlashIAPLimits();
-
-  Serial.print("Flash Size: ");
-  Serial.print(flashSize / 1024.0 / 1024.0);
-  Serial.println(" MB");
-  Serial.print("FlashIAP Start Address: 0x");
-  Serial.println(startAddress, HEX);
-  Serial.print("FlashIAP Size: ");
-  Serial.print(iapSize / 1024.0 / 1024.0);
-  Serial.println(" MB");
+  #ifdef DEBUG
+    Serial.print("Flash Size: ");
+    Serial.print(flashSize / 1024.0 / 1024.0);
+    Serial.println(" MB");
+    Serial.print("FlashIAP Start Address: 0x");
+    Serial.println(startAddress, HEX);
+    Serial.print("FlashIAP Size: ");
+    Serial.print(iapSize / 1024.0 / 1024.0);
+    Serial.println(" MB");
+  #endif  
 
   // Create a block device on the available space of the flash
   FlashIAPBlockDevice blockDevice(startAddress, iapSize);
@@ -600,9 +669,13 @@ void setup() {
   blockDevice.init();
 
   // Initialize the key-value store
-  Serial.print("Initializing TDBStore: ");
+  #ifdef DEBUG
+    Serial.print("Initializing TDBStore: ");
+  #endif  
   auto result = store.init();
-  Serial.println(result == MBED_SUCCESS ? "OK" : "Failed");
+  #ifdef DEBUG
+    Serial.println(result == MBED_SUCCESS ? "OK" : "Failed");
+  #endif  
   if (result != MBED_SUCCESS)
     while (true); // Stop the sketch if an error occurs
 
@@ -622,19 +695,21 @@ void setup() {
 
   outTopic[9] = HOST / 10 + 48;
   outTopic[10] = HOST % 10 + 48;
-
-  Serial.println(outTopic);
+  #ifdef DEBUG
+    Serial.println(outTopic);
+  #endif  
 
   if (flagMqtt == 1) {
     reconnect();
   }
-
-  Serial.println("BomberCat, yes Sir!");
-  Serial.println("Host Relay NFC");
-  Serial.println("Welcome to the BomberCat CLI " + String(fwVersion, 1) + "v\n");
-  Serial.println("Type help to get the available commands.");
-  Serial.println("Electronic Cats ® 2022");
-
+  #ifdef DEBUG
+    Serial.println("BomberCat, yes Sir!");
+    Serial.println("Host Relay NFC");
+    Serial.println("Welcome to the BomberCat CLI " + String(fwVersion, 1) + "v\n");
+    Serial.println("Type help to get the available commands.");
+    Serial.println("Electronic Cats ® 2022");
+  #endif
+  
   // Setup callbacks for SerialCommand commands
   SCmd.addCommand("help", help);
   SCmd.addCommand("setup_wifi", setup_wifi);
@@ -682,8 +757,10 @@ void loop() { // Main loop
     dhost[5] = '#';
     dhost[1] = '#';
     dhost[2] = '#';
-
-    Serial.println("The host connection is terminated.");
+    
+    #ifdef DEBUG
+      Serial.println("The host connection is terminated.");
+    #endif
     apdubuffer[0] = NULL;
     apdulen = 0;
     reconnect();
@@ -748,12 +825,16 @@ void setup_track() {
   arg = SCmd.next();     // Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {     // As long as it existed, take it
     strcpy(tracks, arg); // Mod arg size in SCmd library for full tracks
-    Serial.print("Tracks: ");
-    Serial.println(tracks);
+    #ifdef DEBUG
+      Serial.print("Tracks: ");
+      Serial.println(tracks);
+    #endif  
     flagStore = false;
   }
   else {
-    Serial.println("No arguments for Tracks");
+    #ifdef DEBUG
+      Serial.println("No arguments for Tracks");
+    #endif  
     result = getSketchStats(statsKey, &previousStats);
     strcpy(tracks, previousStats.trackStore);
     Serial.println("OK");
@@ -768,18 +849,23 @@ void setup_track() {
     result = setSketchStats(statsKey, previousStats);
 
     if (result == MBED_SUCCESS) {
-      Serial.println("Save MQTTSetup in Stats Flash");
-      Serial.print("\tSSID: ");
-      Serial.println(previousStats.ssidStore);
-      Serial.print("\tWiFiPass: ");
-      Serial.println(previousStats.passwordStore);
-      Serial.print("\tMQTT Server: ");
-      Serial.println(previousStats.mqttStore);
-      Serial.print("\tTracks: ");
-      Serial.println(previousStats.trackStore);
+      #ifdef DEBUG
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+        Serial.print("\tTracks: ");
+        Serial.println(previousStats.trackStore);
+      #endif  
       Serial.println("OK");
     } else {
-      Serial.println("Error while saving to key-value store");
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");  
       while (true);
     }
   }
@@ -787,5 +873,8 @@ void setup_track() {
 
 // This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {
-  Serial.println("Command not found, type help to get the valid commands");
+  #ifdef DEBUG
+    Serial.println("Command not found, type help to get the valid commands");
+  #endif
+  Serial.println("ERROR");  
 }

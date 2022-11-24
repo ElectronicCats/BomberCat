@@ -50,7 +50,7 @@ TDBStore store(&blockDevice);
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define CLIENT 02
+#define CLIENT 01
 
 #define HMAX 42
 
@@ -326,26 +326,41 @@ void storeRevTrack(int track) {
 }
 
 void magspoof() {
-  Serial.println("Activating MagSpoof...");
+  #ifdef DEBUG
+    Serial.println("Activating MagSpoof...");
+  #endif
+  
   playTrack(1 + (curTrack++ % 2));
   blink(L1, 150, 3);
   tiempo = -10000;
 }
 
 void resetMode() { //Reset the configuration mode after each reading
-  Serial.println("Reset...");
+  #ifdef DEBUG
+    Serial.println("Reset...");
+  #endif
+  
   if (nfc.connectNCI()) { //Wake up the board
-    Serial.println("Error while setting up the mode, check connections!");
+    #ifdef DEBUG
+      Serial.println("Error while setting up the mode, check connections!");
+    #endif
+    Serial.println("ERROR");
     while (1);
   }
 
   if (nfc.ConfigureSettings()) {
-    Serial.println("The Configure Settings failed!");
+    #ifdef DEBUG
+      Serial.println("The Configure Settings failed!");
+    #endif
+    Serial.println("ERROR");
     while (1);
   }
 
   if (nfc.ConfigMode(mode)) { //Set up the configuration mode
-    Serial.println("The Configure Mode failed!!");
+    #ifdef DEBUG
+      Serial.println("The Configure Mode failed!!");
+    #endif
+    Serial.println("ERROR");
     while (1);
   }
 
@@ -446,22 +461,35 @@ void setup_wifi() {
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {
     strcpy(ssid, arg);
-    Serial.print("First argument was: ");
+    
+    #ifdef DEBUG
+      Serial.print("First argument was: ");
+    #endif
+      
     Serial.println(ssid);
   }
   else {
-    Serial.println("No arguments for WiFi");
+    #ifdef DEBUG
+      Serial.println("No arguments for WiFi");
+    #endif  
   }
 
   arg = SCmd.next();
   if (arg != NULL) {
     strcpy(pass, arg);
-    Serial.print("Second argument was: ");
-    Serial.println(pass);
+    
+    #ifdef DEBUG    
+      Serial.print("Second argument was: ");
+      Serial.println(pass);
+    #endif
+    
     flagStore = false;
   }
   else {
-    Serial.println("No second argument for pass, get value from store");
+    
+    #ifdef DEBUG     
+      Serial.println("No second argument for pass, get value from store");
+    #endif  
     result = getSketchStats(statsKey, &previousStats);
 
     strcpy(ssid, previousStats.ssidStore);
@@ -469,27 +497,39 @@ void setup_wifi() {
   }
 
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
+    #ifdef DEBUG    
+      Serial.println();
+      Serial.print("Connecting to ");
+      Serial.println(ssid);
+    #endif 
+    
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
+    #ifdef DEBUG     
+      Serial.println("Communication with WiFi module failed!");
+    #endif
+    Serial.println("ERROR");
+      
     // don't continue
     while (true);
   }
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
+    #ifdef DEBUG  
+      Serial.println("Please upgrade the firmware");
+    #endif  
   }
 
   int cont = 0;
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
+    
+    #ifdef DEBUG
+      Serial.print("Attempting to connect to SSID: ");
+      Serial.println(ssid);
+    #endif
+      
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
     if(status == WL_CONNECTED){
@@ -500,11 +540,15 @@ void setup_wifi() {
       break;
     }
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("OK");
+
+  #ifdef DEBUG
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    Serial.println("OK");
+  #endif
+    
   if (!flagStore) {
     result = getSketchStats(statsKey, &previousStats);
 
@@ -514,17 +558,24 @@ void setup_wifi() {
     result = setSketchStats(statsKey, previousStats);
 
     if (result == MBED_SUCCESS) {
-      Serial.println("Save WiFiSetup in Stats Flash");
-      Serial.print("\tSSID: ");
-      Serial.println(previousStats.ssidStore);
-      Serial.print("\tWiFiPass: ");
-      Serial.println(previousStats.passwordStore);
-      Serial.print("\tMQTT Server: ");
-      Serial.println(previousStats.mqttStore);
-      Serial.println("OK");
+
+      #ifdef DEBUG
+        Serial.println("Save WiFiSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+      #endif
+        Serial.println("OK");
 
     } else {
-      Serial.println("Error while saving to key-value store");
+      
+      #ifdef DEBUG      
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");
       while (true);
     }
   }
@@ -539,19 +590,28 @@ void setup_mqtt() {
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {    // As long as it existed, take it
     strcpy(mqtt_server, arg);
-    Serial.print("MQTT Server: ");
-    Serial.println(mqtt_server);
+    
+    #ifdef DEBUG   
+      Serial.print("MQTT Server: ");
+      Serial.println(mqtt_server);
+    #endif
+      
     flagStore = false;
   }
   else {
-    Serial.println("No arguments for MQTTServer, get value from store");
+    #ifdef DEBUG
+      Serial.println("No arguments for MQTTServer, get value from store");
+    #endif  
     result = getSketchStats(statsKey, &previousStats);
     strcpy(mqtt_server, previousStats.mqttStore);
   }
-  Serial.print("Connecting MQTT to ");
-  Serial.println(mqtt_server);
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
+  #ifdef DEBUG
+    Serial.print("Connecting MQTT to ");
+    Serial.println(mqtt_server);
+  #endif     
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);
+ 
   Serial.println("OK");
 
   if (!flagStore) {
@@ -563,21 +623,30 @@ void setup_mqtt() {
     result = setSketchStats(statsKey, previousStats);
 
     if (result == MBED_SUCCESS) {
-      Serial.println("Save MQTTSetup in Stats Flash");
-      Serial.print("\tSSID: ");
-      Serial.println(previousStats.ssidStore);
-      Serial.print("\tWiFiPass: ");
-      Serial.println(previousStats.passwordStore);
-      Serial.print("\tMQTT Server: ");
-      Serial.println(previousStats.mqttStore);
+      
+      #ifdef DEBUG
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+      #endif
+        
       Serial.println("OK");
     } else {
-      Serial.println("Error while saving to key-value store");
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");  
       while (true);
     }
   }
   flagMqtt = true;
-  Serial.println("connected MQTT");
+  #ifdef DEBUG
+    Serial.println("connected MQTT");
+  #endif  
 }
 
 
@@ -624,11 +693,15 @@ void callback(char* topic, byte * payload, unsigned int length) {
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
 
     if (payload[0] == 'N' && length == 1) {
-      Serial.println();
-      Serial.println("****************");
-      Serial.println("Card no detected");
-      Serial.println("****************");
-      Serial.println();
+      
+      #ifdef DEBUG
+        Serial.println();
+        Serial.println("****************");
+        Serial.println("Card no detected");
+        Serial.println("****************");
+        Serial.println();
+      #endif
+        
       return;
     }
 
@@ -700,12 +773,18 @@ void reconnect() {
   setup_mqtt();
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection... ");
+    
+    #ifdef DEBUG
+      Serial.print("Attempting MQTT connection... ");
+    #endif
+      
     // Attempt to connect
     clientId[16] = CLIENT/10 + 48;
     clientId[17] = CLIENT%10 + 48;
     if (client.connect(clientId)) {
-      Serial.println("connected");
+      #ifdef DEBUG
+        Serial.println("connected");
+      #endif  
       // Once connected, publish an announcement...
       buf[22] = CLIENT/10 + 48;
       buf[23] = CLIENT%10 + 48;
@@ -713,9 +792,13 @@ void reconnect() {
       client.subscribe("hosts");
     } else {
       cont++;
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 1 seconds");
+
+      #ifdef DEBUG
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 1 seconds");
+      #endif
+        
       // Wait 1 seconds before retrying
       delay(1000);
     }
@@ -762,15 +845,16 @@ void setup() {
 
   // Get limits of the the internal flash of the microcontroller
   auto [flashSize, startAddress, iapSize] = getFlashIAPLimits();
-
-  Serial.print("Flash Size: ");
-  Serial.print(flashSize / 1024.0 / 1024.0);
-  Serial.println(" MB");
-  Serial.print("FlashIAP Start Address: 0x");
-  Serial.println(startAddress, HEX);
-  Serial.print("FlashIAP Size: ");
-  Serial.print(iapSize / 1024.0 / 1024.0);
-  Serial.println(" MB");
+  #ifdef DEBUG
+    Serial.print("Flash Size: ");
+    Serial.print(flashSize / 1024.0 / 1024.0);
+    Serial.println(" MB");
+    Serial.print("FlashIAP Start Address: 0x");
+    Serial.println(startAddress, HEX);
+    Serial.print("FlashIAP Size: ");
+    Serial.print(iapSize / 1024.0 / 1024.0);
+    Serial.println(" MB");
+  #endif  
 
   // Create a block device on the available space of the flash
   FlashIAPBlockDevice blockDevice(startAddress, iapSize);
@@ -779,9 +863,15 @@ void setup() {
   blockDevice.init();
 
   // Initialize the key-value store
-  Serial.print("Initializing TDBStore: ");
+  #ifdef DEBUG
+    Serial.print("Initializing TDBStore: ");
+  #endif
+    
   auto result = store.init();
-  Serial.println(result == MBED_SUCCESS ? "OK" : "Failed");
+  #ifdef DEBUG
+    Serial.println(result == MBED_SUCCESS ? "OK" : "Failed");
+  #endif
+    
   if (result != MBED_SUCCESS)
     while (true); // Stop the sketch if an error occurs
 
@@ -799,19 +889,23 @@ void setup() {
 
   outTopic[11] = CLIENT/10 + 48;
   outTopic[12] = CLIENT%10 + 48;
-  
-  Serial.println(outTopic);
+
+  #ifdef DEBUG
+    Serial.println(outTopic);
+  #endif  
 
   if (flagMqtt == 1) {
     reconnect();
   }
 
-  Serial.println("BomberCat, yes Sir!");
-  Serial.println("Client Relay NFC");
-  Serial.println("Welcome to the BomberCat CLI " + String(fwVersion, 1) + "v\n");
-  Serial.println("Type help to get the available commands.");
-  Serial.println("Electronic Cats ® 2022");
-
+  #ifdef DEBUG
+    Serial.println("BomberCat, yes Sir!");
+    Serial.println("Client Relay NFC");
+    Serial.println("Welcome to the BomberCat CLI " + String(fwVersion, 1) + "v\n");
+    Serial.println("Type help to get the available commands.");
+    Serial.println("Electronic Cats ® 2022");
+  #endif
+  
   // Setup callbacks for SerialCommand commands
   SCmd.addCommand("help", help);
   SCmd.addCommand("set_h", set_h);
@@ -855,7 +949,9 @@ void loop() {
     clean();
     once_time = false;
     flag_read = false;
-    Serial.println("The host connection is terminated.");
+    #ifdef DEBUG
+      Serial.println("The host connection is terminated.");
+    #endif  
   }
 
   if (flag_read == false && host_selected == true && msflag == 0) {
@@ -863,7 +959,10 @@ void loop() {
   }
 
   if (msflag == 1 && host_selected == true && once_time == true) {
-    Serial.println("Wait a moment...");
+    #ifdef DEBUG
+      Serial.println("Wait a moment...");
+    #endif
+      
     delay(1500);
     // Publish magstripe get data MS from host
     client.publish(outTopic, "M");
@@ -899,10 +998,16 @@ void help() {
 }
 
 void select_h(int host) {
-
-  Serial.println(hs);
+  #ifdef DEBUG
+    Serial.println(hs);
+  #endif
+    
   if (hs[2*host+1] != '#') {
-    Serial.println("Busy host, try again later.");
+    #ifdef DEBUG
+      Serial.println("Busy host, try again later.");
+    #endif
+    
+    Serial.println("ERROR");  
     return;
   }
   
@@ -923,12 +1028,14 @@ void select_h(int host) {
   shost[5] = inTopic[10];
   
   client.publish("queue", shost);
-
-  Serial.println(inTopic);
-  Serial.print("Host ");
-  Serial.print(host);
-  Serial.println(" ready");
-  Serial.println("OK");
+  
+  #ifdef DEBUG
+    Serial.println(inTopic);
+    Serial.print("Host ");
+    Serial.print(host);
+    Serial.println(" ready");
+  #endif 
+  Serial.println("OK"); 
 }
 
 void set_h() {
@@ -941,13 +1048,21 @@ void set_h() {
     host = atoi(arg);
   
     if (host_selected) {
-      Serial.println("Wait for the current process to finish");
+      #ifdef DEBUG
+        Serial.println("Wait for the current process to finish");
+      #endif
+      Serial.println("ERROR");   
       return;
     }
     
-    if (host < 0 || host > HMAX) {
-      Serial.print("Error setting the host value must be between 0-");
+    if (host < 0 || host >= HMAX) {
+      
+      #ifdef DEBUG
+        Serial.print("Error setting the host value must be between 0-");
       Serial.println(HMAX);
+      #endif
+      
+      Serial.println("ERROR");
       return;
     }
 
@@ -955,7 +1070,10 @@ void set_h() {
     select_h(host);
   }
   else {
-    Serial.println("No argument");
+    #ifdef DEBUG
+      Serial.println("No argument");
+    #endif
+    Serial.println("ERROR");  
   }
 }
 
@@ -967,40 +1085,49 @@ void free_h() {
 
     int host;
     host = atoi(arg);
-  
-    host_selected = false;
 
-    if (host < 0 || host > HMAX) {
-      Serial.print("Error setting the host value must be between 0-");
-      Serial.println(HMAX);
+    if (host < 0 || host >= HMAX) {
+      #ifdef DEBUG
+        Serial.print("Error setting the host value must be between 0-");
+        Serial.println(HMAX);
+      #endif
+      Serial.println("ERROR");  
       return;
     } 
   
-    dhost[1] = inTopic[9];;
-    dhost[2] = inTopic[10];
+    dhost[1] = host/10 + 48;
+    dhost[2] = host%10 + 48;
     
     client.publish("queue", dhost);
   
     dhost[1] = '#';
     dhost[2] = '#';
 
-  
-  Serial.println("OK");
+    Serial.println("OK");
 
   }
   else {
-    Serial.println("No argument");
+    #ifdef DEBUG
+      Serial.println("No argument");
+    #endif  
+    Serial.println("ERROR");
   }  
 }
 
 void mode_nfc() {
-  Serial.print("Mode NFC ");
+  #ifdef DEBUG
+    Serial.print("Mode NFC ");
+  #endif
+    
   msflag = 0;
   Serial.println("OK");
 }
 
 void mode_ms() {
-  Serial.println("\nMode magnetic stripe ");
+  #ifdef DEBUG
+    Serial.println("\nMode magnetic stripe ");
+  #endif
+    
   msflag = 1;
   Serial.println("OK");
 }
@@ -1041,5 +1168,8 @@ void get_config() {
 
 // This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {
-  Serial.println("Command not found, type help to get the valid commands");
+  #ifdef DEBUG
+    Serial.println("Command not found, type help to get the valid commands");
+  #endif
+  Serial.println("ERROR");
 }
