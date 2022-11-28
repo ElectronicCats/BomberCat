@@ -245,9 +245,10 @@ void seekTrack2() {
 #ifdef DEBUG
     printData(apdubuffer, apdulen, 4);
 #endif
-
+  
     client.publish(outTopic, apdubuffer, apdulen);
     tiempo = millis();  // more time before close the connection
+    }
   else {
     #ifdef DEBUG
       Serial.println("Error reading the card!");
