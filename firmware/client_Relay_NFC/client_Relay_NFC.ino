@@ -930,7 +930,7 @@ void setup() {
 void loop() {
 
   // Process Comands Serial
-  SCmd.readSerial();
+  SCmd.readSerial(); 
 
   if ((millis() - tiempo) > PERIOD && host_selected == true) {
     // RESET host connection
@@ -983,6 +983,8 @@ void loop() {
 }
 
 void help() {
+  if(host_selected == true)
+    return;
   Serial.println("Fw version: " + String(fwVersion, 1) + "v");
   Serial.println("\tConfiguration commands:");
   Serial.println("\tset_h");
@@ -1039,6 +1041,8 @@ void select_h(int host) {
 }
 
 void set_h() {
+  if(host_selected == true)
+    return;  
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
 
@@ -1077,7 +1081,7 @@ void set_h() {
   }
 }
 
-void free_h() {
+void free_h() { 
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
 
@@ -1115,6 +1119,8 @@ void free_h() {
 }
 
 void mode_nfc() {
+  if(host_selected == true)
+    return;
   #ifdef DEBUG
     Serial.print("Mode NFC ");
   #endif
@@ -1124,6 +1130,8 @@ void mode_nfc() {
 }
 
 void mode_ms() {
+  if(host_selected == true)
+    return;  
   #ifdef DEBUG
     Serial.println("\nMode magnetic stripe ");
   #endif
@@ -1133,6 +1141,8 @@ void mode_ms() {
 }
 
 void get_config() {
+  if(host_selected == true)
+    return;
   Serial.println("\nBomberCat configurations: ");
 
   // Get previous run stats from the key-value store

@@ -3,7 +3,6 @@
 //  Command test script for BomberCat Client/Host
 //  by Andres Sabas, Electronic Cats (https://electroniccats.com/)
 //  by Raul Vargas
-//  by Salvador Mendoza (salmg.net)
 //  Date: 24/11/2022
 //
 //  This script sends serial commands from a list to the BomberCat client.
@@ -27,6 +26,7 @@
 
 import serial
 import time
+import sys
 
 ser = serial.Serial()
 ser.port = '/dev/ttyACM0'
@@ -36,17 +36,12 @@ ser.parity = serial.PARITY_NONE
 ser.stopbits = serial.STOPBITS_ONE
 ser.timeout = 1
 
-cmds = ["set_h 01", "set_h 01", "set_h 01", "help", "free_h 01", "set_h 11", \
-	"mode_ms", "set_h 21", "set_h 21", "mode_ms", "free_h 21", "set_h 21", \
-	"mode_nfc", "free_h 01", "set_01", "mode_ms", "set_h 21", "get_config", \
-	"mode_ms", "mode_ms", "set_h 8", "mode_nfc", "free_h 9", "set_h 9", \
-	"mode_ms", "set_h 44", "set_h a", "get_config", "free_h 21", "free_h 21", \
-	"mode_nfc", "set_h 11", "set_h 1", "help", "free_h 1", "set_h 21", \
-	"mode_ms", "set_h 10", "set_h 21", "mode_nfc", "free_h 10", "set_h 21",
-	"setup_wifi", "set_h 23", "set_h 8", "mode_nfc", "help", "set_h 14", \
-	"mode_nfc", "set_h 1", "set_h 1", "mode_ms", "free_h 21", "set_h 21", \
-	"mode_ms", "set_h 11", "set_h 11", "mode_nfc", "free_h 42", "set_h 37"]
-N = 59
+cmds = ["mode_ms", "set_h ", "get_config", "free_h ", "mode_nfc", \
+	"set_h ", "mode_ms", "free_h "]
+	
+print(sys.argv[1])	
+	
+N = 7
 
 time.sleep(1)
 ser.open()
@@ -55,16 +50,39 @@ e = 0
 
 while True:
 	if ser.is_open:
-		cmd = cmds[e] + '\r\n'
+		cmd = cmds[e]
+		if cmd[3:5] == '_h':
+			cmd = cmd + sys.argv[1]
+			print(cmd)
+		#if cmd[4:6] == '_h':
+		#	cmd = cmd + sys.argv[1]
+			
+		cmd = cmd + '\r\n'	
+			
 
 	if ser.in_waiting == 0:
 		for i in cmd:
 			ser.write(i.encode())
 			time.sleep(0.01)
-    
+
+	while(ser.in_waiting == 0):
+		pass
+		
 	if ser.in_waiting > 0:
 		msg = ser.read(ser.in_waiting)
-		print (msg.decode())
+		cad = msg.decode()
+		
+		if cad[:2] == 'ER':
+			print('ERROR:', end = " ")
+			print(cmds[e], end = " ")
+			print('command could not be executed')
+		
+		elif cad[:2] == 'OK':
+			print("OK")
+					
+		else:
+			print (cad)	
+		
 
 	e = e + 1
 	if e > N:
