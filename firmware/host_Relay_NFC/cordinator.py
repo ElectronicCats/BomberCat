@@ -3,7 +3,6 @@
 //  Cordinator script for BomberCat Client/Host
 //  by Andres Sabas, Electronic Cats (https://electroniccats.com/)
 //  by Raul Vargas
-//  by Salvador Mendoza (salmg.net)
 //  Date: 22/11/2022
 //
 //  This script receives requests from BomberCat clients that want 
@@ -41,7 +40,7 @@ def on_message(client, userdata, message):
     print(str(message.payload.decode("utf-8")))
     
     #print(command[0])
-    if command[0] == 'c' or command[0] == 'h':
+    if command[0] == 'c' or command[0] == 'h' or command[0] == 'u':
         # Adding elements to the queue
         queue.append(command)
     
@@ -49,7 +48,7 @@ def on_message(client, userdata, message):
 
 ########################################
 
-broker_address=""
+broker_address="test.mosquitto.org"
 
 print("Creating new instance.")
 client = mqtt.Client("CORDINATOR") #create new instance
@@ -74,9 +73,16 @@ while True:
         if queue:
             result = queue.pop(0)
             print(result)
-
+            
+            if result[0] == 'u':
+                print('Hosts update')
+                s = "".join(shosts)    
+                print(s)    
+                client.publish("hosts",s)                
+                continue    
+                    
             if result[0] == 'c':
-                # check if the host is busy
+                # new client
                 if result[4] == '#' and result[5] == '#':
                     print("New client added")
                     s = "".join(shosts)
@@ -84,7 +90,7 @@ while True:
                     client.publish("hosts",s)
                     continue
 
-                
+                # check if the host is busy
                 # check if there is another client instance
                 
                 for i in range(0,len(shosts),2):
@@ -112,6 +118,8 @@ while True:
                 
                 else:
                     print("Busy host")
+                    s = 'h' + result[4] + result[5] + '-'
+                    client.publish("status",s)
                     
                       
             elif result[0] == 'h': # release the host        

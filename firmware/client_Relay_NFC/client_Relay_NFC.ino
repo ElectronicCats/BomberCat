@@ -85,12 +85,15 @@ char dhost[] = "h##c##";
 
 char buf[] = "Hello I'm here Client ##";
 
-boolean host_selected = false;
+int host_selected = 0;
 char hs[2*HMAX];// = "####################################################################################"; // hosts status 42 host max
 
 
-boolean ms_ok = false;
-boolean once_time = false;
+int ms_ok = 0;
+int once_time = 0;
+int hu = 0;
+int hr = 0;
+int nhost;
 
 unsigned long tiempo = 0;
 
@@ -138,15 +141,15 @@ int status = WL_IDLE_STATUS;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 
-boolean flagWifi, flagMqtt, flagStore = false;
+int flagWifi, flagMqtt, flagStore = 0;
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;
 
 uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
-boolean flag_send = false;
-boolean flag_read = false;
+int flag_send = 0;
+int flag_read = 0;
 
 unsigned char Cmd[256], CmdSize;
 
@@ -156,7 +159,7 @@ uint8_t commandlarge = 0;
 uint8_t apdubuffer[255] = {}, apdulen;
 uint8_t ppsea[255] = {};
 
-boolean detectCardFlag = false;
+int detectCardFlag = 0;
 
 uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
 
@@ -409,7 +412,7 @@ void printData(uint8_t *buff, uint8_t lenbuffer, uint8_t cmd) {
 //Emulate a Visa MSD
 void visamsd() {
 
-  if (flag_send == true) {
+  if (flag_send == 1) {
 
 #ifdef DEBUG
     Serial.print("Send:");
@@ -426,8 +429,8 @@ void visamsd() {
     printData(ppsea, commandlarge, 3);
 #endif
 
-    flag_send = false;
-    flag_read = false;
+    flag_send = 0;
+    flag_read = 0;
   }
 
   if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
@@ -435,7 +438,7 @@ void visamsd() {
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
     // *****************************************************
-    if (flag_send == false) {
+    if (flag_send == 0) {
       delay(1500);
     }
     // Publish messages for host (the host should be subscribed to the topic)
@@ -445,7 +448,7 @@ void visamsd() {
     printData(Cmd, CmdSize, 2);
 #endif
 
-    flag_read = true;
+    flag_read = 1;
     tiempo = millis();
   }
   for (int i = 0; i < commandlarge; i++) {
@@ -483,7 +486,7 @@ void setup_wifi() {
       Serial.println(pass);
     #endif
     
-    flagStore = false;
+    flagStore = 0;
   }
   else {
     
@@ -511,7 +514,7 @@ void setup_wifi() {
     Serial.println("ERROR");
       
     // don't continue
-    while (true);
+    while (1);
   }
 
   String fv = WiFi.firmwareVersion();
@@ -533,7 +536,7 @@ void setup_wifi() {
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
     if(status == WL_CONNECTED){
-      flagWifi = true;
+      flagWifi = 1;
     }
     cont++;
     if (cont > 5) {
@@ -576,7 +579,7 @@ void setup_wifi() {
         Serial.println("Error while saving to key-value store");
       #endif
       Serial.println("ERROR");
-      while (true);
+      while (1);
     }
   }
 }
@@ -596,7 +599,7 @@ void setup_mqtt() {
       Serial.println(mqtt_server);
     #endif
       
-    flagStore = false;
+    flagStore = 0;
   }
   else {
     #ifdef DEBUG
@@ -640,10 +643,10 @@ void setup_mqtt() {
         Serial.println("Error while saving to key-value store");
       #endif
       Serial.println("ERROR");  
-      while (true);
+      while (1);
     }
   }
-  flagMqtt = true;
+  flagMqtt = 1;
   #ifdef DEBUG
     Serial.println("connected MQTT");
   #endif  
@@ -687,6 +690,10 @@ void callback(char* topic, byte * payload, unsigned int length) {
     for (int i = 0; i < 2*HMAX; i++) {
       hs[i] = payload[i];
     }
+    
+    hu = 1;
+    Serial.println("hu = 1");
+    
     return;
   }
 
@@ -762,7 +769,7 @@ void callback(char* topic, byte * payload, unsigned int length) {
     Serial.println();
 #endif
 
-    flag_send = true;
+    flag_send = 1;
 
     visamsd();
   }
@@ -803,7 +810,7 @@ void reconnect() {
       delay(1000);
     }
     if (cont > 3) {
-      flagMqtt = false;
+      flagMqtt = 0;
       break;
     }
   }
@@ -873,14 +880,14 @@ void setup() {
   #endif
     
   if (result != MBED_SUCCESS)
-    while (true); // Stop the sketch if an error occurs
+    while (1); // Stop the sketch if an error occurs
 
   get_config();
 
-  if (flagStore == true) {
+  if (flagStore == 1) {
     setup_wifi();
   }
-  if ((flagWifi == true) && (flagStore == true)) {
+  if ((flagWifi == 1) && (flagStore == 1)) {
     setup_mqtt();
   }
 
@@ -932,10 +939,12 @@ void loop() {
   // Process Comands Serial
   SCmd.readSerial();
 
-  if ((millis() - tiempo) > PERIOD && host_selected == true) {
+  if ((millis() - tiempo) > PERIOD && host_selected == 1) {
     // RESET host connection
     client.subscribe("hosts");
-    host_selected = false;
+    host_selected = 0;
+    hu = 0;
+    hr = 0;
 
     inTopic[9] = '#';
     inTopic[10] = '#';
@@ -947,18 +956,18 @@ void loop() {
     
     client.unsubscribe(inTopic);
     clean();
-    once_time = false;
-    flag_read = false;
+    once_time = 0;
+    flag_read = 0;
     #ifdef DEBUG
       Serial.println("The host connection is terminated.");
     #endif  
   }
 
-  if (flag_read == false && host_selected == true && msflag == 0) {
+  if (flag_read == 0 && host_selected == 1 && msflag == 0) {
     visamsd();
   }
 
-  if (msflag == 1 && host_selected == true && once_time == true) {
+  if (msflag == 1 && host_selected == 1 && once_time == 1) {
     #ifdef DEBUG
       Serial.println("Wait a moment...");
     #endif
@@ -966,17 +975,20 @@ void loop() {
     delay(1500);
     // Publish magstripe get data MS from host
     client.publish(outTopic, "M");
-    once_time = false;
+    once_time = 0;
+    hu = 0;
+    hr = 0;
   }
 
-  if (flagMqtt == true) {
+  if (flagMqtt == 1) {
     if (!client.connected()) {
       reconnect();
     }
   }
 
-  if (flagMqtt == true) {
+  if (flagMqtt == 1) {
     // Loop MQTT
+    checkhostsupdate();
     client.loop();
   }
 
@@ -997,11 +1009,21 @@ void help() {
   Serial.println("..help");
 }
 
+
+void checkhostsupdate() { 
+    if(hu && hr) {
+      select_h(nhost);
+      hr = 0; 
+    }    
+}
+
 void select_h(int host) {
   #ifdef DEBUG
     Serial.println(hs);
   #endif
-    
+
+  Serial.println("Entra en select_h ");  
+  
   if (hs[2*host+1] != '#') {
     #ifdef DEBUG
       Serial.println("Busy host, try again later.");
@@ -1011,23 +1033,24 @@ void select_h(int host) {
     return;
   }
   
-  inTopic[9] = host/10 + 48; // topic host id
-  inTopic[10] = host%10 + 48;
+//  inTopic[9] = host/10 + 48; // topic host id
+//  inTopic[10] = host%10 + 48;
   
   client.subscribe(inTopic);
-  host_selected = true;
+  host_selected = 1;
+  hu = 0;
   tiempo = millis();
   
   hs[2*host] = CLIENT/10 + 48;
   hs[2*host+1] = CLIENT%10 + 48;
-
-  shost[1] = CLIENT/10 + 48; // to publish on queue
-  shost[2] = CLIENT%10 + 48;
-  
-  shost[4] = inTopic[9];
-  shost[5] = inTopic[10];
-  
-  client.publish("queue", shost);
+//
+//  shost[1] = CLIENT/10 + 48; // to publish on queue
+//  shost[2] = CLIENT%10 + 48;
+//  
+//  shost[4] = inTopic[9];
+//  shost[5] = inTopic[10];
+//  
+//  client.publish("queue", shost);
   
   #ifdef DEBUG
     Serial.println(inTopic);
@@ -1041,6 +1064,8 @@ void select_h(int host) {
 void set_h() {
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+
+  Serial.println("Entra en set_h");
 
   if (arg != NULL) {
 
@@ -1066,8 +1091,23 @@ void set_h() {
       return;
     }
 
-    once_time = true;
-    select_h(host);
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++         // request to cordinator
+    inTopic[9] = host/10 + 48; // topic host id
+    inTopic[10] = host%10 + 48;
+  
+    shost[1] = CLIENT/10 + 48; // to publish on queue
+    shost[2] = CLIENT%10 + 48;
+    
+    shost[4] = inTopic[9];
+    shost[5] = inTopic[10];
+    
+    client.publish("queue", shost);
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    once_time = 1;
+    nhost =  host;
+    hr = 1;
+    //select_h(host);
   }
   else {
     #ifdef DEBUG
@@ -1147,7 +1187,7 @@ void get_config() {
     Serial.println(previousStats.passwordStore);
     Serial.print("\tMQTT Server: ");
     Serial.println(previousStats.mqttStore);
-    flagStore = true;
+    flagStore = 1;
   } else if (result == MBED_ERROR_ITEM_NOT_FOUND) {
     Serial.println("No previous data for wifi and mqtt was found.");
     Serial.println("Run setup_wifi command.");
