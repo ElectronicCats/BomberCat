@@ -36,12 +36,12 @@ ser.parity = serial.PARITY_NONE
 ser.stopbits = serial.STOPBITS_ONE
 ser.timeout = 1
 
-cmds = ["mode_ms", "set_h ", "get_config", "free_h ", "mode_nfc", \
-	"set_h ", "mode_ms", "free_h "]
+cmds = ["mode_ms", "set_h ", "get_config", "mode_ms", \
+	"set_h ", "mode_ms"]
 	
 print(sys.argv[1])	
 	
-N = 7
+N = 5
 
 time.sleep(1)
 ser.open()
@@ -63,10 +63,12 @@ while True:
 	if ser.in_waiting == 0:
 		for i in cmd:
 			ser.write(i.encode())
-			time.sleep(0.01)
+			time.sleep(0.001)
 
 	while(ser.in_waiting == 0):
 		pass
+		
+	time.sleep(0.01)
 		
 	if ser.in_waiting > 0:
 		msg = ser.read(ser.in_waiting)
@@ -89,6 +91,6 @@ while True:
 		e = 0
             
 	ser.flush()
-	time.sleep(1)
+	time.sleep(5)
 
 ser.close()

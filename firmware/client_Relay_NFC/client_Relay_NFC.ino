@@ -692,7 +692,6 @@ void callback(char* topic, byte * payload, unsigned int length) {
     }
     
     hu = 1;
-    Serial.println("hu = 1");
     
     return;
   }
@@ -1022,9 +1021,7 @@ void checkhostsupdate() {
 void select_h(int host) {
   #ifdef DEBUG
     Serial.println(hs);
-  #endif
-
-  Serial.println("Entra en select_h ");  
+  #endif 
   
   if (hs[2*host+1] != '#') {
     #ifdef DEBUG
@@ -1068,8 +1065,6 @@ void set_h() {
     return;  
   char *arg;
   arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-
-  Serial.println("Entra en set_h");
 
   if (arg != NULL) {
 
