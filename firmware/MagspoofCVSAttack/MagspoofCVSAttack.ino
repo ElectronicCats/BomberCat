@@ -41,10 +41,8 @@
 #define TRACKS (2)
 
 // consts get stored in flash as we don't adjust them
-char* tracks[] = {
-  "", // Track 1
-  "" // Track 2
-};
+// consts get stored in ram as we don't adjust them
+char tracks[2][128];
 
 char revTrack[41];
 
@@ -267,21 +265,29 @@ void setup() {
       Serial.println();
       int i,j;
       j = 0;
-      for(i = 0; i < 255; i++) {
-          if(buf[i] == '?' && j == 0) {
-              tracks[0][i] = buf[i];
-              j = i;
+      for (i = 0; i < 255; i++) {
+        if (buf[i] == '?' && j == 0) {
+          tracks[0][i] = buf[i];
+          j = i;
+          tracks[0][i + 1] = NULL;
+        }
+        if (j == 0) {
+          tracks[0][i] = buf[i];
+        }
+        else {
+          tracks[1][i - j] = buf[i + 1];
+          if (buf[i + 1] == '?') {
+            tracks[1][i - j + 1] = NULL;
+            break;
           }
-          if(j == 0) {
-              tracks[0][i] = buf[i];
-          }
-          else
-              tracks[1][i-j] = buf[i+1];
+        }
       }
-       Serial.print("Track 0: ");
-      Serial.println(tracks[0]);
+      Serial.print("Track 0: ");
+      Serial.write(tracks[0]);
+      Serial.println();
       Serial.print("Track 1: ");
-      Serial.println(tracks[1]);
+      Serial.write(tracks[1]);
+      Serial.println();
       magspoof();
     }
   }

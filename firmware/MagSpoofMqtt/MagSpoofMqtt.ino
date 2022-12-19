@@ -118,20 +118,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
   int i, j;
   j = 0;
   for (i = 0; i < 255; i++) {
-    if (payload[i] == '?' && j == 0) {
-      tracks[0][i] = payload[i];
-      j = i;
-    }
-    if (j == 0) {
-      tracks[0][i] = payload[i];
-      Serial.print("Track1: ");
-      Serial.println(tracks[0]);
-    }
-    else
-      tracks[1][i - j] = payload[i + 1];
-    Serial.print("Track2: ");
-    Serial.println(tracks[1]);
-  }
+        if (payload[i] == '?' && j == 0) {
+          tracks[0][i] = payload[i];
+          j = i;
+          tracks[0][i + 1] = NULL;
+        }
+        if (j == 0) {
+          tracks[0][i] = payload[i];
+        }
+        else {
+          tracks[1][i - j] = payload[i + 1];
+          if (payload[i + 1] == '?') {
+            tracks[1][i - j + 1] = NULL;
+            break;
+          }
+        }
+      }
 
   magspoof();
 
