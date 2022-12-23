@@ -28,6 +28,7 @@
 
 import paho.mqtt.client as mqtt #import the client1
 import time
+import sys
 
 # Initializing a queue
 queue = []
@@ -48,12 +49,16 @@ def on_message(client, userdata, message):
 
 ########################################
 
-broker_address="test.mosquitto.org"
+broker_address = "test.mosquitto.org"
+if(len(sys.argv) > 1):
+    broker_address = sys.argv[1]
 
 print("Creating new instance.")
 client = mqtt.Client("CORDINATOR") #create new instance
 client.on_message = on_message #attach function to callback
-print("connecting to broker")
+print("connecting to broker ")
+print(broker_address)
+
 client.connect(broker_address) #connect to broker
 
 client.loop_start() #start the loop
@@ -75,7 +80,6 @@ while True:
             print(result)
             
             if result[0] == 'u':
-                print('Hosts update')
                 s = "".join(shosts)    
                 print(s)    
                 client.publish("hosts",s)                
