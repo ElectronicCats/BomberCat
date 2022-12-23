@@ -80,7 +80,6 @@ while True:
             print(result)
             
             if result[0] == 'u':
-                print('HELL')
                 s = "".join(shosts)    
                 print(s)    
                 client.publish("hosts",s)                
