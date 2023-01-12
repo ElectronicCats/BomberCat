@@ -432,7 +432,7 @@ void setup_wifi() {
       flagWifi = 1;
     }
     cont++;
-    if (cont > 5) {
+    if (cont > 2) {
       break;
     }
   }
@@ -621,7 +621,7 @@ void reconnect() {
       // Wait 1 seconds before retrying
       delay(1000);
     }
-    if (cont > 3) {
+    if (cont > 1) {
       flagMqtt = 0;
       break;
     }
