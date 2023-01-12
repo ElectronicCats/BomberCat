@@ -542,7 +542,7 @@ void setup_wifi() {
       flagWifi = 1;
     }
     cont++;
-    if (cont > 5) {
+    if (cont > 2) {
       break;
     }
   }
