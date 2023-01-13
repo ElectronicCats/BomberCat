@@ -50,7 +50,7 @@ TDBStore store(&blockDevice);
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define CLIENT 23
+#define CLIENT 0
 
 #define HMAX 42
 
@@ -62,6 +62,7 @@ float fwVersion = 0.2;
 char mqtt_server[] = mqttServ;
 char ssid[255] = SECRET_SSID;        // your network SSID (name)
 char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
+int nclient;
 
 auto result = 0;
 // An example key name for the stats on the store
@@ -72,6 +73,7 @@ struct SketchStats {
   char ssidStore[255];
   char passwordStore[255];
   char mqttStore[255];
+  int nclientStore;
 };
 
 // Previous stats
@@ -87,7 +89,6 @@ char buf[] = "Hello I'm here Client ##";
 
 int host_selected = 0;
 char hs[2*HMAX];// = "####################################################################################"; // hosts status 42 host max
-
 
 int ms_ok = 0;
 int once_time = 0;
@@ -457,6 +458,91 @@ void visamsd() {
   }
 }
 
+void set_n(){
+
+  //nclient = CLIENT;
+  
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) { // && !rf) {    // As long as it existed, take it
+  
+    nclient = atoi(arg);
+
+    if (nclient < 0 || nclient >= HMAX) {
+      
+      #ifdef DEBUG
+        Serial.print("Error setting the client number must be between 0-");
+      Serial.println(HMAX);
+      #endif
+      
+      Serial.println("ERROR");
+      return;
+    }    
+ 
+    #ifdef DEBUG   
+      Serial.print("Client: ");
+      Serial.println(nclient);
+    #endif
+      
+    flagStore = 0;
+  }
+  else {
+    #ifdef DEBUG
+      Serial.println("No arguments for client number, get value from store");
+    #endif 
+    flagStore = 1; 
+    result = getSketchStats(statsKey, &previousStats);
+    nclient = previousStats.nclientStore;
+  }
+  #ifdef DEBUG
+    Serial.print("Client: ");
+    Serial.println(nclient);
+  #endif     
+
+  if (flagStore == 0) {
+    result = getSketchStats(statsKey, &previousStats);
+
+    previousStats.nclientStore = nclient;
+
+
+    result = setSketchStats(statsKey, previousStats);
+
+    if (result == MBED_SUCCESS) {
+      
+      #ifdef DEBUG
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+        Serial.print("\tClient: ");
+        Serial.println(previousStats.nclientStore);
+      #endif
+        
+
+    } else {
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");  
+      while (1);
+    }
+  }
+  
+  Serial.println("OK"); 
+
+   clientId[16] = nclient/10 + 48;
+   clientId[17] = nclient%10 + 48;
+   outTopic[11] = nclient/10 + 48;
+   outTopic[12] = nclient%10 + 48;  
+
+   shost[1] = nclient/10 + 48; // publish on queue
+   shost[2] = nclient%10 + 48;
+   client.publish("queue", shost);  
+}
+
 /*****************
        WIFI
  *****************/
@@ -795,15 +881,15 @@ void reconnect() {
     #endif
       
     // Attempt to connect
-    clientId[16] = CLIENT/10 + 48;
-    clientId[17] = CLIENT%10 + 48;
+    clientId[16] = nclient/10 + 48;
+    clientId[17] = nclient%10 + 48;
     if (client.connect(clientId)) {
       #ifdef DEBUG
         Serial.println("connected");
       #endif  
       // Once connected, publish an announcement...
-      buf[22] = CLIENT/10 + 48;
-      buf[23] = CLIENT%10 + 48;
+      buf[22] = nclient/10 + 48;
+      buf[23] = nclient%10 + 48;
       client.publish("status", buf);
       client.subscribe("hosts");
       
@@ -898,14 +984,15 @@ void setup() {
     setup_wifi();
   }
   if ((flagWifi == 1) && (flagStore == 1)) {
+    set_n();
     setup_mqtt();
   }
 
   // blink to show we started up
   blink(L1, 300, 5);
 
-  outTopic[11] = CLIENT/10 + 48;
-  outTopic[12] = CLIENT%10 + 48;
+  outTopic[11] = nclient/10 + 48;
+  outTopic[12] = nclient%10 + 48;
 
   #ifdef DEBUG
     Serial.println(outTopic);
@@ -929,18 +1016,19 @@ void setup() {
   SCmd.addCommand("free_h", free_h);
   SCmd.addCommand("mode_nfc", mode_nfc);
   SCmd.addCommand("mode_ms", mode_ms);
+  SCmd.addCommand("set_n", set_n);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
   SCmd.addCommand("get_config", get_config);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
 
-  shost[1] = CLIENT/10 + 48; // publish on queue
-  shost[2] = CLIENT%10 + 48;
+  shost[1] = nclient/10 + 48; // publish on queue
+  shost[2] = nclient%10 + 48;
   client.publish("queue", shost);
   
-  dhost[4] = CLIENT/10 + 48;
-  dhost[5] = CLIENT%10 + 48;
+  dhost[4] = nclient/10 + 48;
+  dhost[5] = nclient%10 + 48;
 }
 
 // Main loop
@@ -1009,6 +1097,7 @@ void help() {
     return;
   Serial.println("Fw version: " + String(fwVersion, 1) + "v");
   Serial.println("\tConfiguration commands:");
+  Serial.println("\tset_n");
   Serial.println("\tset_h");
   Serial.println("\tfree_h");
   Serial.println("\tmode_nfc");
@@ -1051,11 +1140,11 @@ void select_h(int host) {
   hostupdate = 0;
   tiempo = millis();
   
-  hs[2*host] = CLIENT/10 + 48;
-  hs[2*host+1] = CLIENT%10 + 48;
+  hs[2*host] = nclient/10 + 48;
+  hs[2*host+1] = nclient%10 + 48;
 //
-//  shost[1] = CLIENT/10 + 48; // to publish on queue
-//  shost[2] = CLIENT%10 + 48;
+//  shost[1] = nclient/10 + 48; // to publish on queue
+//  shost[2] = nclient%10 + 48;
 //  
 //  shost[4] = inTopic[9];
 //  shost[5] = inTopic[10];
@@ -1109,8 +1198,8 @@ void set_h() {
     inTopic[9] = host/10 + 48; // topic host id
     inTopic[10] = host%10 + 48;
   
-    shost[1] = CLIENT/10 + 48; // to publish on queue
-    shost[2] = CLIENT%10 + 48;
+    shost[1] = nclient/10 + 48; // to publish on queue
+    shost[2] = nclient%10 + 48;
     
     shost[4] = inTopic[9];
     shost[5] = inTopic[10];
