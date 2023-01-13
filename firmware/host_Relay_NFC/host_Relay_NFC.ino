@@ -36,7 +36,8 @@
 //#define DEBUG
 #define SERIALCOMMAND_HARDWAREONLY
 #define PERIOD 10000
-#define HOST 9
+#define HOST 0
+#define HMAX 42
 
 // Create a client ID
 char hostId[] = "BomberCatHost-CARD##";
@@ -65,6 +66,8 @@ char mqtt_server[] = mqttServ;
 char ssid[255] = SECRET_SSID;        // your network SSID (name)
 char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 
+int nhost;
+
 // tracks
 char tracks[255];
 
@@ -78,6 +81,7 @@ struct SketchStats {
   char passwordStore[255];
   char mqttStore[255];
   char trackStore[255];
+  int nhostStore;
 };
 
 // Previous stats
@@ -332,8 +336,8 @@ void detectcard() {
 
       dhost[4] = inTopic[11];
       dhost[5] = inTopic[12];
-      dhost[1] = HOST / 10 + 48;
-      dhost[2] = HOST % 10 + 48;
+      dhost[1] = nhost / 10 + 48;
+      dhost[2] = nhost % 10 + 48;
 
       client.publish("queue", dhost);
 
@@ -357,6 +361,100 @@ void mifarevisa() {
     seekTrack2();
   }
 }
+
+void set_n(){
+
+  //nclient = CLIENT;
+  
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) { // && !rf) {    // As long as it existed, take it
+  
+    nhost = atoi(arg);
+
+    if (nhost < 0 || nhost >= HMAX) {
+      
+      #ifdef DEBUG
+        Serial.print("Error setting the host number must be between 0-");
+      Serial.println(HMAX);
+      #endif
+      
+      Serial.println("ERROR");
+      return;
+    }    
+ 
+    #ifdef DEBUG   
+      Serial.print("Host: ");
+      Serial.println(nhost);
+    #endif
+      
+    flagStore = 0;
+  }
+  else {
+    #ifdef DEBUG
+      Serial.println("No arguments for host number, get value from store");
+    #endif 
+    flagStore = 1; 
+    result = getSketchStats(statsKey, &previousStats);
+    nhost = previousStats.nhostStore;
+  }
+  #ifdef DEBUG
+    Serial.print("Host: ");
+    Serial.println(nhost);
+  #endif     
+
+  if (flagStore == 0) {
+    result = getSketchStats(statsKey, &previousStats);
+
+    previousStats.nhostStore = nhost;
+
+
+    result = setSketchStats(statsKey, previousStats);
+
+    if (result == MBED_SUCCESS) {
+      
+      #ifdef DEBUG
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+        Serial.print("\tClient: ");
+        Serial.println(previousStats.nhost);
+      #endif
+        
+
+    } else {
+      #ifdef DEBUG
+        Serial.println("Error while saving to key-value store");
+      #endif
+      Serial.println("ERROR");  
+      while (1);
+    }
+  }
+  
+  Serial.println("OK"); 
+
+   hostId[18] = nhost / 10 + 48;
+   hostId[19] = nhost % 10 + 48;
+   
+   outTopic[9] = nhost / 10 + 48;
+   outTopic[10] = nhost % 10 + 48;  
+
+   dhost[4] = inTopic[11];
+   dhost[5] = inTopic[12];
+   dhost[1] = nhost / 10 + 48;
+   dhost[2] = nhost % 10 + 48;
+   client.publish("queue", dhost);
+
+   dhost[4] = '#';
+   dhost[5] = '#';
+   dhost[1] = '#';
+   dhost[2] = '#';  
+}
+
 /*****************
        WIFI
  *****************/
@@ -546,9 +644,9 @@ void callback(char* topic, byte * payload, unsigned int length) {
 
   // update host status check if there is a client requesting
   if (strcmp(topic, "hosts") == 0) {
-    if (payload[2 * HOST + 1] != '#') {    // the host is requested
-      inTopic[11] = payload[2 * HOST];   // change client number
-      inTopic[12] = payload[2 * HOST + 1];
+    if (payload[2 * nhost + 1] != '#') {    // the host is requested
+      inTopic[11] = payload[2 * nhost];   // change client number
+      inTopic[12] = payload[2 * nhost + 1];
       host_selected = 1;
       tiempo = millis();            // reset time
       client.subscribe(inTopic);
@@ -595,15 +693,15 @@ void reconnect() {
       Serial.print("Attempting MQTT connection...");
     #endif  
     // Attempt to connect
-    hostId[18] = HOST / 10 + 48;
-    hostId[19] = HOST % 10 + 48;
+    hostId[18] = nhost / 10 + 48;
+    hostId[19] = nhost % 10 + 48;
     if (client.connect(hostId)) {
       #ifdef DEBUG
         Serial.println(" connected");
       #endif  
       // Once connected, publish an announcement...
-      buf[20] = HOST / 10 + 48;
-      buf[21] = HOST % 10 + 48;
+      buf[20] = nhost / 10 + 48;
+      buf[21] = nhost % 10 + 48;
       client.publish("status", buf);
       // ... and resubscribe
       client.subscribe("hosts");
@@ -683,6 +781,7 @@ void setup() {
     setup_wifi();
   }
   if ((flagWifi == 1) && (flagStore == 1)) {
+    set_n();
     setup_mqtt();
   }
 
@@ -691,8 +790,8 @@ void setup() {
     strcpy(tracks, previousStats.trackStore);
   }
 
-  outTopic[9] = HOST / 10 + 48;
-  outTopic[10] = HOST % 10 + 48;
+  outTopic[9] = nhost / 10 + 48;
+  outTopic[10] = nhost % 10 + 48;
   #ifdef DEBUG
     Serial.println(outTopic);
   #endif  
@@ -710,6 +809,7 @@ void setup() {
   
   // Setup callbacks for SerialCommand commands
   SCmd.addCommand("help", help);
+  SCmd.addCommand("set_n", set_n);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
   SCmd.addCommand("setup_track", setup_track);
@@ -718,8 +818,8 @@ void setup() {
 
   dhost[4] = inTopic[11];
   dhost[5] = inTopic[12];
-  dhost[1] = HOST / 10 + 48;
-  dhost[2] = HOST % 10 + 48;
+  dhost[1] = nhost / 10 + 48;
+  dhost[2] = nhost % 10 + 48;
   client.publish("queue", dhost);
 
   dhost[4] = '#';
@@ -753,8 +853,8 @@ void loop() { // Main loop
 
     dhost[4] = inTopic[11];
     dhost[5] = inTopic[12];
-    dhost[1] = HOST / 10 + 48;
-    dhost[2] = HOST % 10 + 48;
+    dhost[1] = nhost / 10 + 48;
+    dhost[2] = nhost % 10 + 48;
     client.publish("queue", dhost);
 
     dhost[4] = '#';
@@ -774,6 +874,7 @@ void loop() { // Main loop
 void help() {
   Serial.println("Fw version: " + String(fwVersion, 1) + "v");
   Serial.println("\tConfiguration commands:");
+  Serial.println("\tset_n");
   Serial.println("\tsetup_wifi");
   Serial.println("\tsetup_mqtt");
   Serial.println("\tsetup_track");
