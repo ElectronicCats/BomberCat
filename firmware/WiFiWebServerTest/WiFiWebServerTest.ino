@@ -1,16 +1,17 @@
 /*
   WiFi Web Server with Files via USB for BomberCat
 
- This example is written for a network using WPA encryption. For
- WEP or WPA, change the WiFi.begin() call accordingly.
+  This example is written for a network using WPA encryption. For
+  WEP or WPA, change the WiFi.begin() call accordingly.
 
- */
+*/
 #include "PluggableUSBMSD.h"
 #include "FlashIAPBlockDevice.h"
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
-#include "home.h"
+#include "DetectTags.h"
+
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
@@ -19,7 +20,7 @@ int keyIndex = 0;                 // your network key index number (needed only 
 
 int status = WL_IDLE_STATUS;
 
-WiFiServer server(80);
+//WiFiServer server(80);
 
 typedef enum {
   DATA_STORAGE_STATE,
@@ -52,16 +53,16 @@ mbed::FATFileSystem &USBMSD::getFileSystem()
 }
 
 void readContents() {
-    f = fopen(fname, "r");
-    if (f != nullptr) {
-      while (std::fgets(buf, sizeof buf, f) != nullptr)
-        Serial.print(buf);
-      fclose(f);
-      Serial.println("File found");
-    }
-    else {
-      Serial.println("File not found");
-    }  
+  f = fopen(fname, "r");
+  if (f != nullptr) {
+    while (std::fgets(buf, sizeof buf, f) != nullptr)
+      Serial.print(buf);
+    fclose(f);
+    Serial.println("File found");
+  }
+  else {
+    Serial.println("File not found");
+  }
 }
 
 void setup() {
@@ -99,6 +100,7 @@ void setup() {
   printWifiStatus();
 
   //readContents();
+  setupDetectTags;
 }
 
 
@@ -117,8 +119,7 @@ void loop() {
           // if the current line is blank, you got two newline characters in a row.
           // that's the end of the client HTTP request, so send a response:
           if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
+            // calling void home to print the home page.
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println();
@@ -157,10 +158,43 @@ void loop() {
         }
         if (currentLine.endsWith("GET /DT")) {
           //Detect Tags Code
-          
+          if (!nfc.WaitForDiscoveryNotification(&RfInterface)) { // Waiting to detect cards
+            displayCardInfo(RfInterface);
+            switch (RfInterface.Protocol) {
+              case PROT_T1T:
+              case PROT_T2T:
+              case PROT_T3T:
+              case PROT_ISODEP:
+                nfc.ProcessReaderMode(RfInterface, READ_NDEF);
+                break;
+
+              case PROT_ISO15693:
+                break;
+
+              case PROT_MIFARE:
+                nfc.ProcessReaderMode(RfInterface, READ_NDEF);
+                break;
+
+              default:
+                break;
+            }
+
+            //* It can detect multiple cards at the same time if they use the same protocol
+            if (RfInterface.MoreTags) {
+              nfc.ReaderActivateNext(&RfInterface);
+            }
+            //* Wait for card removal
+            nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
+            client.println("CARD REMOVED!");
+
+            nfc.StopDiscovery();
+            nfc.StartDiscovery(mode);
+            
+          ResetMode();
+          delay(500);
         }
         if (currentLine.endsWith("GET /BMC")) {
-          
+
         }
       }
     }
