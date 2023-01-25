@@ -9,7 +9,8 @@
 #include "FlashIAPBlockDevice.h"
 #include <SPI.h>
 #include <WiFiNINA.h>
-#include "arduino_secrets.h" 
+#include "arduino_secrets.h"
+#include "home.h"
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
@@ -102,60 +103,67 @@ void setup() {
 
 
 void loop() {
-  // listen for incoming clients
-  WiFiClient client = server.available();
-  if (client) {
-    Serial.println("new client");
-    // an HTTP request ends with a blank line
-    boolean currentLineIsBlank = true;
-    while (client.connected()) {
-      if (client.available()) {
-        char c = client.read();
-        Serial.write(c);
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the HTTP request has ended,
-        // so you can send a reply
-        if (c == '\n' && currentLineIsBlank) {
-          // send a standard HTTP response header
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-Type: text/html");
-          client.println("Connection: close");  // the connection will be closed after completion of the response
-          //client.println("Refresh: 5");  // refresh the page automatically every 5 sec
-          client.println();
-          //client.println("<!DOCTYPE HTML>");
-          //client.println("<html>");
-           //output the value of each analog input pin
-          /*for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
-            int sensorReading = analogRead(analogChannel);
-            client.print("analog input ");
-            client.print(analogChannel);
-            client.print(" is ");
-            client.print(sensorReading);
-            client.println("<br />");
+  WiFiClient client = server.available();   // listen for incoming clients
+
+  if (client) {                             // if you get a client,
+    Serial.println("new client");           // print a message out the serial port
+    String currentLine = "";                // make a String to hold incoming data from the client
+    while (client.connected()) {            // loop while the client's connected
+      if (client.available()) {             // if there's bytes to read from the client,
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+        if (c == '\n') {                    // if the byte is a newline character
+
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+          if (currentLine.length() == 0) {
+            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+            // and a content-type so the client knows what's coming, then a blank line:
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            client.print("<style>");
+            client.print(".container {margin: 0 auto; text-align: center; margin-top: 100px;}");
+            client.print("button {color: white; width: 100px; height: 100px;");
+            client.print("border-radius: 50%; margin: 20px; border: none; font-size: 20px; outline: none; transition: all 0.2s;}");
+            client.print(".red{background-color: rgb(196, 39, 39);}");
+            client.print(".green{background-color: rgb(39, 121, 39);}");
+            client.print(".blue {background-color: rgb(5, 87, 180);}");
+            client.print("button:hover{cursor: pointer; opacity: 0.7;}");
+            client.print("</style>");
+            client.print("<div class='container'>");
+            client.print("<button class='red' type='submit' onmousedown='location.href=\"/MGS\"'>MGS</button>");
+            client.print("<button class='green' type='submit' onmousedown='location.href=\"/DT\"'>DT</button>");
+            client.print("<button class='blue' type='submit' onmousedown='location.href=\"/BMC\"'>BMC</button>");
+            client.print("</div>");
+
+            // The HTTP response ends with another blank line:
+            client.println();
+            // break out of the while loop:
+            break;
+          } else {    // if you got a newline, then clear currentLine:
+            currentLine = "";
           }
-          */
-          f = fopen(fname, "r");
-          if (f != nullptr) {
-          while (std::fgets(buf, sizeof buf, f) != nullptr)
-            client.write(buf);
-          }
-          fclose(f);
-          //client.write(buf);
-          //client.println("</html>");
-          break;
+        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          currentLine += c;      // add it to the end of the currentLine
         }
-        if (c == '\n') {
-          // you're starting a new line
-          currentLineIsBlank = true;
-        } else if (c != '\r') {
-          // you've gotten a character on the current line
-          currentLineIsBlank = false;
+
+        // Check to see if the client request was /X
+
+        if (currentLine.endsWith("GET /MGS")) {
+          //MagSpoof Code
+        }
+        if (currentLine.endsWith("GET /DT")) {
+          //Detect Tags Code
+          
+        }
+        if (currentLine.endsWith("GET /BMC")) {
+          
         }
       }
     }
-    // give the web browser time to receive the data
-    delay(1);
-
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
