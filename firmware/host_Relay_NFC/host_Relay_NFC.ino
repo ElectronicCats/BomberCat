@@ -835,6 +835,7 @@ if(debug) {
   
   // Setup callbacks for SerialCommand commands
   SCmd.addCommand("help", help);
+  SCmd.addCommand("test_card", test_card);
   SCmd.addCommand("set_n", set_n);
   SCmd.addCommand("set_debug", set_debug);
   SCmd.addCommand("setup_wifi", setup_wifi);
@@ -907,6 +908,7 @@ void help() {
   Serial.println("\tsetup_track");
 
   Serial.println("Monitor commands:");
+  Serial.println("\test_card");
   Serial.println("\tget_config");
   Serial.println("\tset_debug");
   Serial.println("..help");
@@ -995,6 +997,136 @@ void setup_track() {
       while (1);
     }
   }
+}
+
+void test_card() {
+  mode = 1;
+  resetMode();
+  Serial.println("Waiting for an Card ...");
+  card();
+  mode = 2;
+  resetMode();
+}
+
+void displayCardInfo(RfIntf_t RfIntf){ //Funtion in charge to show the card/s in te field
+  char tmp[16];
+  while (1){
+    switch(RfIntf.Protocol){  //Indetify card protocol
+    case PROT_T1T:
+    case PROT_T2T:
+    case PROT_T3T:
+    case PROT_ISODEP:
+        Serial.print(" - POLL MODE: Remote activated tag type: ");
+        Serial.println(RfIntf.Protocol);
+        break;
+    case PROT_ISO15693:
+        Serial.println(" - POLL MODE: Remote ISO15693 card activated");
+        break;
+    case PROT_MIFARE:
+        Serial.println(" - POLL MODE: Remote MIFARE card activated");
+        break;
+    default:
+        Serial.println(" - POLL MODE: Undetermined target");
+        return;
+    }
+
+    switch(RfIntf.ModeTech) { //Indetify card technology
+      case (MODE_POLL | TECH_PASSIVE_NFCA):
+
+          Serial.print("\tSENS_RES = ");
+          sprintf(tmp, "0x%.2X",RfIntf.Info.NFC_APP.SensRes[0]);
+          Serial.print(tmp); Serial.print(" ");
+          sprintf(tmp, "0x%.2X",RfIntf.Info.NFC_APP.SensRes[1]);
+          Serial.print(tmp); Serial.println(" ");
+          
+          Serial.print("\tNFCID = ");
+          printBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
+          
+          if(RfIntf.Info.NFC_APP.SelResLen != 0) {
+              Serial.print("\tSEL_RES = ");
+              sprintf(tmp, "0x%.2X",RfIntf.Info.NFC_APP.SelRes[0]);
+              Serial.print(tmp); Serial.println(" ");
+          }
+
+      break;
+  
+      case (MODE_POLL | TECH_PASSIVE_NFCB):
+          if(RfIntf.Info.NFC_BPP.SensResLen != 0) {
+              Serial.print("\tSENS_RES = ");
+              printBuf(RfIntf.Info.NFC_BPP.SensRes,RfIntf.Info.NFC_BPP.SensResLen);
+          }
+          break;
+  
+      case (MODE_POLL | TECH_PASSIVE_NFCF):
+          Serial.print("\tBitrate = ");
+          Serial.println((RfIntf.Info.NFC_FPP.BitRate == 1) ? "212" : "424");
+          
+          if(RfIntf.Info.NFC_FPP.SensResLen != 0) {
+              Serial.print("\tSENS_RES = ");
+              printBuf(RfIntf.Info.NFC_FPP.SensRes,RfIntf.Info.NFC_FPP.SensResLen);
+          }
+          break;
+  
+      case (MODE_POLL | TECH_PASSIVE_15693):
+          Serial.print("\tID = ");
+          printBuf(RfIntf.Info.NFC_VPP.ID,sizeof(RfIntf.Info.NFC_VPP.ID));
+          
+          Serial.print("\ntAFI = ");
+          Serial.println(RfIntf.Info.NFC_VPP.AFI);
+          
+          Serial.print("\tDSFID = ");
+          Serial.println(RfIntf.Info.NFC_VPP.DSFID,HEX);
+      break;
+  
+      default:
+          break;
+    }
+    if(RfIntf.MoreTags) { // It will try to identify more NFC cards if they are the same technology
+      if(nfc.ReaderActivateNext(&RfIntf) == NFC_ERROR) break;
+    }
+    else break;
+  }
+}
+  
+void card() { 
+  if(!nfc.WaitForDiscoveryNotification(&RfInterface)){ // Waiting to detect cards
+    if(debug) {
+      displayCardInfo(RfInterface);
+    }
+    Serial.println("OK");
+    
+    switch(RfInterface.Protocol) {
+      case PROT_T1T:
+      case PROT_T2T:
+      case PROT_T3T:
+      case PROT_ISODEP:
+          nfc.ProcessReaderMode(RfInterface, READ_NDEF);
+          break;
+      
+      case PROT_ISO15693:
+          break;
+      
+      case PROT_MIFARE:
+          nfc.ProcessReaderMode(RfInterface, READ_NDEF);
+          break;
+      
+      default:
+          break;
+    }
+    
+    //* It can detect multiple cards at the same time if they use the same protocol 
+    if(RfInterface.MoreTags) {
+        nfc.ReaderActivateNext(&RfInterface);
+    }
+    //* Wait for card removal 
+//    nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
+//    Serial.println("CARD REMOVED!");
+    
+    nfc.StopDiscovery();
+    nfc.StartDiscovery(mode);
+  }
+  resetMode();
+  delay(500);  
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
