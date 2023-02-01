@@ -1000,11 +1000,11 @@ void setup_track() {
 }
 
 void test_card() {
-  mode = 1;
+  mode = 1; //temporarily switch to mode 1 to test the card
   resetMode();
   Serial.println("Waiting for an Card ...");
-  card();
-  mode = 2;
+  card(); //Waiting for card, if the card is correctly positioned returns OK
+  mode = 2; //return to mode 2
   resetMode();
 }
 
