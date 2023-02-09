@@ -908,7 +908,7 @@ void help() {
   Serial.println("\tsetup_track");
 
   Serial.println("Monitor commands:");
-  Serial.println("\test_card");
+  Serial.println("\ttest_card");
   Serial.println("\tget_config");
   Serial.println("\tset_debug");
   Serial.println("..help");

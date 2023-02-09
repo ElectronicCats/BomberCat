@@ -820,7 +820,7 @@ if(debug) {
   if (strcmp(topic, inTopic) == 0) { // mensaje del host
 
     if (payload[0] == 'N' && length == 1) {
-      
+      Serial.println("ERROR");
       if(debug) {
         Serial.println();
         Serial.println("****************");
