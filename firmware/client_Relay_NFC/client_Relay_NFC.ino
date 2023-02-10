@@ -442,9 +442,16 @@ if(debug) {
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
     // *****************************************************
-    if (flag_send == 0) {
-      delay(1500);
+
+    if(debug) {
+      Serial.print("CmdSize: ");
+      Serial.println(CmdSize);
     }
+    
+    if (flag_send == 0) {
+      delay(CmdSize*5);
+    }
+    
     // Publish messages for host (the host should be subscribed to the topic)
     client.publish(outTopic, Cmd, CmdSize);
 
