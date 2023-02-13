@@ -65,6 +65,7 @@ char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use a
 int nclient;
 
 int debug = 0;
+int cmd_delay = 50;
 
 auto result = 0;
 // An example key name for the stats on the store
@@ -449,7 +450,7 @@ if(debug) {
     }
     
     if (flag_send == 0) {
-      delay(CmdSize*5);
+      delay(CmdSize*cmd_delay);
     }
     
     // Publish messages for host (the host should be subscribed to the topic)
@@ -465,6 +466,34 @@ if(debug) {
   for (int i = 0; i < commandlarge; i++) {
     ppsea[i] = 0;
   }
+}
+
+void set_delay(){
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+
+  if (arg != NULL) {
+    
+    cmd_delay = atoi(arg);
+
+    if (cmd_delay < 1 || cmd_delay >= 100) {
+      if(debug) {
+        Serial.println("Error setting the command delay value must be between 1-100");
+        cmd_delay = 50;
+      }
+      Serial.println("ERROR");  
+      return;
+    } 
+
+    Serial.println("OK");
+
+  }
+  else {
+    if(debug) {
+      Serial.println("No argument");
+    }  
+    Serial.println("ERROR");
+  } 
 }
 
 void set_debug() {
@@ -1052,6 +1081,7 @@ if(debug) {
   SCmd.addCommand("mode_ms", mode_ms);
   SCmd.addCommand("set_n", set_n);
   SCmd.addCommand("set_debug", set_debug);
+  SCmd.addCommand("set_delay", set_delay);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
   SCmd.addCommand("get_config", get_config);
@@ -1133,6 +1163,7 @@ void help() {
   Serial.println("Fw version: " + String(fwVersion, 1) + "v");
   Serial.println("\tConfiguration commands:");
   Serial.println("\tset_n");
+  Serial.println("\tset_delay");
   Serial.println("\tset_h");
   Serial.println("\tfree_h");
   Serial.println("\tmode_nfc");
