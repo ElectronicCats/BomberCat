@@ -65,7 +65,7 @@ char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use a
 int nclient;
 
 int debug = 0;
-int cmd_delay = 50;
+int cmd_delay = 1000;
 
 auto result = 0;
 // An example key name for the stats on the store
@@ -443,14 +443,14 @@ if(debug) {
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
     // *****************************************************
-
+    
     if(debug) {
       Serial.print("CmdSize: ");
       Serial.println(CmdSize);
     }
     
     if (flag_send == 0) {
-      delay(CmdSize*cmd_delay);
+      delay(cmd_delay);
     }
     
     // Publish messages for host (the host should be subscribed to the topic)
@@ -476,10 +476,10 @@ void set_delay(){
     
     cmd_delay = atoi(arg);
 
-    if (cmd_delay < 1 || cmd_delay >= 100) {
+    if (cmd_delay < 1 || cmd_delay >= 1500) {
       if(debug) {
         Serial.println("Error setting the command delay value must be between 1-100");
-        cmd_delay = 50;
+        cmd_delay = 1000;
       }
       Serial.println("ERROR");  
       return;

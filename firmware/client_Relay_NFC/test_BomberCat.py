@@ -36,22 +36,22 @@ ser.parity = serial.PARITY_NONE
 ser.stopbits = serial.STOPBITS_ONE
 ser.timeout = 1
 
-cmds = ["mode_ms", "set_h ", "get_config", "mode_ms", \
-	"set_h ", "mode_ms"]
+cmds = ["mode_ms", "set_h-", "get_config", "mode_ms", \
+	"set_h-", "mode_ms"] # put here the commands to be processed
 	
 print(sys.argv[1])	
 	
-N = 5
+N = 5 # commands number minus 1 in cmds
 
 time.sleep(1)
 ser.open()
 
-e = 0
+e = 0 # index in cmds
 
 while True:
 	if ser.is_open:
-		cmd = cmds[e]
-		if cmd[3:5] == '_h':
+		cmd = cmds[e] #get the command in turn
+		if cmd[3:5] == '_h': # check for select host
 			cmd = cmd + sys.argv[1]
 			print(cmd)
 		#if cmd[4:6] == '_h':
