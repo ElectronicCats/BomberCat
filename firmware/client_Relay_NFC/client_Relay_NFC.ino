@@ -65,7 +65,7 @@ char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use a
 int nclient;
 
 int debug = 0;
-int cmd_delay = 1000;
+int ndelay = 1000;
 
 auto result = 0;
 // An example key name for the stats on the store
@@ -77,6 +77,7 @@ struct SketchStats {
   char passwordStore[255];
   char mqttStore[255];
   int nclientStore;
+  int ndelayStore;
 };
 
 // Previous stats
@@ -450,7 +451,7 @@ if(debug) {
     }
     
     if (flag_send == 0) {
-      delay(cmd_delay);
+      delay(ndelay);
     }
     
     // Publish messages for host (the host should be subscribed to the topic)
@@ -474,26 +475,73 @@ void set_delay(){
 
   if (arg != NULL) {
     
-    cmd_delay = atoi(arg);
+    ndelay = atoi(arg);
 
-    if (cmd_delay < 1 || cmd_delay >= 1500) {
+    if (ndelay < 1 || ndelay >= 1500) {
       if(debug) {
-        Serial.println("Error setting the command delay value must be between 1-100");
-        cmd_delay = 1000;
+        Serial.println("Error setting the command delay value must be between 1-1500");
+        ndelay = 1000;
       }
       Serial.println("ERROR");  
       return;
     } 
-
-    Serial.println("OK");
-
+    
+    if(debug) {   
+      Serial.print("Delay: ");
+      Serial.println(ndelay);
+    }    
+ 
+    flagStore = 0;
   }
   else {
     if(debug) {
-      Serial.println("No argument");
-    }  
-    Serial.println("ERROR");
-  } 
+      Serial.println("No arguments for delay period, get value from store");
+    } 
+    flagStore = 1; 
+    result = getSketchStats(statsKey, &previousStats);
+    ndelay = previousStats.ndelayStore;
+  }
+  if(debug) {
+    Serial.print("Delay: ");
+    Serial.println(ndelay);
+  }     
+
+  if (flagStore == 0) {
+    result = getSketchStats(statsKey, &previousStats);
+
+    previousStats.ndelayStore = ndelay;
+
+
+    result = setSketchStats(statsKey, previousStats);
+
+    if (result == MBED_SUCCESS) {
+      
+      if(debug) {
+        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.print("\tSSID: ");
+        Serial.println(previousStats.ssidStore);
+        Serial.print("\tWiFiPass: ");
+        Serial.println(previousStats.passwordStore);
+        Serial.print("\tMQTT Server: ");
+        Serial.println(previousStats.mqttStore);
+        Serial.print("\tClient: ");
+        Serial.println(previousStats.nclientStore);
+        Serial.print("\tDelay: ");
+        Serial.println(previousStats.ndelayStore);
+        
+      }
+        
+
+    } else {
+      if(debug) {
+        Serial.println("Error while saving to key-value store");
+      }
+      Serial.println("ERROR");  
+      while (1);
+    }
+  }
+
+  Serial.println("OK");   
 }
 
 void set_debug() {
@@ -582,6 +630,8 @@ void set_n(){
         Serial.println(previousStats.mqttStore);
         Serial.print("\tClient: ");
         Serial.println(previousStats.nclientStore);
+        Serial.print("\tDelay: ");
+        Serial.println(previousStats.ndelayStore);
       }
         
 
@@ -1048,6 +1098,7 @@ if(debug) {
   }
   if ((flagWifi == 1) && (flagStore == 1)) {
     set_n();
+    set_delay();
     setup_mqtt();
   }
 
@@ -1378,6 +1429,8 @@ void get_config() {
   Serial.println(clientId);
   Serial.print("\tMode: ");
   Serial.println(msflag ? "Magnetic Strip" : "NFC");
+  Serial.print("\tDelay:");
+  Serial.println(ndelay);
   Serial.println("OK");
 
 }
