@@ -113,9 +113,11 @@ void setup() {
   //readContents();
 }
 
-
 void loop() {
+  runServer();
+}
 
+void runServer() {
   WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
@@ -166,17 +168,17 @@ void loop() {
 
         if (currentLine.endsWith("GET /MGS")) {
           //MagSpoof Code
+          Serial.println("MGS");
         }
         while (currentLine.endsWith("GET /DT")) {
           //Detect Tags Code
-
-          setupDetectTags();
-          loopdetectTags();
-
-
+          // setupDetectTags();
+          // loopdetectTags();
+          Serial.println("Here");
         }
         if (currentLine.endsWith("GET /BMC")) {
-
+          //BMC Code
+          Serial.println("BMC");
         }
       }
     }
@@ -185,7 +187,6 @@ void loop() {
     Serial.println("client disconnected");
   }
 }
-
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
