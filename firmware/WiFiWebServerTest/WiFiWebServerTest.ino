@@ -10,7 +10,7 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
-
+#include "index.html.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -76,6 +76,8 @@ void readContents() {
   }
 }
 
+void showWepPage();
+
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
@@ -128,36 +130,11 @@ void runServer() {
         char c = client.read();             // read a byte, then
         Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
-
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
           if (currentLine.length() == 0) {
-            // calling void home to print the home page.
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println();
-
-            // the content of the HTTP response follows the header:
-            client.print("<style>");
-            client.print(".container {margin: 0 auto; text-align: center; margin-top: 100px;}");
-            client.print("button {color: white; width: 100px; height: 100px;");
-            client.print("border-radius: 50%; margin: 20px; border: none; font-size: 20px; outline: none; transition: all 0.2s;}");
-            client.print(".red{background-color: rgb(196, 39, 39);}");
-            client.print(".green{background-color: rgb(39, 121, 39);}");
-            client.print(".blue {background-color: rgb(5, 87, 180);}");
-            client.print("button:hover{cursor: pointer; opacity: 0.7;}");
-            client.print("</style>");
-            client.print("<div class='container'>");
-            client.print("<button class='red' type='submit' onmousedown='location.href=\"/MGS\"'>MGS</button>");
-            client.print("<button class='green' type='submit' onmousedown='location.href=\"/DT\"'>DT</button>");
-            client.print("<button class='blue' type='submit' onmousedown='location.href=\"/BMC\"'>BMC</button>");
-            client.print("</div>");
-
-            // The HTTP response ends with another blank line:
-            client.println();
-            // break out of the while loop:
+            showWebPage(client);
             break;
-          } else {    // if you got a newline, then clear currentLine:
+          } else {
+            // if you got a newline, then clear currentLine:
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
@@ -165,12 +142,11 @@ void runServer() {
         }
 
         // Check to see if the client request was /X
-
         if (currentLine.endsWith("GET /MGS")) {
           //MagSpoof Code
           Serial.println("MGS");
         }
-        while (currentLine.endsWith("GET /DT")) {
+        if (currentLine.endsWith("GET /DT")) {
           //Detect Tags Code
           // setupDetectTags();
           // loopdetectTags();
@@ -182,8 +158,7 @@ void runServer() {
         }
       }
     }
-    // close the connection:
-    client.stop();
+    client.stop(); // close the connection:
     Serial.println("client disconnected");
   }
 }
@@ -203,6 +178,13 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+void showWebPage(WiFiClient client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/html");
+  client.println();
+  client.println(index_html);
 }
 
 /////////////////////////////////
