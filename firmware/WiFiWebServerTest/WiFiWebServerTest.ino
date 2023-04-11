@@ -22,7 +22,6 @@ RfIntf_t RfInterface;                                              //Intarface t
 
 uint8_t mode = 1;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
-
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
@@ -32,6 +31,7 @@ int status = WL_IDLE_STATUS;
 
 WiFiServer server(80);
 
+char html[sizeof(index_html) + sizeof(styles_css)];
 
 typedef enum {
   DATA_STORAGE_STATE,
@@ -76,7 +76,8 @@ void readContents() {
   }
 }
 
-void showWepPage();
+void showWebPage(WiFiClient client);
+void showCSS(WiFiClient client);
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -113,6 +114,7 @@ void setup() {
   printWifiStatus();
 
   //readContents();
+  // sprintf(html, index_html, styles_css);
 }
 
 void loop() {
