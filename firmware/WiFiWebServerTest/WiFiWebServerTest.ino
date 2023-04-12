@@ -180,6 +180,7 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+  Serial.println("HTML size: " + String(sizeof(index_html)) + " bytes");
 }
 
 void showWebPage(WiFiClient client) {
