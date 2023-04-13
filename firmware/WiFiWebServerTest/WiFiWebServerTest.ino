@@ -188,7 +188,15 @@ void showWebPage(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println();
-  client.println(index_html);
+  char myChar;
+  char *char_ptr = (char *) index_html;
+  while(1) {
+    if ((byte) *char_ptr == 0) break;
+    myChar = *char_ptr;
+    client.print(myChar);
+    char_ptr++;
+  }
+  client.println();
 }
 
 /////////////////////////////////
