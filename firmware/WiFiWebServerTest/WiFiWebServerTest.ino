@@ -5,8 +5,6 @@
   WEP or WPA, change the WiFi.begin() call accordingly.
 
 */
-#include "PluggableUSBMSD.h"
-#include "FlashIAPBlockDevice.h"
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
@@ -31,50 +29,11 @@ int status = WL_IDLE_STATUS;
 
 WiFiServer server(80);
 
-char html[sizeof(index_html) + sizeof(styles_css)];
-
 typedef enum {
   DATA_STORAGE_STATE,
   DATA_LOGGER_IDLE_STATE,
   DATA_LOGGER_RUNNING_STATE
 } demo_state_e;
-
-static FlashIAPBlockDevice bd(XIP_BASE + 0x100000, 0x100000);
-
-USBMSD MassStorage(&bd);
-
-static FILE *f = nullptr;
-
-char buf[64] { 0 };
-
-const char *fname = "/root/home.html";
-
-void USBMSD::begin()
-{
-  int err = getFileSystem().mount(&bd);
-  if (err) {
-    err = getFileSystem().reformat(&bd);
-  }
-}
-
-mbed::FATFileSystem &USBMSD::getFileSystem()
-{
-  static mbed::FATFileSystem fs("root");
-  return fs;
-}
-
-void readContents() {
-  f = fopen(fname, "r");
-  if (f != nullptr) {
-    while (std::fgets(buf, sizeof buf, f) != nullptr)
-      Serial.print(buf);
-    fclose(f);
-    Serial.println("File found");
-  }
-  else {
-    Serial.println("File not found");
-  }
-}
 
 void runServer();
 void printWifiStatus();
@@ -83,10 +42,6 @@ void showWebPage(WiFiClient client);
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  MassStorage.begin();
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -115,7 +70,6 @@ void setup() {
   printWifiStatus();
 
   //readContents();
-  // sprintf(html, index_html, styles_css);
 }
 
 void loop() {
@@ -181,22 +135,32 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
-  Serial.println("HTML size: " + String(sizeof(index_html)) + " bytes");
+  Serial.println("Page size: " + String(sizeof(index_html)) + " bytes");
 }
 
 void showWebPage(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println();
-  char myChar;
+
+  char temp_string[1001];
+  temp_string[1000] = 0;
+  boolean last_string = false;
   char *char_ptr = (char *) index_html;
-  while(1) {
-    if ((byte) *char_ptr == 0) break;
-    myChar = *char_ptr;
-    client.print(myChar);
-    char_ptr++;
+
+  while (1) {
+    for (int i = 0; i < 1000; i++) { 
+      if ((byte) *char_ptr == 0) {
+        last_string = true;
+        temp_string[i] = 0;
+      }
+      temp_string[i] = *char_ptr;
+      char_ptr ++;
+    }
+    client.print (temp_string);
+    if (last_string == true) break;
   }
-  client.println();
+  client.println("");
 }
 
 /////////////////////////////////
