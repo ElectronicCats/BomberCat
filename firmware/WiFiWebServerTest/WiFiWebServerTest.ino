@@ -30,20 +30,13 @@ char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;                 // your network key index number (needed only for WEP)
 
-int status = WL_IDLE_STATUS;
-
 WiFiServer server(80);
-
-typedef enum {
-  DATA_STORAGE_STATE,
-  DATA_LOGGER_IDLE_STATE,
-  DATA_LOGGER_RUNNING_STATE
-} demo_state_e;
+int status = WL_IDLE_STATUS;
+int webRequest = URL_DEFAULT;
 
 void runServer();
 void printWifiStatus();
-void showWebPage(WiFiClient client);
-void showCSS(WiFiClient client);
+void showPageContent(WiFiClient client, const char* pageContent);
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -74,8 +67,6 @@ void setup() {
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
-
-  //readContents();
 }
 
 void loop() {
@@ -84,10 +75,8 @@ void loop() {
 
 void runServer() {
   WiFiClient client = server.available();   // listen for incoming clients
-  static int web_req = URL_DEFAULT;
 
   if (client) {                             // if you get a client,
-    Serial.println("new client");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
@@ -95,11 +84,11 @@ void runServer() {
         Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
-            if (web_req == URL_DEFAULT) {
-              showWebPage(client);
-            } else if (web_req == URL_CSS) {
-              showCSS(client);
-              web_req = URL_DEFAULT; // Reset the web request to default
+            if (webRequest == URL_DEFAULT) {
+              showPageContent(client, index_html);
+            } else if (webRequest == URL_CSS) {
+              showPageContent(client, styles_css);
+              webRequest = URL_DEFAULT; // Reset the web request to default
             }
 
             break;
@@ -118,7 +107,7 @@ void runServer() {
           Serial.println("URL: " + url);
           if (url.startsWith("/styles.css")) {
             Serial.println ("Request: /styles.css");
-            web_req = URL_CSS;
+            webRequest = URL_CSS;
           }
         }
       }
@@ -146,64 +135,43 @@ void printWifiStatus() {
   Serial.println("Page size: " + String(sizeof(index_html)) + " bytes");
 }
 
-void showWebPage(WiFiClient client, const char* page_content) {
+void showPageContent(WiFiClient client, const char* pageContent) {
+  String contentType;
+  if (webRequest == URL_DEFAULT) {
+    contentType = "text/html";
+  } else if (webRequest == URL_CSS) {
+    contentType = "text/css";
+  }
   client.println("HTTP/1.1 200 OK");
-  client.println("Content-type:text/html");
+  client.println("Content-type:" + contentType);
   client.println();
 
   // Create a temporary string to hold the page content
-  char temp_string[1001];
-  temp_string[1000] = 0;
+  char tempString[1001];
+  tempString[1000] = 0;
   // Flag to indicate if we've reached the end of the page content
-  boolean last_string = false;
+  boolean lastString = false;
   // Pointer to determine where we are in the page content
-  char *char_ptr = (char *) page_content;
+  char *charPtr = (char *) pageContent;
 
   // Loop to read the page content in chunks of 1000 bytes
   while (1) {
     for (int i = 0; i < 1000; i++) {
       // Check if we've reached the end of the page content
-      if ((byte) *char_ptr == 0) {
-        last_string = true;
-        temp_string[i] = 0;
+      if ((byte) *charPtr == 0) {
+        lastString = true;
+        tempString[i] = 0;
       }
       // Copy the page content to the temporary string
-      temp_string[i] = *char_ptr;
-      char_ptr ++;
+      tempString[i] = *charPtr;
+      charPtr ++;
     }
     // Send the temporary string to the client
-    client.print (temp_string);
-    if (last_string == true) break; // Exit the loop if we've reached the end of the page content
+    client.print (tempString);
+    if (lastString == true) break; // Exit the loop if we've reached the end of the page content
   }
   client.println(""); // Send a blank line to indicate the end of the page content
 }
-
-void showCSS(WiFiClient client) {
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-type:text/css");
-  client.println();
-
-  char temp_string[1001];
-  temp_string[1000] = 0;
-  boolean last_string = false;
-  char *char_ptr = (char *) styles_css;
-
-  while (1) {
-    for (int i = 0; i < 1000; i++) { 
-      if ((byte) *char_ptr == 0) {
-        last_string = true;
-        temp_string[i] = 0;
-      }
-      temp_string[i] = *char_ptr;
-      char_ptr ++;
-    }
-    client.print (temp_string);
-    if (last_string == true) break;
-  }
-  client.println("");
-}
-
-/////////////////////////////////
 
 void ResetMode() {                                 //Reset the configuration mode after each reading
   WiFiClient client = server.available();
@@ -229,6 +197,7 @@ void PrintBuf(const byte * data, const uint32_t numBytes) { //Print hex data buf
   }
   client.println();
 }
+
 void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s in te field
   WiFiClient client = server.available();
   char tmp[16];
