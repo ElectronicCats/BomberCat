@@ -9,9 +9,7 @@ String index_html = R"=====(
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        )=====" + styles_css + R"=====(
-    </style>
+
 </head>
 <body>
     <header>
@@ -33,8 +31,6 @@ String index_html = R"=====(
             </form>
         </div>
     </section>
-    <h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2>
-    <h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2>
     <script>
         )=====" + app_js + R"=====(
     </script>
