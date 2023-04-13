@@ -1,4 +1,5 @@
 #include "styles.css.h"
+#include "app.js.h"
 
 String index_html = R"=====(
 <!DOCTYPE html>
@@ -32,8 +33,10 @@ String index_html = R"=====(
             </form>
         </div>
     </section>
+    <h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2>
+    <h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2><h2>Hello</h2>
     <script>
-        alert('Hello')
+        )=====" + app_js + R"=====(
     </script>
 </body>
 </html>

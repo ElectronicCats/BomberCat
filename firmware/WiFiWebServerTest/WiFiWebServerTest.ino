@@ -76,8 +76,9 @@ void readContents() {
   }
 }
 
+void runServer();
+void printWifiStatus();
 void showWebPage(WiFiClient client);
-void showCSS(WiFiClient client);
 
 void setup() {
   //Initialize serial and wait for port to open:
