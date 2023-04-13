@@ -9,11 +9,15 @@
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
 #include "index.html.h"
+#include "styles.css.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
 #define PN7150_VEN   (13)
 #define PN7150_ADDR  (0x28)
+
+#define URL_DEFAULT 0
+#define URL_CSS 1
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -38,6 +42,7 @@ typedef enum {
 void runServer();
 void printWifiStatus();
 void showWebPage(WiFiClient client);
+void showCSS(WiFiClient client);
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -78,6 +83,7 @@ void loop() {
 
 void runServer() {
   WiFiClient client = server.available();   // listen for incoming clients
+  static int web_req = URL_DEFAULT;
 
   if (client) {                             // if you get a client,
     Serial.println("new client");           // print a message out the serial port
@@ -88,7 +94,13 @@ void runServer() {
         Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
-            showWebPage(client);
+            if (web_req == URL_DEFAULT) {
+              showWebPage(client);
+            } else if (web_req == URL_CSS) {
+              showCSS(client);
+              web_req = URL_DEFAULT; // Reset the web request to default
+            }
+
             break;
           } else {
             // if you got a newline, then clear currentLine:
@@ -98,20 +110,15 @@ void runServer() {
           currentLine += c;      // add it to the end of the currentLine
         }
 
-        // Check to see if the client request was /X
-        if (currentLine.endsWith("GET /MGS")) {
-          //MagSpoof Code
-          Serial.println("MGS");
-        }
-        if (currentLine.endsWith("GET /DT")) {
-          //Detect Tags Code
-          // setupDetectTags();
-          // loopdetectTags();
-          Serial.println("Here");
-        }
-        if (currentLine.endsWith("GET /BMC")) {
-          //BMC Code
-          Serial.println("BMC");
+        // Only check for URL if it's a GET <url options> HTTP/ (ignore the http version number)
+        if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
+          Serial.println("\nRequest: " + currentLine);
+          String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
+          Serial.println("URL: " + url);
+          if (url.startsWith("/styles.css")) {
+            Serial.println ("Request: /styles.css");
+            web_req = URL_CSS;
+          }
         }
       }
     }
@@ -147,6 +154,31 @@ void showWebPage(WiFiClient client) {
   temp_string[1000] = 0;
   boolean last_string = false;
   char *char_ptr = (char *) index_html;
+
+  while (1) {
+    for (int i = 0; i < 1000; i++) { 
+      if ((byte) *char_ptr == 0) {
+        last_string = true;
+        temp_string[i] = 0;
+      }
+      temp_string[i] = *char_ptr;
+      char_ptr ++;
+    }
+    client.print (temp_string);
+    if (last_string == true) break;
+  }
+  client.println("");
+}
+
+void showCSS(WiFiClient client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/css");
+  client.println();
+
+  char temp_string[1001];
+  temp_string[1000] = 0;
+  boolean last_string = false;
+  char *char_ptr = (char *) styles_css;
 
   while (1) {
     for (int i = 0; i < 1000; i++) { 

@@ -1,4 +1,4 @@
-String styles_css = R"=====(
+const char* styles_css = R"=====(
 :root {
     --main-logo-background: #1A5157;
     --text-section: #333333;
