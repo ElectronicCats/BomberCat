@@ -10,6 +10,7 @@
 #include "arduino_secrets.h"
 #include "index.html.h"
 #include "styles.css.h"
+#include "app.js.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -145,29 +146,36 @@ void printWifiStatus() {
   Serial.println("Page size: " + String(sizeof(index_html)) + " bytes");
 }
 
-void showWebPage(WiFiClient client) {
+void showWebPage(WiFiClient client, const char* page_content) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println();
 
+  // Create a temporary string to hold the page content
   char temp_string[1001];
   temp_string[1000] = 0;
+  // Flag to indicate if we've reached the end of the page content
   boolean last_string = false;
-  char *char_ptr = (char *) index_html;
+  // Pointer to determine where we are in the page content
+  char *char_ptr = (char *) page_content;
 
+  // Loop to read the page content in chunks of 1000 bytes
   while (1) {
-    for (int i = 0; i < 1000; i++) { 
+    for (int i = 0; i < 1000; i++) {
+      // Check if we've reached the end of the page content
       if ((byte) *char_ptr == 0) {
         last_string = true;
         temp_string[i] = 0;
       }
+      // Copy the page content to the temporary string
       temp_string[i] = *char_ptr;
       char_ptr ++;
     }
+    // Send the temporary string to the client
     client.print (temp_string);
-    if (last_string == true) break;
+    if (last_string == true) break; // Exit the loop if we've reached the end of the page content
   }
-  client.println("");
+  client.println(""); // Send a blank line to indicate the end of the page content
 }
 
 void showCSS(WiFiClient client) {
