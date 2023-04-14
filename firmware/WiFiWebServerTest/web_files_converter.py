@@ -16,14 +16,7 @@ for filename in os.listdir(input_dir):
 
         with open(os.path.join(input_dir, filename), 'r') as file:
             content = file.read()
-
-        # Escape any double quotes or backslashes in the content
-        print('Original content: ')
-        print(content)
-        # content = content.replace('"', '\\"').replace('\\', '\\\\')
-        print('Escaped content: ')
-        print(content)
-
+            
         header_variable_name = os.path.splitext(filename)[0] + '_' + file_extension[1:]
         header_content = 'const char* {} = R"=====({})=====";'.format(header_variable_name, content)
 
