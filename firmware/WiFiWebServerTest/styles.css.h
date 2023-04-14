@@ -1,5 +1,4 @@
-const char* styles_css = R"=====(
-:root {
+const char* styles_css = R"=====(:root {
     --main-logo-background: #1A5157;
     --text-section: #333333;
     --fill-input-field: #F8F9FC;
@@ -98,7 +97,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    align-self: center;
 }
 
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
@@ -296,7 +294,7 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main1 main2" "footer footer";
+    grid-template-areas: \\"header header\\" \\"main1 main2\\" \\"footer footer\\";
     align-items: center;
     justify-items: center;
     margin-bottom: 90px;
@@ -322,5 +320,4 @@ a {
         width: 400px;
         justify-items: center;
     }
-}
-)=====";
+})=====";
