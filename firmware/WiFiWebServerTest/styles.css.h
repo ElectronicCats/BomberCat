@@ -31,6 +31,7 @@ body {
     color: var(--main-logo-background);
     font-size: var(--lg);
     font-weight: 700;
+    padding: 30px;
 }
 
 .signin {
@@ -67,11 +68,11 @@ body {
     width: 300px;
 }
 
-.logo {
+/* .logo {
     width: 100px;
     height: 100px;
     margin-right: 30px; 
-}
+} */
 
 .title {
     font-size: var(--lg);
