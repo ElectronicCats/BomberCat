@@ -112,7 +112,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     outline: none;
     border-radius: 27px;
     font-size: var(--sm);
-    padding: 5px;
+    padding: 5px 5px 5px 20px;
     margin-bottom: 24px;
     color: var(--text);
 }
