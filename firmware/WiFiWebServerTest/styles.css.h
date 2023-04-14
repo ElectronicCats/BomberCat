@@ -155,11 +155,21 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     margin-bottom: 30px;
 }
 
+.input-ap::placeholder {
+    background-image: url(./ap.png);
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: contain;
+    margin-bottom: 30px;
+}
+
 .primary-button {
     width: 250px;
     height: 40px;
-    background-color: #1A5157;
+    background-color: var(--main-logo-background);
     border: none;
     border-radius: 24px;
+    font-size: var(--md);
+    color: var(--white);
 }
 )=====";
