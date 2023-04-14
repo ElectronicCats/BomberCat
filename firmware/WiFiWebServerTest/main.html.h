@@ -1,12 +1,12 @@
-const char* index_html = R"=====(
-<!DOCTYPE html>
+const char* main_html = R"=====(<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Login</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="styles.css" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in</title>
+    <link rel="shortcut icon" href="./Símbolo EC.svg" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
@@ -25,12 +25,6 @@ const char* index_html = R"=====(
                 <input type="submit" value="Sign in" class="primary-button signin-button">
             </form>
         </div>
-    </section>
-    <script>
-        alert('Hello World');
-        console.log('Hello');
-        console.log('World');
-    </script>
+    </section>  
 </body>
-</html>
-)=====";
+</html>)=====";

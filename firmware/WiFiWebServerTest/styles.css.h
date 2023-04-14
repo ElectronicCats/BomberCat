@@ -294,7 +294,7 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: \\"header header\\" \\"main1 main2\\" \\"footer footer\\";
+    grid-template-areas: "header header" "main1 main2" "footer footer";
     align-items: center;
     justify-items: center;
     margin-bottom: 90px;

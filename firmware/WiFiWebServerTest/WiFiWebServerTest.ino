@@ -8,9 +8,8 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
-#include "index.html.h"
+#include "main.html.h"
 #include "styles.css.h"
-#include "app.js.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -85,7 +84,7 @@ void runServer() {
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
             if (webRequest == URL_DEFAULT) {
-              showPageContent(client, index_html);
+              showPageContent(client, main_html);
             } else if (webRequest == URL_CSS) {
               showPageContent(client, styles_css);
               webRequest = URL_DEFAULT; // Reset the web request to default
@@ -132,7 +131,6 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
-  Serial.println("Page size: " + String(sizeof(index_html)) + " bytes");
 }
 
 void showPageContent(WiFiClient client, const char* pageContent) {

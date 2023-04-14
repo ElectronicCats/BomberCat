@@ -1,25 +1,31 @@
 #!/bin/python3
 import os
 
-# Get the input file name
-input_filename = 'data/styles.css'
-input_file_extension = os.path.splitext(input_filename)[1]
+# Define the directory where the web files are located
+input_dir = 'data'
 
-# Generate the output file name
-output_filename = os.path.splitext(input_filename)[0] + input_file_extension + '.h'
+for filename in os.listdir(input_dir):
+    file_extension = os.path.splitext(filename)[1]
 
-# Remove data/ from the output file name
-output_filename = output_filename.replace('data/', '')
-print(output_filename)
+    # Check if the file has an extension of .html, .css, or .js
+    if file_extension in ('.html', '.css', '.js'):
+        output_filename = os.path.join(input_dir, os.path.splitext(filename)[0] + file_extension + '.h')
 
-with open(input_filename, 'r') as file:
-    content = file.read()
+        # Remove data/ from the output file name
+        output_filename = output_filename.replace('data/', '')
 
-# Escape any double quotes or backslashes in the content
-content = content.replace('"', '\\"').replace('\\', '\\\\')
+        with open(os.path.join(input_dir, filename), 'r') as file:
+            content = file.read()
 
-header_content = 'const char* styles_css = R"=====({})=====";'.format(content)
+        # Escape any double quotes or backslashes in the content
+        print('Original content: ')
+        print(content)
+        # content = content.replace('"', '\\"').replace('\\', '\\\\')
+        print('Escaped content: ')
+        print(content)
 
-# Write the contents to the output file
-with open(output_filename, 'w') as file:
-    file.write(header_content)
+        header_variable_name = os.path.splitext(filename)[0] + '_' + file_extension[1:]
+        header_content = 'const char* {} = R"=====({})=====";'.format(header_variable_name, content)
+
+        with open(output_filename, 'w') as file:
+            file.write(header_content)
