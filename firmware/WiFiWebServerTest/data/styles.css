@@ -180,13 +180,13 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 .header-home {
     margin: 0 auto;
     width: 100%;
-    height: 180px;
+    height: 160px;
     display: flex;
     flex-direction: row;
-    place-items: center;
+    align-items: center;
     background-color: var(--main-logo-background);
     color: var(--white);
-    margin-bottom: 80px;
+    margin-bottom: 50px;
 }
 
 .logoP {
