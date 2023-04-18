@@ -5,7 +5,7 @@ const char* main_html = R"=====(<!DOCTYPE html>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in</title>
-    <link rel="shortcut icon" href="./Símbolo EC.svg" type="image/x-icon">
+    <!-- <link rel="shortcut icon" href="./Símbolo EC.svg" type="image/x-icon"> -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -90,9 +90,6 @@ const char* main_html = R"=====(<!DOCTYPE html>
                 <input type="username" required id="username" placeholder="Username" class="input input-username">
                 <input type="password" required id="password" placeholder="Password" class="input input-password">
                 <input type="submit" value="Sign in" class="primary-button signin-button">
-                <!-- <button class='primary-button' type='submit'>
-                    <a href="ON">Sign in</a>
-                </button> -->
             </form>
         </div>
     </section>

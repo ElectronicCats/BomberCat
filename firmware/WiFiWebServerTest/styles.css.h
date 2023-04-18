@@ -163,7 +163,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 }
 
 .primary-button {
-    width: 250px;
+    width: 275px;
     height: 40px;
     background-color: var(--main-logo-background);
     border: none;

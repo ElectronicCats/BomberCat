@@ -108,7 +108,7 @@ void runServer() {
               currentHTML = URL_DEFAULT;
             } else if (webRequest == URL_CSS) {
               showPageContent(client, styles_css);
-              webRequest = currentHTML; // Reset the web request to default
+              webRequest = currentHTML;
             } else if (webRequest == URL_HOME) {
               showPageContent(client, home_html);
               currentHTML = URL_HOME;
