@@ -11,6 +11,7 @@ const char* main_html = R"=====(<!DOCTYPE html>
 <body>
     <header>
         <div class="header-container">
+            <!-- Logo-100-100.svg -->
             <?xml version="1.0" standalone="no"?>
             <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
             "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
@@ -85,12 +86,15 @@ const char* main_html = R"=====(<!DOCTYPE html>
         <div class="form-container">
             <h2 class="title">Sign in</h2>
             <p class="subtitle">Enter your username and password.</p>
-            <form action="/" class="form">
+            <form action="home.html" class="form">
                 <input type="username" required id="username" placeholder="Username" class="input input-username">
                 <input type="password" required id="password" placeholder="Password" class="input input-password">
                 <input type="submit" value="Sign in" class="primary-button signin-button">
+                <!-- <button class='primary-button' type='submit'>
+                    <a href="ON">Sign in</a>
+                </button> -->
             </form>
         </div>
-    </section>  
+    </section>
 </body>
 </html>)=====";

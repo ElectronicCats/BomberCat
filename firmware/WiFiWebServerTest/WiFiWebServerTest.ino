@@ -26,6 +26,7 @@
 #include "arduino_secrets.h"
 #include "main.html.h"
 #include "styles.css.h"
+#include "home.html.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -34,6 +35,8 @@
 
 #define URL_DEFAULT 0
 #define URL_CSS 1
+#define URL_JAVASCRIPT 2
+#define URL_HOME 3
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -90,20 +93,25 @@ void loop() {
 
 void runServer() {
   WiFiClient client = server.available();   // listen for incoming clients
+  static int currentHTML;
 
   if (client) {                             // if you get a client,
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
+        // Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
             if (webRequest == URL_DEFAULT) {
               showPageContent(client, main_html);
+              currentHTML = URL_DEFAULT;
             } else if (webRequest == URL_CSS) {
               showPageContent(client, styles_css);
-              webRequest = URL_DEFAULT; // Reset the web request to default
+              webRequest = currentHTML; // Reset the web request to default
+            } else if (webRequest == URL_HOME) {
+              showPageContent(client, home_html);
+              currentHTML = URL_HOME;
             }
 
             break;
@@ -123,6 +131,9 @@ void runServer() {
           if (url.startsWith("/styles.css")) {
             Serial.println ("Request: /styles.css");
             webRequest = URL_CSS;
+          } else if (url.startsWith("/home.html?")) {
+            Serial.println("Request: /home.html");
+            webRequest = URL_HOME;
           }
         }
       }
