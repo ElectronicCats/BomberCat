@@ -23,6 +23,7 @@ body {
     place-items: center;
     align-items: center;
     justify-content: center;
+    margin-left: 10px;
     margin-top: 52px;
     margin-bottom: 30px;
 }
@@ -31,7 +32,7 @@ body {
     color: var(--main-logo-background);
     font-size: var(--lg);
     font-weight: 700;
-    padding: 30px;
+    padding: 30px 0px 30px 30px;
 }
 
 .signin {
@@ -302,6 +303,10 @@ a {
 }
 
 @media (max-width: 640px) {
+    .header-container {
+        margin-left: 0px;
+    }
+
     .logo{
         display: block;
     }
