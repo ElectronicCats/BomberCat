@@ -198,14 +198,19 @@ const char* home_html = R"=====(<!DOCTYPE html>
                     </g>
                     </svg>
                 </div>
-                <p>Examples<br>GitHub</p>
+                <p>Github<br>Examples</p>
             </a>
-        </div> 
+        </div>
     </section>
     <footer>
         <div class="footer-home">
             <a href="./home.html">
-                <img src="./Home1.png" alt="home-icon" class="footer-icon">
+                <!-- <img src="./Home1.png" alt="home-icon" class="footer-icon"> -->
+                <div class="footer-icon">
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <svg width="30px" height="30px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path fill="#1A5157" d="M512 128 128 447.936V896h255.936V640H640v256h255.936V447.936z"/></svg>
+                </div>
+                <p class="footer-icon-text">Home</p>
             </a>
             <a href="./info.html">
                 <img src="./info.png" alt="info-icon" class="footer-icon">

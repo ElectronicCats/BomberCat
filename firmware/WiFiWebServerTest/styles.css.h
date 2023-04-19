@@ -231,6 +231,7 @@ a {
     bottom: 0;
     border-top: 1px solid var(--nav-bar);
     background-color: var(--white);
+    /* background-color: #000000; */
     place-items: center;
     align-content: center;
     display: none;
@@ -289,6 +290,13 @@ a {
     margin: 0 auto;
     flex-direction: column;
     align-items: center;
+}
+
+.footer-icon-text {
+    margin-top: 0px;
+    margin-bottom: 50px;
+    color: var(--main-logo-background);
+    font-size: var(--sm);
 }
 
 .card-form, .read-form {
