@@ -5,6 +5,7 @@
     --border: #aeaeae;
     --white: #FFFFFF;
     --text: #000000;
+    --gray-text: #5f5f5f;
     --lg: 28px;
     --md: 16px;
     --sm: 12px;
@@ -292,11 +293,21 @@ a {
     align-items: center;
 }
 
+.footer-icon-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .footer-icon-text {
     margin-top: 0px;
     margin-bottom: 50px;
-    color: var(--main-logo-background);
+    color: var(--gray-text);
     font-size: var(--sm);
+}
+
+.selected {
+    color: var(--main-logo-background);
 }
 
 .card-form, .read-form {
