@@ -306,6 +306,11 @@ a {
     font-size: var(--sm);
 }
 
+/* Center the log out icon */
+.logout {
+    padding-left: 5px;
+}
+
 .selected {
     color: var(--main-logo-background);
 }
