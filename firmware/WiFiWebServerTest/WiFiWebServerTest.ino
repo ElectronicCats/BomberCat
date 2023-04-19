@@ -134,6 +134,9 @@ void runServer() {
           } else if (url.startsWith("/home.html?")) {
             Serial.println("Request: /home.html");
             webRequest = URL_HOME;
+          } else if (url.startsWith("/main.html")) {
+            Serial.println("Request: /main.html");
+            webRequest = URL_DEFAULT;
           }
         }
       }
