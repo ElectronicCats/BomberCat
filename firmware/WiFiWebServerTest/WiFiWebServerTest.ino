@@ -34,11 +34,11 @@
 #define PN7150_VEN   (13)
 #define PN7150_ADDR  (0x28)
 
-#define URL_DEFAULT 0
-#define URL_CSS 1
-#define URL_JAVASCRIPT 2
-#define URL_HOME 3
-#define URL_INFO 4
+#define CSS_URL 0
+#define JAVASCRIPT_URL 1
+#define LOGIN_URL 2
+#define HOME_URL 3
+#define INFO_URL 4
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -52,7 +52,7 @@ int keyIndex = 0;                 // your network key index number (needed only 
 
 WiFiServer server(80);
 int status = WL_IDLE_STATUS;
-int webRequest = URL_DEFAULT;
+int webRequest = LOGIN_URL;
 
 void runServer();
 void printWifiStatus();
@@ -105,18 +105,18 @@ void runServer() {
         // Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
-            if (webRequest == URL_DEFAULT) {
+            if (webRequest == LOGIN_URL) {
               showPageContent(client, main_html);
-              currentHTML = URL_DEFAULT;
-            } else if (webRequest == URL_CSS) {
+              currentHTML = LOGIN_URL;
+            } else if (webRequest == CSS_URL) {
               showPageContent(client, styles_css);
               webRequest = currentHTML;
-            } else if (webRequest == URL_HOME) {
+            } else if (webRequest == HOME_URL) {
               showPageContent(client, home_html);
-              currentHTML = URL_HOME;
-            } else if (webRequest == URL_INFO) {
+              currentHTML = HOME_URL;
+            } else if (webRequest == INFO_URL) {
               showPageContent(client, info_html);
-              currentHTML = URL_INFO;
+              currentHTML = INFO_URL;
             }
 
             break;
@@ -135,15 +135,15 @@ void runServer() {
           Serial.println("URL: " + url);
           if (url.startsWith("/styles.css")) {
             Serial.println ("Request: /styles.css");
-            webRequest = URL_CSS;
+            webRequest = CSS_URL;
           } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
             Serial.println("Request: /home.html");
-            webRequest = URL_HOME;
+            webRequest = HOME_URL;
           } else if (url.startsWith("/main.html")) {
             Serial.println("Request: /main.html");
-            webRequest = URL_DEFAULT;
+            webRequest = LOGIN_URL;
           } else if (url.startsWith("/info.html")) {
-            webRequest = URL_INFO;
+            webRequest = INFO_URL;
           }
         }
       }
@@ -172,9 +172,9 @@ void printWifiStatus() {
 
 void showPageContent(WiFiClient client, const char* pageContent) {
   String contentType;
-  if (webRequest == URL_DEFAULT) {
+  if (webRequest == LOGIN_URL) {
     contentType = "text/html";
-  } else if (webRequest == URL_CSS) {
+  } else if (webRequest == CSS_URL) {
     contentType = "text/css";
   }
   client.println("HTTP/1.1 200 OK");
