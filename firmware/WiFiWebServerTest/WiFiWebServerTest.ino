@@ -136,7 +136,7 @@ void runServer() {
           if (url.startsWith("/styles.css")) {
             Serial.println ("Request: /styles.css");
             webRequest = URL_CSS;
-          } else if (url.startsWith("/home.html?")) {
+          } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
             Serial.println("Request: /home.html");
             webRequest = URL_HOME;
           } else if (url.startsWith("/main.html")) {
