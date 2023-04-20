@@ -27,6 +27,7 @@
 #include "main.html.h"
 #include "styles.css.h"
 #include "home.html.h"
+#include "info.html.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -37,6 +38,7 @@
 #define URL_CSS 1
 #define URL_JAVASCRIPT 2
 #define URL_HOME 3
+#define URL_INFO 4
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -112,6 +114,9 @@ void runServer() {
             } else if (webRequest == URL_HOME) {
               showPageContent(client, home_html);
               currentHTML = URL_HOME;
+            } else if (webRequest == URL_INFO) {
+              showPageContent(client, info_html);
+              currentHTML = URL_INFO;
             }
 
             break;
@@ -137,6 +142,8 @@ void runServer() {
           } else if (url.startsWith("/main.html")) {
             Serial.println("Request: /main.html");
             webRequest = URL_DEFAULT;
+          } else if (url.startsWith("/info.html")) {
+            webRequest = URL_INFO;
           }
         }
       }
