@@ -18,6 +18,13 @@ body {
     font-family: 'Segoe UI';
 }
 
+main {
+    margin-bottom: 60px;
+    padding: 0px;
+    min-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
 .header-container {
     display: grid;
     grid-template-columns: auto auto;
@@ -28,6 +35,7 @@ body {
     margin-top: 52px;
     margin-bottom: 30px;
 }
+
 
 .logoTitle {
     color: var(--main-logo-background);
@@ -187,7 +195,6 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     align-items: center;
     background-color: var(--main-logo-background);
     color: var(--white);
-    margin-bottom: 50px;
 }
 
 .logoP {
@@ -280,12 +287,12 @@ a {
 }
 
 .footer-home {
-    margin-top: 72px;
+    /* margin-top: 72px; */
     position: fixed;
     width: 100%;
     height: 60px;
     bottom: 0;
-    border-top: 1px solid var(--nav-bar);
+    border-top: 1px solid var(--border);
     background-color: var(--white);
     place-items: center;
     align-content: center;
