@@ -235,5 +235,5 @@ const char* home_html = R"=====(<!DOCTYPE html>
             </a>
         </div>
     </footer>
-    </body>  
+    </body>
 </html>)=====";

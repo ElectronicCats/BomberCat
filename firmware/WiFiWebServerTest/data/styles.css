@@ -19,7 +19,8 @@ body {
 }
 
 main {
-    margin-bottom: 60px;
+    /* margin-bottom: 60px; */
+    margin: 10px 20px 70px 20px;
     padding: 0px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
@@ -51,14 +52,14 @@ main {
     place-items: center;
 }
 
-.main-container {
+/* .main-container {
     width: 300px;
     margin: 0 auto;
     display: flex;
     justify-content: center;
     place-items: center;
     align-items: center;
-}
+} */
 
 .ssid {
     margin-top: 104px;
