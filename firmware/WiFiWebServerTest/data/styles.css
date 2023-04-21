@@ -224,20 +224,6 @@ a {
     place-content: center;
 }
 
-.footer-home {
-    margin-top: 72px;
-    position: fixed;
-    width: 100%;
-    height: 60px;
-    bottom: 0;
-    border-top: 1px solid var(--nav-bar);
-    background-color: var(--white);
-    /* background-color: #000000; */
-    place-items: center;
-    align-content: center;
-    display: none;
-}
-
 .config-header {
     margin: 54px auto;
     width: 500px;
@@ -293,6 +279,19 @@ a {
     align-items: center;
 }
 
+.footer-home {
+    margin-top: 72px;
+    position: fixed;
+    width: 100%;
+    height: 60px;
+    bottom: 0;
+    border-top: 1px solid var(--nav-bar);
+    background-color: var(--white);
+    place-items: center;
+    align-content: center;
+    display: none;
+}
+
 .footer-icon-link {
     display: flex;
     flex-direction: column;
@@ -301,7 +300,7 @@ a {
 
 .footer-icon-text {
     margin-top: 0px;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
     color: var(--gray-text);
     font-size: var(--sm);
 }
