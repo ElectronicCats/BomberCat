@@ -24,7 +24,7 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
-#include "main.html.h"
+#include "login.html.h"
 #include "styles.css.h"
 #include "home.html.h"
 #include "info.html.h"
@@ -110,7 +110,7 @@ void runServer() {
         if (c == '\n') {                    // if the byte is a newline character
           if (currentLine.length() == 0) {
             if (webRequest == LOGIN_URL) {
-              showPageContent(client, main_html);
+              showPageContent(client, login_html);
               currentHTML = LOGIN_URL;
             } else if (webRequest == CSS_URL) {
               showPageContent(client, styles_css);
@@ -143,8 +143,8 @@ void runServer() {
           } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
             Serial.println("Request: /home.html");
             webRequest = HOME_URL;
-          } else if (url.startsWith("/main.html")) {
-            Serial.println("Request: /main.html");
+          } else if (url.startsWith("/login.html")) {
+            Serial.println("Request: /login.html");
             webRequest = LOGIN_URL;
           } else if (url.startsWith("/info.html")) {
             webRequest = INFO_URL;

@@ -225,7 +225,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                 </div>
                 <p class="footer-icon-text">Info</p>
             </a>
-            <a href="./main.html">
+            <a href="./login.html">
                 <!-- <img src="./logOut.png" alt="logout-icon" class="footer-icon"> -->
                 <div class="footer-icon logout">
                     <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
