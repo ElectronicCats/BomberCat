@@ -69,6 +69,10 @@ void setup() {
     while (true);
   }
 
+  // Set a static IP address
+  IPAddress ip(10, 42, 0, 103);
+  WiFi.config(ip);
+
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
     Serial.println("Please upgrade the firmware");
@@ -154,20 +158,10 @@ void runServer() {
 }
 
 void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
+  Serial.println("SSID: " + String(WiFi.SSID()));
+  Serial.print("IP Address: http://");
+  Serial.println(WiFi.localIP());
+  Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
 }
 
 void showPageContent(WiFiClient client, const char* pageContent) {
