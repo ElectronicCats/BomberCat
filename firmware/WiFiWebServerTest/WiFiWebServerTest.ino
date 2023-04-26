@@ -1,66 +1,88 @@
-/*********************************************************************************
-  Example WebServer with NFC Copy Cat WiFi
-  by Francisco Torres, Electronic Cats (https://electroniccats.com/)
-  Date: 14/04/2023
-  
-  This example demonstrates how to use NFC Copy Cat by Electronic Cats
-  https://github.com/ElectronicCats/NFC-Copy-Cat-WiFi
+/*
+  WiFi Web Server with Files via USB for BomberCat
 
-  Development environment specifics:
-  IDE: Visual Studio Code + Arduino CLI
-  Hardware Platform:
-  NFC Copy Cat
-  - ESP32-S2
+  This example is written for a network using WPA encryption. For
+  WEP or WPA, change the WiFi.begin() call accordingly.
 
-  Electronic Cats invests time and resources providing this open source code,
-  please support Electronic Cats and open-source hardware by purchasing
-  products from Electronic Cats!
-
-  This code is beerware; if you see me (or any other Electronic Cats
-  member) at the local, and you've found our code helpful,
-  please buy us a round!
-  Distributed as-is; no warranty is given.
-***********************************************************************************/
+*/
+#include "PluggableUSBMSD.h"
+#include "FlashIAPBlockDevice.h"
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "arduino_secrets.h"
-#include "main.html.h"
-#include "styles.css.h"
-#include "home.html.h"
-#include "info.html.h"
+
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
 #define PN7150_VEN   (13)
 #define PN7150_ADDR  (0x28)
 
-#define CSS_URL 0
-#define JAVASCRIPT_URL 1
-#define LOGIN_URL 2
-#define HOME_URL 3
-#define INFO_URL 4
-
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
 
 uint8_t mode = 1;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
+
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;                 // your network key index number (needed only for WEP)
 
-WiFiServer server(80);
 int status = WL_IDLE_STATUS;
-int webRequest = LOGIN_URL;
 
-void runServer();
-void printWifiStatus();
-void showPageContent(WiFiClient client, const char* pageContent);
+WiFiServer server(80);
+
+
+typedef enum {
+  DATA_STORAGE_STATE,
+  DATA_LOGGER_IDLE_STATE,
+  DATA_LOGGER_RUNNING_STATE
+} demo_state_e;
+
+static FlashIAPBlockDevice bd(XIP_BASE + 0x100000, 0x100000);
+
+USBMSD MassStorage(&bd);
+
+static FILE *f = nullptr;
+
+char buf[64] { 0 };
+
+const char *fname = "/root/home.html";
+
+void USBMSD::begin()
+{
+  int err = getFileSystem().mount(&bd);
+  if (err) {
+    err = getFileSystem().reformat(&bd);
+  }
+}
+
+mbed::FATFileSystem &USBMSD::getFileSystem()
+{
+  static mbed::FATFileSystem fs("root");
+  return fs;
+}
+
+void readContents() {
+  f = fopen(fname, "r");
+  if (f != nullptr) {
+    while (std::fgets(buf, sizeof buf, f) != nullptr)
+      Serial.print(buf);
+    fclose(f);
+    Serial.println("File found");
+  }
+  else {
+    Serial.println("File not found");
+  }
+}
 
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
+  MassStorage.begin();
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -87,71 +109,83 @@ void setup() {
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
+
+  //readContents();
 }
+
 
 void loop() {
-  runServer();
-}
 
-void runServer() {
   WiFiClient client = server.available();   // listen for incoming clients
-  static int currentHTML;
 
   if (client) {                             // if you get a client,
+    Serial.println("new client");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
-        // Serial.write(c);                    // print it out the serial monitor
+        Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {                    // if the byte is a newline character
-          if (currentLine.length() == 0) {
-            if (webRequest == LOGIN_URL) {
-              showPageContent(client, main_html);
-              currentHTML = LOGIN_URL;
-            } else if (webRequest == CSS_URL) {
-              showPageContent(client, styles_css);
-              webRequest = currentHTML;
-            } else if (webRequest == HOME_URL) {
-              showPageContent(client, home_html);
-              currentHTML = HOME_URL;
-            } else if (webRequest == INFO_URL) {
-              showPageContent(client, info_html);
-              currentHTML = INFO_URL;
-            }
 
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+          if (currentLine.length() == 0) {
+            // calling void home to print the home page.
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            client.print("<style>");
+            client.print(".container {margin: 0 auto; text-align: center; margin-top: 100px;}");
+            client.print("button {color: white; width: 100px; height: 100px;");
+            client.print("border-radius: 50%; margin: 20px; border: none; font-size: 20px; outline: none; transition: all 0.2s;}");
+            client.print(".red{background-color: rgb(196, 39, 39);}");
+            client.print(".green{background-color: rgb(39, 121, 39);}");
+            client.print(".blue {background-color: rgb(5, 87, 180);}");
+            client.print("button:hover{cursor: pointer; opacity: 0.7;}");
+            client.print("</style>");
+            client.print("<div class='container'>");
+            client.print("<button class='red' type='submit' onmousedown='location.href=\"/MGS\"'>MGS</button>");
+            client.print("<button class='green' type='submit' onmousedown='location.href=\"/DT\"'>DT</button>");
+            client.print("<button class='blue' type='submit' onmousedown='location.href=\"/BMC\"'>BMC</button>");
+            client.print("</div>");
+
+            // The HTTP response ends with another blank line:
+            client.println();
+            // break out of the while loop:
             break;
-          } else {
-            // if you got a newline, then clear currentLine:
+          } else {    // if you got a newline, then clear currentLine:
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
         }
 
-        // Only check for URL if it's a GET <url options> HTTP/ (ignore the http version number)
-        if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
-          Serial.println("\nRequest: " + currentLine);
-          String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
-          Serial.println("URL: " + url);
-          if (url.startsWith("/styles.css")) {
-            Serial.println ("Request: /styles.css");
-            webRequest = CSS_URL;
-          } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
-            Serial.println("Request: /home.html");
-            webRequest = HOME_URL;
-          } else if (url.startsWith("/main.html")) {
-            Serial.println("Request: /main.html");
-            webRequest = LOGIN_URL;
-          } else if (url.startsWith("/info.html")) {
-            webRequest = INFO_URL;
-          }
+        // Check to see if the client request was /X
+
+        if (currentLine.endsWith("GET /MGS")) {
+          //MagSpoof Code
+        }
+        while (currentLine.endsWith("GET /DT")) {
+          //Detect Tags Code
+
+          setupDetectTags();
+          loopdetectTags();
+
+
+        }
+        if (currentLine.endsWith("GET /BMC")) {
+
         }
       }
     }
-    client.stop(); // close the connection:
+    // close the connection:
+    client.stop();
     Serial.println("client disconnected");
   }
 }
+
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
@@ -170,43 +204,7 @@ void printWifiStatus() {
   Serial.println(" dBm");
 }
 
-void showPageContent(WiFiClient client, const char* pageContent) {
-  String contentType;
-  if (webRequest == LOGIN_URL) {
-    contentType = "text/html";
-  } else if (webRequest == CSS_URL) {
-    contentType = "text/css";
-  }
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-type:" + contentType);
-  client.println();
-
-  // Create a temporary string to hold the page content
-  char tempString[1001];
-  tempString[1000] = 0;
-  // Flag to indicate if we've reached the end of the page content
-  boolean lastString = false;
-  // Pointer to determine where we are in the page content
-  char *charPtr = (char *) pageContent;
-
-  // Loop to read the page content in chunks of 1000 bytes
-  while (1) {
-    for (int i = 0; i < 1000; i++) {
-      // Check if we've reached the end of the page content
-      if ((byte) *charPtr == 0) {
-        lastString = true;
-        tempString[i] = 0;
-      }
-      // Copy the page content to the temporary string
-      tempString[i] = *charPtr;
-      charPtr ++;
-    }
-    // Send the temporary string to the client
-    client.print (tempString);
-    if (lastString == true) break; // Exit the loop if we've reached the end of the page content
-  }
-  client.println(""); // Send a blank line to indicate the end of the page content
-}
+/////////////////////////////////
 
 void ResetMode() {                                 //Reset the configuration mode after each reading
   WiFiClient client = server.available();
@@ -232,7 +230,6 @@ void PrintBuf(const byte * data, const uint32_t numBytes) { //Print hex data buf
   }
   client.println();
 }
-
 void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s in te field
   WiFiClient client = server.available();
   char tmp[16];

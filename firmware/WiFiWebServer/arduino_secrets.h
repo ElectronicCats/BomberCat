@@ -1,2 +1,2 @@
-#define SECRET_SSID "EC_2.4"
-#define SECRET_PASS "electronicCats"
+#define SECRET_SSID "deimos"
+#define SECRET_PASS "hello123"
