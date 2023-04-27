@@ -26,6 +26,7 @@
 #include "arduino_secrets.h"
 #include "login.html.h"
 #include "styles.css.h"
+#include "main.js.h"
 #include "home.html.h"
 #include "info.html.h"
 
@@ -71,7 +72,7 @@ void setup() {
 
   // Set a static IP address
   IPAddress ip(10, 42, 0, 103);
-  WiFi.config(ip);
+  // WiFi.config(ip);
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
@@ -115,6 +116,9 @@ void runServer() {
             } else if (webRequest == CSS_URL) {
               showPageContent(client, styles_css);
               webRequest = currentHTML;
+            } else if (webRequest == JAVASCRIPT_URL) {
+              showPageContent(client, main_js);
+              webRequest = currentHTML;
             } else if (webRequest == HOME_URL) {
               showPageContent(client, home_html);
               currentHTML = HOME_URL;
@@ -140,6 +144,9 @@ void runServer() {
           if (url.startsWith("/styles.css")) {
             Serial.println ("Request: /styles.css");
             webRequest = CSS_URL;
+          } else if (url.startsWith("/main.js")) {
+            Serial.println("Request: /main.js");
+            webRequest = JAVASCRIPT_URL;
           } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
             Serial.println("Request: /home.html");
             webRequest = HOME_URL;

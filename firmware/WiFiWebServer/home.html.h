@@ -87,7 +87,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
     <main>
         <section class="menu">
             <div class="menu-container">
-                <a href="./ssid.html">
+                <a href="#" id="configBtn">
                     <!-- <img src="./WiFi.png" alt="wifi" class="menu-icon ssid-icon"> -->
                     <div class="menu-icon ssid-icon">
                         <?xml version="1.0" standalone="no"?>
@@ -235,5 +235,6 @@ const char* home_html = R"=====(<!DOCTYPE html>
             </a>
         </div>
     </footer>
+    <script src="./main.js"></script>
     </body>
 </html>)=====";
