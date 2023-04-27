@@ -279,7 +279,7 @@ a {
 
 .send-button, .read-button {
     grid-area: footer;
-    width: 200px;
+    width: 292px;
 }
 
 .mags-container, .nfc-container {
