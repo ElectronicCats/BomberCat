@@ -101,6 +101,10 @@ main {
     margin-bottom: 20px;
 }
 
+.i-title-container {
+    width: 193px;
+}
+
 .i-title {
     color: var(--text-section);
 }
@@ -234,7 +238,7 @@ a {
 
 .config-header {
     margin: 54px auto;
-    width: 500px;
+    /* width: 500px; */
     text-align: center;
     font-size: var(--lg);
     font-weight: normal;
@@ -245,11 +249,11 @@ a {
     margin: 0 auto;
     margin-top: 40px;
     display: grid;
-    width: 500px;
+    max-width: 343px;
     grid-auto-flow: column;
     grid-template-columns: 1fr 100px;
-    justify-content: end;
-    align-items: center;  
+    justify-content: center;
+    align-items: center;
 }
 
 .input-card, .text-card {
@@ -281,7 +285,7 @@ a {
 .mags-container, .nfc-container {
     margin-top: 40px;
     display: flex;
-    width: 500px;
+    /* width: 500px; */
     margin: 0 auto;
     flex-direction: column;
     align-items: center;

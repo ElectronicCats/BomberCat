@@ -29,6 +29,7 @@
 #include "main.js.h"
 #include "home.html.h"
 #include "info.html.h"
+#include "magspoof.html.h"
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (11)
@@ -40,6 +41,7 @@
 #define LOGIN_URL 2
 #define HOME_URL 3
 #define INFO_URL 4
+#define MAGSPOOF_URL 5
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -125,6 +127,9 @@ void runServer() {
             } else if (webRequest == INFO_URL) {
               showPageContent(client, info_html);
               currentHTML = INFO_URL;
+            } else if (webRequest == MAGSPOOF_URL) {
+              showPageContent(client, magspoof_html);
+              currentHTML = MAGSPOOF_URL;
             }
 
             break;
@@ -155,6 +160,8 @@ void runServer() {
             webRequest = LOGIN_URL;
           } else if (url.startsWith("/info.html")) {
             webRequest = INFO_URL;
+          } else if (url.startsWith("/magspoof.html")) {
+            webRequest = MAGSPOOF_URL;
           }
         }
       }
