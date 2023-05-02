@@ -256,9 +256,39 @@ a {
     align-items: center;
 }
 
+.mags-container, .nfc-container {
+    margin-top: 40px;
+    display: flex;
+    /* width: 500px; */
+    margin: 0 auto;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card-form, .read-form {
+    margin-top: 50px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-areas: "header header" "main main" "footer footer";
+    align-items: center;
+    justify-items: center;
+    margin-bottom: 90px;
+}
+
 .input-card, .text-card {
    grid-area: header;
    width: 280px;
+}
+
+.input-track1 {
+    grid-area: header;
+    width: 280px;
+}
+
+.input-track2 {
+    grid-area: main;
+    width: 280px;
 }
 
 .input-date, .text-date {
@@ -280,15 +310,6 @@ a {
 .send-button, .read-button {
     grid-area: footer;
     width: 292px;
-}
-
-.mags-container, .nfc-container {
-    margin-top: 40px;
-    display: flex;
-    /* width: 500px; */
-    margin: 0 auto;
-    flex-direction: column;
-    align-items: center;
 }
 
 .footer-home {
@@ -324,17 +345,6 @@ a {
 
 .selected {
     color: var(--main-logo-background);
-}
-
-.card-form, .read-form {
-    margin-top: 50px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main1 main2" "footer footer";
-    align-items: center;
-    justify-items: center;
-    margin-bottom: 90px;
 }
 
 @media (max-width: 640px) {
