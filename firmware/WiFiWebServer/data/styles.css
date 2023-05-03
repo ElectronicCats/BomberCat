@@ -302,6 +302,8 @@ a {
     width: 292px;
 }
 
+/* Footer */
+
 .footer-home {
     /* margin-top: 72px; */
     position: fixed;

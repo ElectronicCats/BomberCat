@@ -16,11 +16,11 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
     </header>
     <main>
         <div class="main-content">
-            <div class="i-title-container">
-                    <section class="card-container">
+            <section class="card-container">
+                <div class="i-title-container">
                     <h3 class="i-title">Insert</h3>
+                    <!-- <img src="./card.png" alt="card" class="card-icon"> -->
                 </div>
-                <!-- <img src="./card.png" alt="card" class="card-icon"> -->
                 <div class="card-icon">
                     <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
                     <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
