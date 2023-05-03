@@ -23,7 +23,11 @@ body {
 }
 
 .main-content {
-    padding: 10px 20px, 70px 20px;
+    /* padding: 10px, 20px, 70px, 20px; */
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 70px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
     border-top-left-radius: 30px;

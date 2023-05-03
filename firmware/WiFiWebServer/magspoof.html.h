@@ -32,9 +32,9 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
                 </div>
             </section>
             <section class="mags-container">
-                <form action="/" class="card-form">
-                    <input type="number" id="card-number" placeholder="Enter track 1" class="inputC input-card">
-                    <input type="number" id="card-number" placeholder="Enter track 2" class="inputC input-track2">
+                <form action="#" class="card-form" method="get">
+                    <input type="text" name="track1" id="track1" placeholder="Enter track 1" class="inputC input-card">
+                    <input type="text" name="track2" id="track2" placeholder="Enter track 2" class="inputC input-track2">
                     <!-- <input type="number" id="card-date" placeholder="Enter card date" class="inputC input-date">
                     <input type="number" id="card-code" placeholder="Enter card code" class="inputC input-code"> -->
                     <input type="submit" value="Send" class="primary-button send-button">

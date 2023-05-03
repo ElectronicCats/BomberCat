@@ -85,31 +85,35 @@ const char* info_html = R"=====(<!DOCTYPE html>
         </div>
     </header>
     <main>
-        <section class="about">
-            <div class="about-container">
-                <h3 class="i-title">About Us</h3>
-                <img src="./Logo-100_100.png" alt="logo" class="mainLogo">
-                <p>We are... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
+        <div class="main-container">
+            <div class="main-content">
+                <section class="about">
+                    <div class="about-container">
+                        <h3 class="i-title">About Us</h3>
+                        <img src="./Logo-100_100.png" alt="logo" class="mainLogo">
+                        <p>We are... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
+                    </div>
+                </section>
+                <section class="contact">
+                    <div class="contact-container">
+                        <h3 class="i-title">Contact Us</h3>
+                        <p>Send us an e-mail</p>
+                        <form action="/" class="form">
+                            <p>
+                                <input type="username" required id="username" placeholder="       your@email.com" class="input input-username input-contact">
+                                <input type="submit" value="contact" class="primary-button send-button">
+                            </p>
+                        </form>
+                    </div>
+                </section>
+                <section class="privacity">
+                    <div class="privacity-container">
+                        <h3 class="i-title">Privacity</h3>
+                        <p>For this privacity policy... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
+                    </div>
+                </section>
             </div>
-        </section>
-        <section class="contact">
-            <div class="contact-container">
-                <h3 class="i-title">Contact Us</h3>
-                <p>Send us an e-mail</p>
-                <form action="/" class="form">
-                    <p>
-                        <input type="username" required id="username" placeholder="       your@email.com" class="input input-username input-contact">
-                        <input type="submit" value="contact" class="primary-button send-button">
-                    </p>
-                </form>
-            </div>
-        </section>
-        <section class="privacity">
-            <div class="privacity-container">
-                <h3 class="i-title">Privacity</h3>
-                <p>For this privacity policy... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
-            </div>
-        </section>
+        </div>
     </main>
     <footer>
         <div class="footer-home">

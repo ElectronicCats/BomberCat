@@ -1,4 +1,6 @@
 const char* main_js = R"=====(let configBtn = document.querySelector("#configBtn");
-configBtn.addEventListener("click", function() {
-    alert("Not available yet!")
-});)=====";
+let nfcBtn = document.querySelector("#nfcBtn");
+
+configBtn.addEventListener("click", () => { alert("Not available yet!") });
+
+nfcBtn.addEventListener("click", () => { alert("Not available yet!") });)=====";
