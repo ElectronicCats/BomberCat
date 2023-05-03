@@ -15,15 +15,20 @@ const char* styles_css = R"=====(:root {
 body {
     margin: 0;
     padding: 0;
+    background-color: --var(--main-logo-background);
     font-family: 'Segoe UI';
+    background-color: #1A5157;
 }
 
 main {
     /* margin-bottom: 60px; */
-    margin: 10px 20px 70px 20px;
-    padding: 0px;
+    /* margin: 10px 20px 70px 20px; */
+    padding: 10px 20px, 70px 20px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    background-color: #FFFFFF;
 }
 
 .header-container {

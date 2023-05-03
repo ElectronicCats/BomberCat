@@ -18,12 +18,13 @@ body {
     font-family: 'Segoe UI';
 }
 
-main {
-    /* margin-bottom: 60px; */
-    margin: 10px 20px 70px 20px;
-    padding: 0px;
+.main {
+    padding: 10px 20px, 70px 20px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    background-color: #FFFFFF;
 }
 
 .header-container {
