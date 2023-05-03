@@ -15,20 +15,20 @@ const char* styles_css = R"=====(:root {
 body {
     margin: 0;
     padding: 0;
-    background-color: --var(--main-logo-background);
     font-family: 'Segoe UI';
-    background-color: #1A5157;
 }
 
-main {
-    /* margin-bottom: 60px; */
-    /* margin: 10px 20px 70px 20px; */
+.main-container {
+    background-color: var(--main-logo-background);
+}
+
+.main-content {
     padding: 10px 20px, 70px 20px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
     border-top-left-radius: 30px;
     border-top-right-radius: 30px;
-    background-color: #FFFFFF;
+    background-color: var(--white);
 }
 
 .header-container {
@@ -57,15 +57,6 @@ main {
     place-items: center;
 }
 
-/* .main-container {
-    width: 300px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    place-items: center;
-    align-items: center;
-} */
-
 .ssid {
     margin-top: 104px;
     width: 100%;
@@ -83,12 +74,6 @@ main {
     grid-template-rows: auto 1fr auto;
     width: 300px;
 }
-
-/* .logo {
-    width: 100px;
-    height: 100px;
-    margin-right: 30px; 
-} */
 
 .title {
     font-size: var(--lg);
