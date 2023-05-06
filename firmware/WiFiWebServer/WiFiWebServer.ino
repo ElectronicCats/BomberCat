@@ -147,22 +147,28 @@ void runServer() {
           Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
           Serial.println("URL: " + url);
+          Serial.println("Condition: " + String(url.substring(0, 15).equals("/magspoof.html?")));
+
           if (url.startsWith("/styles.css")) {
-            Serial.println ("Request: /styles.css");
             webRequest = CSS_URL;
           } else if (url.startsWith("/main.js")) {
-            Serial.println("Request: /main.js");
             webRequest = JAVASCRIPT_URL;
           } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
-            Serial.println("Request: /home.html");
             webRequest = HOME_URL;
           } else if (url.startsWith("/login.html")) {
-            Serial.println("Request: /login.html");
             webRequest = LOGIN_URL;
           } else if (url.startsWith("/info.html")) {
             webRequest = INFO_URL;
           } else if (url.startsWith("/magspoof.html")) {
             webRequest = MAGSPOOF_URL;
+          }
+
+          // ? is the start of request parameters
+          if (url.startsWith("/magspoof.html?")) {
+            String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
+            String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&track3="));
+            Serial.println("Track 1: " + track1);
+            Serial.println("Track 2: " + track2);
           }
         }
       }
