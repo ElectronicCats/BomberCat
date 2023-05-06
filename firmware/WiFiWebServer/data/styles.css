@@ -263,8 +263,8 @@ a {
     margin-top: 50px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main main" "footer footer";
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+    grid-template-areas: "header header" "main main" "top-footer top-footer" "footer footer";
     align-items: center;
     justify-items: center;
     margin-bottom: 90px;
@@ -299,6 +299,16 @@ a {
     grid-area: main2;
     width: 125px;
     margin-left: 8px;
+}
+
+.save-button {
+    grid-area: top-footer;
+    width: 292px;
+    background-color: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    font-size: var(--md);
+    color: var(--text);
 }
 
 .send-button, .read-button {

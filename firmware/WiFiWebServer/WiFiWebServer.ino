@@ -23,6 +23,7 @@
 ***********************************************************************************/
 #include <SPI.h>
 #include <WiFiNINA.h>
+#include <Preferences.h>
 #include "arduino_secrets.h"
 #include "login.html.h"
 #include "styles.css.h"

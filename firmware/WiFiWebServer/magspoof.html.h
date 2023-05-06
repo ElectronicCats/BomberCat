@@ -37,7 +37,8 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
                     <input type="text" name="track2" id="track2" placeholder="Enter track 2" class="inputC input-track2">
                     <!-- <input type="number" id="card-date" placeholder="Enter card date" class="inputC input-date">
                     <input type="number" id="card-code" placeholder="Enter card code" class="inputC input-code"> -->
-                    <input type="submit" value="Send" class="primary-button send-button">
+                    <input type="submit" value="Save" class="primary-button save-button">
+                    <input type="submit" value="Emulate" class="primary-button send-button">
                 </form>
             </section>
         </div>
