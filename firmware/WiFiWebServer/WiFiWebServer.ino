@@ -147,7 +147,6 @@ void runServer() {
           Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
           Serial.println("URL: " + url);
-          Serial.println("Condition: " + String(url.substring(0, 15).equals("/magspoof.html?")));
 
           if (url.startsWith("/styles.css")) {
             webRequest = CSS_URL;
@@ -166,9 +165,11 @@ void runServer() {
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
             String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
-            String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&track3="));
+            String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
+            String button = url.substring(url.indexOf("button=") + 7, url.length());
             Serial.println("Track 1: " + track1);
             Serial.println("Track 2: " + track2);
+            Serial.println("Button: " + button);
           }
         }
       }

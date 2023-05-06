@@ -35,10 +35,9 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
                 <form action="#" class="card-form" method="get">
                     <input type="text" name="track1" id="track1" placeholder="Enter track 1" class="inputC input-card">
                     <input type="text" name="track2" id="track2" placeholder="Enter track 2" class="inputC input-track2">
-                    <!-- <input type="number" id="card-date" placeholder="Enter card date" class="inputC input-date">
-                    <input type="number" id="card-code" placeholder="Enter card code" class="inputC input-code"> -->
-                    <input type="submit" value="Save" class="primary-button save-button">
-                    <input type="submit" value="Emulate" class="primary-button send-button">
+                    <input type="hidden" name="button" value="" id="btnField">
+                    <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
+                    <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
                 </form>
             </section>
         </div>
@@ -74,5 +73,6 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
             </a>
         </div>
     </footer>
-    </body>   
+    <script src="./main.js"></script>
+    </body>
 </html>)=====";

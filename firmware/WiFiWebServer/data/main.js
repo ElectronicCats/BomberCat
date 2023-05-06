@@ -1,6 +1,28 @@
-let configBtn = document.querySelector("#configBtn");
-let nfcBtn = document.querySelector("#nfcBtn");
+// Home
+let btnConfig = document.querySelector("#btnConfig");
+let btnNfc = document.querySelector("#btnNfc");
 
-configBtn.addEventListener("click", () => { alert("Not available yet!") });
+if (btnConfig != null) {
+    btnConfig.addEventListener("click", () => { alert("Not available yet!") });
+}
 
-nfcBtn.addEventListener("click", () => { alert("Not available yet!") });
+if (btnNfc != null) {
+    btnNfc.addEventListener("click", () => { alert("Not available yet!") });
+}
+
+// Magspoof
+let btnSave = document.querySelector("#btnSave");
+let btnEmulate = document.querySelector("#btnEmulate");
+let btnField = document.querySelector("#btnField");
+
+if (btnSave != null) {
+    btnSave.addEventListener("click", () => {
+        btnField.setAttribute("value", "Save");
+    });
+}
+
+if (btnEmulate != null) {
+    btnEmulate.addEventListener("click", () => {
+        btnField.setAttribute("value", "Emulate");
+    });
+}
