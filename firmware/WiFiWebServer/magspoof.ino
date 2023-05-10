@@ -22,20 +22,6 @@
   Distributed as-is; no warranty is given.
 */
 
-#define L1         (LED_BUILTIN)  //LED1
-
-#define PIN_A      (6) //MagSpoof-1
-#define PIN_B      (7) //MagSpoof
-
-// #define NPIN       (5) //Button
-
-#define CLOCK_US   (500)
-
-#define BETWEEN_ZERO (53) // 53 zeros between track1 & 2
-
-#define TRACKS (2)
-#define DEBUGCAT
-
 // consts get stored in flash as we don't adjust them
 const char* tracks[] = {
   "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0", // Track 1
@@ -202,6 +188,17 @@ void magspoof(){
     blink(L1, 150, 3);
     delay(400);
   }
+}
+
+void magspoofSetup() {
+  pinMode(PIN_A, OUTPUT);
+  pinMode(PIN_B, OUTPUT);
+  pinMode(L1, OUTPUT);
+  pinMode(NPIN, INPUT_PULLUP);
+
+  // blink to show we started up
+  blink(L1, 200, 2);
+  Serial.println("Press the MagSpoof button");
 }
 
 // void setup(){

@@ -44,7 +44,15 @@
 #define INFO_URL 4
 #define MAGSPOOF_URL 5
 
-#define NPIN       (5) //Button
+// Magspoof consts
+#define L1            (LED_BUILTIN)  //LED1
+#define PIN_A         (6) //MagSpoof-1
+#define PIN_B         (7) //MagSpoof
+#define NPIN          (5) //Button
+#define CLOCK_US      (500)
+#define BETWEEN_ZERO  (53) // 53 zeros between track1 & 2
+#define TRACKS        (2)
+#define DEBUGCAT
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -97,9 +105,8 @@ void setup() {
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
-
-  // Magspoof setup
-  pinMode(NPIN, INPUT_PULLUP);
+  
+  magspoofSetup();
 }
 
 void loop() {
