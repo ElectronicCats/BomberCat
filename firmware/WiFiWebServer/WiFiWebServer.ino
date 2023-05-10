@@ -23,7 +23,7 @@
 ***********************************************************************************/
 #include <SPI.h>
 #include <WiFiNINA.h>
-#include <Preferences.h>
+// #include <Preferences.h>
 #include "arduino_secrets.h"
 #include "login.html.h"
 #include "styles.css.h"
@@ -43,6 +43,8 @@
 #define HOME_URL 3
 #define INFO_URL 4
 #define MAGSPOOF_URL 5
+
+#define NPIN       (5) //Button
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
@@ -95,10 +97,14 @@ void setup() {
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
+
+  // Magspoof setup
+  pinMode(NPIN, INPUT_PULLUP);
 }
 
 void loop() {
-  runServer();
+  // runServer();
+  magspoof();
 }
 
 void runServer() {
