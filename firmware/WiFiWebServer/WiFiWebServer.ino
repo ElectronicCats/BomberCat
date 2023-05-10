@@ -2,7 +2,7 @@
   Example WebServer with NFC Copy Cat WiFi
   by Francisco Torres, Electronic Cats (https://electroniccats.com/)
   Date: 14/04/2023
-  
+
   This example demonstrates how to use NFC Copy Cat by Electronic Cats
   https://github.com/ElectronicCats/NFC-Copy-Cat-WiFi
 
@@ -24,18 +24,18 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 // #include <Preferences.h>
+#include "Electroniccats_PN7150.h"
 #include "arduino_secrets.h"
-#include "login.html.h"
-#include "styles.css.h"
-#include "main.js.h"
 #include "home.html.h"
 #include "info.html.h"
+#include "login.html.h"
 #include "magspoof.html.h"
+#include "main.js.h"
+#include "styles.css.h"
 
-#include "Electroniccats_PN7150.h"
-#define PN7150_IRQ   (11)
-#define PN7150_VEN   (13)
-#define PN7150_ADDR  (0x28)
+#define PN7150_IRQ (11)
+#define PN7150_VEN (13)
+#define PN7150_ADDR (0x28)
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -45,24 +45,24 @@
 #define MAGSPOOF_URL 5
 
 // Magspoof consts
-#define L1            (LED_BUILTIN)  //LED1
-#define PIN_A         (6) //MagSpoof-1
-#define PIN_B         (7) //MagSpoof
-#define NPIN          (5) //Button
-#define CLOCK_US      (500)
-#define BETWEEN_ZERO  (53) // 53 zeros between track1 & 2
-#define TRACKS        (2)
+#define L1 (LED_BUILTIN)  // LED1
+#define PIN_A (6)         // MagSpoof-1
+#define PIN_B (7)         // MagSpoof
+#define NPIN (5)          // Button
+#define CLOCK_US (500)
+#define BETWEEN_ZERO (53)  // 53 zeros between track1 & 2
+#define TRACKS (2)
 #define DEBUGCAT
 
-Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
+Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
+RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
 
-uint8_t mode = 1;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
+uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = SECRET_SSID;        // your network SSID (name)
-char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;                 // your network key index number (needed only for WEP)
+char ssid[] = SECRET_SSID;  // your network SSID (name)
+char pass[] = SECRET_PASS;  // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;           // your network key index number (needed only for WEP)
 
 WiFiServer server(80);
 int status = WL_IDLE_STATUS;
@@ -73,14 +73,15 @@ void printWifiStatus();
 void showPageContent(WiFiClient client, const char* pageContent);
 
 void setup() {
-  //Initialize serial and wait for port to open:
+  // Initialize serial and wait for port to open:
   Serial.begin(9600);
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
-    while (true);
+    while (true)
+      ;
   }
 
   // Set a static IP address
@@ -105,26 +106,26 @@ void setup() {
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
-  
+
   magspoofSetup();
 }
 
 void loop() {
-  // runServer();
+  runServer();
   magspoof();
 }
 
 void runServer() {
-  WiFiClient client = server.available();   // listen for incoming clients
+  WiFiClient client = server.available();  // listen for incoming clients
   static int currentHTML;
 
-  if (client) {                             // if you get a client,
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected()) {            // loop while the client's connected
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
+  if (client) {                   // if you get a client,
+    String currentLine = "";      // make a String to hold incoming data from the client
+    while (client.connected()) {  // loop while the client's connected
+      if (client.available()) {   // if there's bytes to read from the client,
+        char c = client.read();   // read a byte, then
         // Serial.write(c);                    // print it out the serial monitor
-        if (c == '\n') {                    // if the byte is a newline character
+        if (c == '\n') {  // if the byte is a newline character
           if (currentLine.length() == 0) {
             if (webRequest == LOGIN_URL) {
               showPageContent(client, login_html);
@@ -187,7 +188,7 @@ void runServer() {
         }
       }
     }
-    client.stop(); // close the connection:
+    client.stop();  // close the connection:
     Serial.println("client disconnected");
   }
 }
@@ -216,57 +217,55 @@ void showPageContent(WiFiClient client, const char* pageContent) {
   // Flag to indicate if we've reached the end of the page content
   boolean lastString = false;
   // Pointer to determine where we are in the page content
-  char *charPtr = (char *) pageContent;
+  char* charPtr = (char*)pageContent;
 
   // Loop to read the page content in chunks of 1000 bytes
   while (1) {
     for (int i = 0; i < 1000; i++) {
       // Check if we've reached the end of the page content
-      if ((byte) *charPtr == 0) {
+      if ((byte)*charPtr == 0) {
         lastString = true;
         tempString[i] = 0;
       }
       // Copy the page content to the temporary string
       tempString[i] = *charPtr;
-      charPtr ++;
+      charPtr++;
     }
     // Send the temporary string to the client
-    client.print (tempString);
-    if (lastString == true) break; // Exit the loop if we've reached the end of the page content
+    client.print(tempString);
+    if (lastString == true) break;  // Exit the loop if we've reached the end of the page content
   }
-  client.println(""); // Send a blank line to indicate the end of the page content
+  client.println("");  // Send a blank line to indicate the end of the page content
 }
 
-void ResetMode() {                                 //Reset the configuration mode after each reading
+void ResetMode() {  // Reset the configuration mode after each reading
   WiFiClient client = server.available();
   client.println("Re-initializing...");
   nfc.ConfigMode(mode);
   nfc.StartDiscovery(mode);
 }
 
-void PrintBuf(const byte * data, const uint32_t numBytes) { //Print hex data buffer in format
+void PrintBuf(const byte* data, const uint32_t numBytes) {  // Print hex data buffer in format
   WiFiClient client = server.available();
   uint32_t szPos;
-  for (szPos = 0; szPos < numBytes; szPos++)
-  {
+  for (szPos = 0; szPos < numBytes; szPos++) {
     client.print(F("0x"));
     // Append leading 0 for small values
     if (data[szPos] <= 0xF)
       client.print(F("0"));
     client.print(data[szPos] & 0xff, HEX);
-    if ((numBytes > 1) && (szPos != numBytes - 1))
-    {
+    if ((numBytes > 1) && (szPos != numBytes - 1)) {
       client.print(F(" "));
     }
   }
   client.println();
 }
 
-void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s in te field
+void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s in te field
   WiFiClient client = server.available();
   char tmp[16];
   while (1) {
-    switch (RfIntf.Protocol) { //Indetify card protocol
+    switch (RfIntf.Protocol) {  // Indetify card protocol
       case PROT_T1T:
       case PROT_T2T:
       case PROT_T3T:
@@ -285,13 +284,15 @@ void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s i
         return;
     }
 
-    switch (RfIntf.ModeTech) { //Indetify card technology
+    switch (RfIntf.ModeTech) {  // Indetify card technology
       case (MODE_POLL | TECH_PASSIVE_NFCA):
         client.print("\tSENS_RES = ");
         sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SensRes[0]);
-        client.print(tmp); client.print(" ");
+        client.print(tmp);
+        client.print(" ");
         sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SensRes[1]);
-        client.print(tmp); client.println(" ");
+        client.print(tmp);
+        client.println(" ");
 
         client.print("\tNFCID = ");
         PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
@@ -299,8 +300,8 @@ void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s i
         if (RfIntf.Info.NFC_APP.SelResLen != 0) {
           client.print("\tSEL_RES = ");
           sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SelRes[0]);
-          client.print(tmp); client.println(" ");
-
+          client.print(tmp);
+          client.println(" ");
         }
         break;
 
@@ -335,10 +336,10 @@ void displayCardInfo(RfIntf_t RfIntf) { //Funtion in charge to show the card/s i
       default:
         break;
     }
-    if (RfIntf.MoreTags) { // It will try to identify more NFC cards if they are the same technology
+    if (RfIntf.MoreTags) {  // It will try to identify more NFC cards if they are the same technology
       if (nfc.ReaderActivateNext(&RfIntf) == NFC_ERROR) break;
-    }
-    else break;
+    } else
+      break;
   }
 }
 
@@ -348,28 +349,31 @@ void setupDetectTags() {
   client.println("Detect NFC tags with PN7150");
 
   client.println("Initializing...");
-  if (nfc.connectNCI()) { //Wake up the board
+  if (nfc.connectNCI()) {  // Wake up the board
     client.println("Error while setting up the mode, check connections!");
-    while (1);
+    while (1)
+      ;
   }
 
   if (nfc.ConfigureSettings()) {
     client.println("The Configure Settings is failed!");
-    while (1);
+    while (1)
+      ;
   }
 
-  if (nfc.ConfigMode(mode)) { //Set up the configuration mode
+  if (nfc.ConfigMode(mode)) {  // Set up the configuration mode
     client.println("The Configure Mode is failed!!");
-    while (1);
+    while (1)
+      ;
   }
-  nfc.StartDiscovery(mode); //NCI Discovery mode
+  nfc.StartDiscovery(mode);  // NCI Discovery mode
   client.println("BomberCat, Yes Sir!");
   client.println("Waiting for an Card ...");
 }
 
 void loopdetectTags() {
   WiFiClient client = server.available();
-  if (!nfc.WaitForDiscoveryNotification(&RfInterface)) { // Waiting to detect cards
+  if (!nfc.WaitForDiscoveryNotification(&RfInterface)) {  // Waiting to detect cards
     displayCardInfo(RfInterface);
     switch (RfInterface.Protocol) {
       case PROT_T1T:
