@@ -22,6 +22,17 @@
   Distributed as-is; no warranty is given.
 */
 
+void magspoofSetup() {
+  pinMode(PIN_A, OUTPUT);
+  pinMode(PIN_B, OUTPUT);
+  pinMode(L1, OUTPUT);
+  pinMode(NPIN, INPUT_PULLUP);
+
+  // blink to show we started up
+  blink(L1, 200, 5);
+  Serial.println("Press the MagSpoof button");
+}
+
 // consts get stored in flash as we don't adjust them
 const char* tracks[] = {
     "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
@@ -162,23 +173,34 @@ void storeRevTrack(int track) {
 }
 
 void magspoof() {
+  int blinkDelay = 100;
+  static bool blinkLed = false;
+  static int count = 0;
+  static bool ledState = LOW;
+  static unsigned long lastTime = millis();
+
   if (digitalRead(NPIN) == 0) {
     Serial.println("Activating MagSpoof...");
     playTrack(1 + (curTrack++ % 2));
-    blink(L1, 150, 3);
+    blinkLed = true;
     delay(400);
   }
-}
 
-void magspoofSetup() {
-  pinMode(PIN_A, OUTPUT);
-  pinMode(PIN_B, OUTPUT);
-  pinMode(L1, OUTPUT);
-  pinMode(NPIN, INPUT_PULLUP);
+  if (blinkLed) {
+    if (millis() - lastTime > blinkDelay) {
+      lastTime = millis();
+      digitalWrite(L1, ledState);
+      ledState = !ledState;
+      count++;
+    }
+  }
 
-  // blink to show we started up
-  blink(L1, 200, 2);
-  Serial.println("Press the MagSpoof button");
+  if (count == 7) {
+    count = 0;
+    blinkLed = false;
+    ledState = LOW;
+    digitalWrite(L1, ledState);
+  }
 }
 
 // void setup(){
