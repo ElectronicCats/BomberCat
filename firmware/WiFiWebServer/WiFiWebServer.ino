@@ -55,6 +55,7 @@
 #define DEBUGCAT
 
 bool runMagspoof = false;
+char tracks[2][128];
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
@@ -180,11 +181,14 @@ void runServer() {
 
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
-            String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
-            String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
+            url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2=")).toCharArray(tracks[0], 128);
+            url.substring(url.indexOf("track2=") + 7, url.indexOf("&button=")).toCharArray(tracks[1], 128);
             String button = url.substring(url.indexOf("button=") + 7, url.length());
-            Serial.println("Track 1: " + track1);
-            Serial.println("Track 2: " + track2);
+
+            Serial.print("Track 1: ");
+            Serial.println(tracks[0]);
+            Serial.print("Track 2: ");
+            Serial.println(tracks[1]);
             Serial.println("Button: " + button);
 
             if (button.startsWith("Emulate")) {

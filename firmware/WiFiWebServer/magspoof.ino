@@ -34,10 +34,10 @@ void magspoofSetup() {
 }
 
 // consts get stored in flash as we don't adjust them
-const char* tracks[] = {
-    "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
-    ";123456781234567=112220100000000000000?\0"                              // Track 2
-};
+// const char* tracks[] = {
+//     "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
+//     ";123456781234567=112220100000000000000?\0"                              // Track 2
+// };
 
 char revTrack[41];
 
