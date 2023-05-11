@@ -1,16 +1,16 @@
 /*********************************************************************************
-  Example WebServer with NFC Copy Cat WiFi
+  Web server for BomberCat
   by Francisco Torres, Electronic Cats (https://electroniccats.com/)
   Date: 14/04/2023
 
-  This example demonstrates how to use NFC Copy Cat by Electronic Cats
-  https://github.com/ElectronicCats/NFC-Copy-Cat-WiFi
+  This example demonstrates how to use a Web server for the BomberCat by Electronic Cats
+  https://github.com/ElectronicCats/BomberCat
 
   Development environment specifics:
-  IDE: Visual Studio Code + Arduino CLI
+  IDE: Visual Studio Code + Arduino CLI Version 0.32.2
   Hardware Platform:
-  NFC Copy Cat
-  - ESP32-S2
+  BomberCat
+  - RP2040
 
   Electronic Cats invests time and resources providing this open source code,
   please support Electronic Cats and open-source hardware by purchasing
