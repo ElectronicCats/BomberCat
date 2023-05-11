@@ -179,7 +179,8 @@ void magspoof() {
   static bool ledState = LOW;
   static unsigned long lastTime = millis();
 
-  if (digitalRead(NPIN) == 0) {
+  if (digitalRead(NPIN) == 0 || runMagspoof) {
+    runMagspoof = false;
     Serial.println("Activating MagSpoof...");
     playTrack(1 + (curTrack++ % 2));
     blinkLed = true;

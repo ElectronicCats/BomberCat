@@ -54,6 +54,8 @@
 #define TRACKS (2)
 #define DEBUGCAT
 
+bool runMagspoof = false;
+
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
 
@@ -184,6 +186,10 @@ void runServer() {
             Serial.println("Track 1: " + track1);
             Serial.println("Track 2: " + track2);
             Serial.println("Button: " + button);
+
+            if (button.startsWith("Emulate")) {
+              runMagspoof = true;
+            }
           }
         }
       }
