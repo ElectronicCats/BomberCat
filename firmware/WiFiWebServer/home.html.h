@@ -172,7 +172,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                         </div>
                         <p>MagSpoof</p>
                     </a>
-                    <a href="https://github.com/ElectronicCats/NFC-Copy-Cat" target="_blank">
+                    <a href="https://github.com/ElectronicCats/BomberCat" target="_blank">
                         <!-- <img src="./gitHub.png" alt="github" class="menu-icon"> -->
                         <div class="menu-icon">
                             <?xml version="1.0" standalone="no"?>
