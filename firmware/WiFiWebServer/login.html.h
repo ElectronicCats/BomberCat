@@ -79,7 +79,7 @@ const char* login_html = R"=====(<!DOCTYPE html>
             4 35 13 0 26 7 30 15 4 12 -4 15 -38 15 -23 0 -46 -3 -49 -7z"/>
             </g>
             </svg>
-            <h1 class="logoTitle">NFC Copy Cat</h1>
+            <h1 class="logoTitle">BomberCat</h1>
         </div>
     </header>
     <section class="signin">

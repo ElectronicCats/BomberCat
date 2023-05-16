@@ -81,7 +81,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                 </g>
                 </svg>
             </div>
-            <p class="logoPTitle">NFC <br>Copy<br> Cat</p>
+            <p class="logoPTitle">BomberCat</p>
         </div>
     </header>
     <main>
