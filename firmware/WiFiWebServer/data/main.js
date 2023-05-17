@@ -6,9 +6,9 @@ if (btnConfig != null) {
     btnConfig.addEventListener("click", () => { alert("Not available yet!") });
 }
 
-if (btnNfc != null) {
-    btnNfc.addEventListener("click", () => { alert("Not available yet!") });
-}
+// if (btnNfc != null) {
+//     btnNfc.addEventListener("click", () => { alert("Not available yet!") });
+// }
 
 // Magspoof
 let btnSave = document.querySelector("#btnSave");

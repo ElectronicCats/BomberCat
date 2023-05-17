@@ -30,6 +30,7 @@
 #include "info.html.h"
 #include "login.html.h"
 #include "magspoof.html.h"
+#include "nfc.html.h"
 #include "main.js.h"
 #include "styles.css.h"
 
@@ -43,6 +44,7 @@
 #define HOME_URL 3
 #define INFO_URL 4
 #define MAGSPOOF_URL 5
+#define NFC_URL 6
 
 // Magspoof consts
 #define L1 (LED_BUILTIN)  // LED1
@@ -148,6 +150,9 @@ void runServer() {
             } else if (webRequest == MAGSPOOF_URL) {
               showPageContent(client, magspoof_html);
               currentHTML = MAGSPOOF_URL;
+            } else if (webRequest == NFC_URL) {
+              showPageContent(client, nfc_html);
+              currentHTML = NFC_URL;
             }
 
             break;
@@ -177,6 +182,8 @@ void runServer() {
             webRequest = INFO_URL;
           } else if (url.startsWith("/magspoof.html")) {
             webRequest = MAGSPOOF_URL;
+          } else if (url.startsWith("/nfc.html")) {
+            webRequest = NFC_URL;
           }
 
           // ? is the start of request parameters

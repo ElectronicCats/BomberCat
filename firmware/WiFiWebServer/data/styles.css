@@ -23,7 +23,6 @@ body {
 }
 
 .main-content {
-    /* padding: 10px, 20px, 70px, 20px; */
     padding-left: 20px;
     padding-right: 20px;
     padding-top: 10px;
@@ -149,14 +148,14 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 }
 
 .input-username::placeholder {
-    background-image: url(./user.png);
+    /* background-image: url(./user.png); */
     background-repeat: no-repeat;
     background-position: left;
     background-size: contain;
 }
 
 .input-password::placeholder, .input-pass::placeholder {
-    background-image: url(./pass.png);
+    /* background-image: url(./pass.png); */
     background-repeat: no-repeat;
     background-position: left;
     background-size: contain;
@@ -164,7 +163,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 }
 
 .input-ap::placeholder {
-    background-image: url(./ap.png);
+    /* background-image: url(./ap.png); */
     background-repeat: no-repeat;
     background-position: left;
     background-size: contain;
@@ -232,7 +231,6 @@ a {
 
 .config-header {
     margin: 54px auto;
-    /* width: 500px; */
     text-align: center;
     font-size: var(--lg);
     font-weight: normal;
@@ -253,7 +251,6 @@ a {
 .mags-container, .nfc-container {
     margin-top: 40px;
     display: flex;
-    /* width: 500px; */
     margin: 0 auto;
     flex-direction: column;
     align-items: center;
@@ -270,9 +267,18 @@ a {
     margin-bottom: 90px;
 }
 
+.read-form {
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-areas: "header header" "main1 main2" "footer footer";
+}
+
 .input-card, .text-card {
    grid-area: header;
    width: 280px;
+}
+
+.text-card {
+    border: none;
 }
 
 .input-track1 {
@@ -289,16 +295,18 @@ a {
     grid-area: main1;
     width: 125px;
     margin-right: 8px;
-}
-
-.text-date, .text-code {
-    font-size: var(--xsm);
+    border: none;
 }
 
 .input-code, .text-code {
     grid-area: main2;
     width: 125px;
     margin-left: 8px;
+    border: none;
+}
+
+.text-date, .text-code {
+    font-size: var(--xsm);
 }
 
 .save-button {
@@ -319,7 +327,6 @@ a {
 /* Footer */
 
 .footer-home {
-    /* margin-top: 72px; */
     position: fixed;
     width: 100%;
     height: 60px;
