@@ -22,7 +22,7 @@ body {
     background-color: var(--main-logo-background);
 }
 
-.main-content {
+.main-background {
     padding-left: 20px;
     padding-right: 20px;
     padding-top: 10px;
@@ -32,6 +32,13 @@ body {
     border-top-left-radius: 30px;
     border-top-right-radius: 30px;
     background-color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-content {
+    max-width: 500px;
 }
 
 .header-container {
@@ -108,12 +115,14 @@ body {
     align-items: center;
 }
 
+
+
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     display: none;
 }
 
 .input {
-    width: 250px;
+    width: 265px;
     height: 26px;
     background-color: var(--fill-input-field);
     border: 1px solid var(--border);
@@ -383,5 +392,11 @@ a {
         margin: 0 auto;
         width: 400px;
         justify-items: center;
+    }
+}
+
+@media (min-width: 800px) {
+    .header-home {
+        padding-left: 100px;
     }
 }

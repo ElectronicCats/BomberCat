@@ -81,37 +81,36 @@ const char* info_html = R"=====(<!DOCTYPE html>
                 </g>
                 </svg>
             </div>
-            <p class="logoPTitle">NFC <br>Copy<br> Cat</p>
+            <p class="logoPTitle">BomberCat</p>
         </div>
     </header>
     <main>
         <div class="main-container">
-            <div class="main-content">
-                <section class="about">
-                    <div class="about-container">
-                        <h3 class="i-title">About Us</h3>
-                        <img src="./Logo-100_100.png" alt="logo" class="mainLogo">
-                        <p>We are... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
-                    </div>
-                </section>
-                <section class="contact">
-                    <div class="contact-container">
-                        <h3 class="i-title">Contact Us</h3>
-                        <p>Send us an e-mail</p>
-                        <form action="/" class="form">
-                            <p>
-                                <input type="username" required id="username" placeholder="       your@email.com" class="input input-username input-contact">
+            <div class="main-background">
+                <div class="main-content">
+                    <section class="about">
+                        <div class="about-container">
+                            <h3 class="i-title">About Us</h3>
+                            <p>We are a Mexican company dedicated to the design and manufacture of embedded systems for the general public and the private companies, characterized by always working with passion for the development of electronic devices, looking to contribute to the well-being of our consumers by offering quality products suitable for your needs.</p>
+                        </div>
+                    </section>
+                    <section class="contact">
+                        <div class="contact-container">
+                            <h3 class="i-title">Contact Us</h3>
+                            <p>Send us an e-mail</p>
+                            <form action="#" class="form">
+                                <input type="username" required id="username" placeholder="your@email.com" class="input input-username input-contact">
                                 <input type="submit" value="contact" class="primary-button send-button">
-                            </p>
-                        </form>
-                    </div>
-                </section>
-                <section class="privacity">
-                    <div class="privacity-container">
-                        <h3 class="i-title">Privacity</h3>
-                        <p>For this privacity policy... Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas ipsam tempore vero deserunt nesciunt, rerum quod magnam veniam autem quia consequatur, corrupti soluta placeat nihil dolore magni, laudantium incidunt. Neque?</p>
-                    </div>
-                </section>
+                            </form>
+                        </div>
+                    </section>
+                    <section class="privacity">
+                        <div class="privacity-container">
+                            <h3 class="i-title">Privacy Policy</h3>
+                            <p>Your can read the privacy policy by clicking on <a href="https://electroniccats.com/privacy-policy/" target="_blank">this link.</a></p>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
     </main>
