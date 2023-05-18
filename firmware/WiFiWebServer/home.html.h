@@ -81,7 +81,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                 </g>
                 </svg>
             </div>
-            <p class="logoPTitle">NFC <br>Copy<br> Cat</p>
+            <p class="logoPTitle">BomberCat</p>
         </div>
     </header>
     <main>
@@ -114,7 +114,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                         </div>
                         <p>Config<br>Device</p>
                     </a>
-                    <a href="#" id="btnNfc">
+                    <a href="./nfc.html" id="btnNfc">
                         <!-- <img src="./NFC.png" alt="nfc" class="menu-icon nfc-icon"> -->
                         <div class="menu-icon nfc-icon">
                             <?xml version="1.0" standalone="no"?>
