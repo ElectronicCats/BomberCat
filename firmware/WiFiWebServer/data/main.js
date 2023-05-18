@@ -26,3 +26,10 @@ if (btnEmulate != null) {
         btnField.setAttribute("value", "Emulate");
     });
 }
+
+// Info
+let btnSendMail = document.querySelector("#btnSendMail");
+
+if (btnSendMail != null) {
+    btnSendMail.addEventListener("click", () => { alert("Not available yet!") });
+}
