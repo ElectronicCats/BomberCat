@@ -13,4 +13,4 @@ monitor:
 clean:
 	arduino-cli cache clean
 
-all: compile upload monitor
+all: compile upload

@@ -33,12 +33,6 @@ void magspoofSetup() {
   Serial.println("Press the MagSpoof button");
 }
 
-// consts get stored in flash as we don't adjust them
-// const char* tracks[] = {
-//     "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
-//     ";123456781234567=112220100000000000000?\0"                              // Track 2
-// };
-
 char revTrack[41];
 
 const int sublen[] = {32, 48, 48};
@@ -97,6 +91,13 @@ void playTrack(int track) {
   for (int i = 0; i < 25; i++)
     playBit(0);
 
+  Serial.println("Playing tracks...");
+  Serial.println(track);
+  Serial.print("Track 1: ");
+  Serial.println(tracks[0]);
+  Serial.print("Track 2: ");
+  Serial.println(tracks[1]);
+
   for (int i = 0; tracks[track][i] != '\0'; i++) {
     crc = 1;
     tmp = tracks[track][i] - sublen[track];
@@ -107,6 +108,7 @@ void playTrack(int track) {
       playBit(tmp & 1);
       tmp >>= 1;
     }
+    Serial.println(crc);
     playBit(crc);
   }
 

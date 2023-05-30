@@ -57,7 +57,11 @@
 #define DEBUGCAT
 
 bool runMagspoof = false;
-char tracks[2][128];
+// char tracks[2][128];
+const char* tracks[] = {
+    "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
+    ";123456781234567=112220100000000000000?\0"                              // Track 2
+};
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
@@ -188,8 +192,8 @@ void runServer() {
 
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
-            url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2=")).toCharArray(tracks[0], 128);
-            url.substring(url.indexOf("track2=") + 7, url.indexOf("&button=")).toCharArray(tracks[1], 128);
+            // url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2=")).toCharArray(tracks[0], 128);
+            // url.substring(url.indexOf("track2=") + 7, url.indexOf("&button=")).toCharArray(tracks[1], 128);
             String button = url.substring(url.indexOf("button=") + 7, url.length());
 
             Serial.print("Track 1: ");
