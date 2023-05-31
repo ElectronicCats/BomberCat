@@ -25,13 +25,14 @@
 #include <WiFiNINA.h>
 // #include <Preferences.h>
 #include "Electroniccats_PN7150.h"
+#include "Magspoof.h"
 #include "arduino_secrets.h"
 #include "home.html.h"
 #include "info.html.h"
 #include "login.html.h"
 #include "magspoof.html.h"
-#include "nfc.html.h"
 #include "main.js.h"
+#include "nfc.html.h"
 #include "styles.css.h"
 
 #define PN7150_IRQ (11)
@@ -46,22 +47,8 @@
 #define MAGSPOOF_URL 5
 #define NFC_URL 6
 
-// Magspoof consts
-#define L1 (LED_BUILTIN)  // LED1
-#define PIN_A (6)         // MagSpoof-1
-#define PIN_B (7)         // MagSpoof
-#define NPIN (5)          // Button
-#define CLOCK_US (500)
-#define BETWEEN_ZERO (53)  // 53 zeros between track1 & 2
-#define TRACKS (2)
-#define DEBUGCAT
-
 bool runMagspoof = false;
 // char tracks[2][128];
-const char* tracks[] = {
-    "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?\0",  // Track 1
-    ";123456781234567=112220100000000000000?\0"                              // Track 2
-};
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
@@ -116,7 +103,7 @@ void setup() {
   // you're connected now, so print out the status:
   printWifiStatus();
 
-  magspoofSetup();
+  setupMagspoof();
 }
 
 void loop() {
