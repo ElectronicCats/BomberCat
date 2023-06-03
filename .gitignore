@@ -36,3 +36,4 @@ firmware/host_Relay_NFC/arduino_secrets.h
 hardware/#auto_saved_files#
 
 .vscode/
+firmware/WiFiWebServer/Magspoof/main
