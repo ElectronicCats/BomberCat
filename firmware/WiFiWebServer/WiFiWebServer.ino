@@ -90,25 +90,58 @@ void setup() {
   }
 
   // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
+  // while (status != WL_CONNECTED) {
+  //   Serial.print("Attempting to connect to SSID: ");
+  //   Serial.println(ssid);
+  //   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+  //   status = WiFi.begin(ssid, pass);
 
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
+  //   // wait 10 seconds for connection:
+  //   delay(10000);
+  // }
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
 
   setupMagspoof();
+  setupTracks();
 }
 
 void loop() {
-  runServer();
+  // runServer();
   magspoof();
+}
+
+void setupTracks() {
+  String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
+  String track2 = ";123456781234567=112220100000000000000?";
+  String arg = track1 + track2;
+  const char* payload = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?;;123456781234567=112220100000000000000?";
+  Serial.print("Payload: ");
+  Serial.println(payload);
+  int i, j = 0;
+
+  for (i = 0; i < 255; i++) {
+    if ((byte)payload[i] == '?' && j == 0) {
+      tracks[0][i] = (byte)payload[i];
+      j = i;
+      tracks[0][i + 1] = NULL;
+    }
+    if (j == 0) {
+      tracks[0][i] = (byte)payload[i];
+    } else {
+      // tracks[1][i - j] = (byte)payload[i + 1];
+      // if ((byte)payload[i + 1] == '?') {
+      //   tracks[1][i - j + 1] = NULL;
+      //   break;
+      // }
+    }
+  }
+
+  Serial.print("Track 1: ");
+  Serial.println((char *)tracks[0]);
+  Serial.print("Track 2: ");
+  Serial.println((char *)tracks[1]);
 }
 
 void runServer() {
@@ -179,8 +212,28 @@ void runServer() {
 
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
-            // url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2=")).toCharArray(tracks[0], 128);
-            // url.substring(url.indexOf("track2=") + 7, url.indexOf("&button=")).toCharArray(tracks[1], 128);
+            // Store tracks from url into String variables and add \0 to end of string
+            // String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2=")) + "\0";
+            // String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button=")) + "\0";
+
+            // Copy the tracks into the char arrays using strcpy
+            // strcpy(tracks[0], track1.c_str());
+            // strcpy(tracks[1], track2.c_str());
+
+            // Copy the tracks into the char arrays
+            // track1.toCharArray(tracks[0], 128);
+            // track2.toCharArray(tracks[1], 128);
+
+            // Copy the tracks into the char arrays using for loops
+            // for (int i = 0; i < track1.length(); i++) {
+            //   // tracks[0][i] = track1.charAt(i);
+            // }
+
+            // for (int i = 0; i < track2.length(); i++) {
+            //   // tracks[1][i] = track2.charAt(i);
+            // }
+
+            // Get the button value from the url
             String button = url.substring(url.indexOf("button=") + 7, url.length());
 
             Serial.print("Track 1: ");
