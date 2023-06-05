@@ -1,5 +1,5 @@
 BOARD_TAG = electroniccats:mbed_rp2040:bombercat
-MONITOR_PORT = /dev/cu.usbmodem11101
+MONITOR_PORT = /dev/cu.usbmodem101
 
 compile:
 	arduino-cli compile --fqbn $(BOARD_TAG)

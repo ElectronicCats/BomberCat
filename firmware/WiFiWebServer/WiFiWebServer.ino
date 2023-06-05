@@ -66,6 +66,7 @@ WiFiServer server(80);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
+String decodeURL(char* url);
 void setupTracks();
 void loadTracks(String url);
 void loadPageContent(WiFiClient client);
@@ -123,6 +124,47 @@ void loop() {
   magspoof();
 }
 
+String decodeURL(char* url) {
+  // Create two pointers that point to the start of the data
+  char* leader = url;
+  char* follower = leader;
+
+  // While we're not at the end of the string (current character not NULL)
+  while (*leader) {
+    // Check to see if the current character is a %
+    if (*leader == '%') {
+      // Grab the next two characters and move leader forwards
+      leader++;
+      char high = *leader;
+      leader++;
+      char low = *leader;
+
+      // Convert ASCII 0-9A-F to a value 0-15
+      if (high > 0x39) high -= 7;
+      high &= 0x0f;
+
+      // Same again for the low byte:
+      if (low > 0x39) low -= 7;
+      low &= 0x0f;
+
+      // Combine the two into a single byte and store in follower:
+      *follower = (high << 4) | low;
+    } else {
+      // All other characters copy verbatim
+      *follower = *leader;
+    }
+
+    // Move both pointers to the next character:
+    leader++;
+    follower++;
+  }
+  // Terminate the new string with a NULL character to trim it off
+  *follower = 0;
+
+  // Return the new string
+  return String(url);
+}
+
 void setupTracks() {
   String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
   String track2 = ";123456781234567=112220100000000000000?";
@@ -143,16 +185,27 @@ void loadTracks(String url) {
   String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
   String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
 
+  // Decode urls
+  track1 = decodeURL((char*)track1.c_str());
+  track2 = decodeURL((char*)track2.c_str());
+
+  // Remove any trailing characters
+  track1.trim();
+  track2.trim();
+
   // Replace + with spaces
   track1.replace("+", " ");
   track2.replace("+", " ");
+
+  track1 = "%" + track1 + "?";
+  track2 = ";" + track2 + "?";
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
 
-  // Track 1 real content: 8%5ESABAS JIMENEZ%2FANDRES EDUAR%5E2
-  // Track 1 expected content: 8^SABAS JIMENEZ/ANDRES EDUAR^2
+  // Track 1 real content:      8^SABAS+JIMENEZ/ANDRES+EDUAR^2
+  // Track 1 expected content:  8^SABAS JIMENEZ/ANDRES EDUAR^2
 }
 
 void loadPageContent(WiFiClient client) {
