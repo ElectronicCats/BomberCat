@@ -67,7 +67,8 @@ int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
 void setupTracks();
-void loadPageContent();
+void loadTracks(String url);
+void loadPageContent(WiFiClient client);
 void runServer();
 void printWifiStatus();
 void showPageContent(WiFiClient client, const char* pageContent);
@@ -137,9 +138,26 @@ void setupTracks() {
   Serial.println(tracks[1]);
 }
 
+void loadTracks(String url) {
+  // Store tracks from url into String variables
+  String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
+  String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
+
+  // Replace + with spaces
+  track1.replace("+", " ");
+  track2.replace("+", " ");
+
+  // Copy the tracks into the char arrays using strcpy
+  strcpy(tracks[0], track1.c_str());
+  strcpy(tracks[1], track2.c_str());
+
+  // Track 1 real content: 8%5ESABAS JIMENEZ%2FANDRES EDUAR%5E2
+  // Track 1 expected content: 8^SABAS JIMENEZ/ANDRES EDUAR^2
+}
+
 void loadPageContent(WiFiClient client) {
   static int currentHTML;
-  
+
   switch (webRequest) {
     case CSS_URL:
       showPageContent(client, styles_css);
@@ -221,21 +239,10 @@ void runServer() {
 
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
-            // Store tracks from url into String variables
-            String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
-            String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
-
-            // Copy the tracks into the char arrays using strcpy
-            strcpy(tracks[0], track1.c_str());
-            strcpy(tracks[1], track2.c_str());
+            loadTracks(url);
 
             // Get the button value from the url
             String button = url.substring(url.indexOf("button=") + 7, url.length());
-
-            Serial.print("Track 1: ");
-            Serial.println(tracks[0]);
-            Serial.print("Track 2: ");
-            Serial.println(tracks[1]);
             Serial.println("Button: " + button);
 
             if (button.startsWith("Emulate")) {
