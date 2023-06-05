@@ -66,6 +66,8 @@ WiFiServer server(80);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
+void setupTracks();
+void loadPageContent();
 void runServer();
 void printWifiStatus();
 void showPageContent(WiFiClient client, const char* pageContent);
@@ -74,11 +76,11 @@ void setup() {
   // Initialize serial and wait for port to open:
   Serial.begin(9600);
 
-  #ifdef DEBUG
+#ifdef DEBUG
   while (!Serial) {
     ;  // wait for serial port to connect. Needed for native USB port only
   }
-  #endif
+#endif
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -123,7 +125,7 @@ void loop() {
 void setupTracks() {
   String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
   String track2 = ";123456781234567=112220100000000000000?";
-  
+
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
@@ -135,9 +137,47 @@ void setupTracks() {
   Serial.println(tracks[1]);
 }
 
+void loadPageContent(WiFiClient client) {
+  static int currentHTML;
+  
+  switch (webRequest) {
+    case CSS_URL:
+      showPageContent(client, styles_css);
+      webRequest = currentHTML;
+      break;
+    case JAVASCRIPT_URL:
+      showPageContent(client, main_js);
+      webRequest = currentHTML;
+      break;
+    case LOGIN_URL:
+      showPageContent(client, login_html);
+      currentHTML = LOGIN_URL;
+      break;
+    case HOME_URL:
+      showPageContent(client, home_html);
+      currentHTML = HOME_URL;
+      break;
+    case INFO_URL:
+      showPageContent(client, info_html);
+      currentHTML = INFO_URL;
+      break;
+    case MAGSPOOF_URL:
+      showPageContent(client, magspoof_html);
+      currentHTML = MAGSPOOF_URL;
+      break;
+    case NFC_URL:
+      showPageContent(client, nfc_html);
+      currentHTML = NFC_URL;
+      break;
+    default:
+      showPageContent(client, login_html);
+      currentHTML = LOGIN_URL;
+      break;
+  }
+}
+
 void runServer() {
   WiFiClient client = server.available();  // listen for incoming clients
-  static int currentHTML;
 
   if (client) {                   // if you get a client,
     String currentLine = "";      // make a String to hold incoming data from the client
@@ -147,29 +187,7 @@ void runServer() {
         // Serial.write(c);                    // print it out the serial monitor
         if (c == '\n') {  // if the byte is a newline character
           if (currentLine.length() == 0) {
-            if (webRequest == LOGIN_URL) {
-              showPageContent(client, login_html);
-              currentHTML = LOGIN_URL;
-            } else if (webRequest == CSS_URL) {
-              showPageContent(client, styles_css);
-              webRequest = currentHTML;
-            } else if (webRequest == JAVASCRIPT_URL) {
-              showPageContent(client, main_js);
-              webRequest = currentHTML;
-            } else if (webRequest == HOME_URL) {
-              showPageContent(client, home_html);
-              currentHTML = HOME_URL;
-            } else if (webRequest == INFO_URL) {
-              showPageContent(client, info_html);
-              currentHTML = INFO_URL;
-            } else if (webRequest == MAGSPOOF_URL) {
-              showPageContent(client, magspoof_html);
-              currentHTML = MAGSPOOF_URL;
-            } else if (webRequest == NFC_URL) {
-              showPageContent(client, nfc_html);
-              currentHTML = NFC_URL;
-            }
-
+            loadPageContent(client);
             break;
           } else {
             // if you got a newline, then clear currentLine:
@@ -179,7 +197,7 @@ void runServer() {
           currentLine += c;      // add it to the end of the currentLine
         }
 
-        // Only check for URL if it's a GET <url options> HTTP/ (ignore the http version number)
+        // Only check for URL if it's a GET <url options> HTTP
         if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
           Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
@@ -210,19 +228,6 @@ void runServer() {
             // Copy the tracks into the char arrays using strcpy
             strcpy(tracks[0], track1.c_str());
             strcpy(tracks[1], track2.c_str());
-
-            // Copy the tracks into the char arrays
-            // track1.toCharArray(tracks[0], 128);
-            // track2.toCharArray(tracks[1], 128);
-
-            // Copy the tracks into the char arrays using for loops
-            // for (int i = 0; i < track1.length(); i++) {
-            //   // tracks[0][i] = track1.charAt(i);
-            // }
-
-            // for (int i = 0; i < track2.length(); i++) {
-            //   // tracks[1][i] = track2.charAt(i);
-            // }
 
             // Get the button value from the url
             String button = url.substring(url.indexOf("button=") + 7, url.length());
