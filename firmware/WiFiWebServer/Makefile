@@ -1,5 +1,8 @@
 BOARD_TAG = electroniccats:mbed_rp2040:bombercat
-MONITOR_PORT = /dev/cu.usbmodem101
+MONITOR_PORT = /dev/cu.usbmodem11201
+
+transcode:
+	python3 web_files_converter.py
 
 compile:
 	arduino-cli compile --fqbn $(BOARD_TAG)
@@ -13,4 +16,4 @@ monitor:
 clean:
 	arduino-cli cache clean
 
-all: compile upload
+all: transcode compile upload

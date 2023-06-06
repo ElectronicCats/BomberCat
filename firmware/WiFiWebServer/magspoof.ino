@@ -147,7 +147,8 @@ void storeRevTrack(int track) {
 }
 
 void magspoof() {
-  if (digitalRead(NPIN) == 0) {
+  if (digitalRead(NPIN) == 0 || runMagspoof) {
+    runMagspoof = false;
     Serial.println("Activating MagSpoof...");
     Serial.print("Track 1: ");
     Serial.println(tracks[0]);
