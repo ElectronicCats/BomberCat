@@ -58,8 +58,8 @@ RfIntf_t RfInterface;                                            // Intarface to
 uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = SECRET_SSID;  // your network SSID (name)
-char pass[] = SECRET_PASS;  // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "BomberCat";  // your network SSID (name)
+char pass[] = "password";  // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;           // your network key index number (needed only for WEP)
 
 WiFiServer server(80);
@@ -101,16 +101,29 @@ void setup() {
     Serial.println("Please upgrade the firmware");
   }
 
-  // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
+  Serial.print("Creating access point named: ");
+  Serial.println(ssid);
 
-    // wait 5 seconds for connection:
-    delay(5000);
+  // // attempt to connect to WiFi network:
+  // while (status != WL_CONNECTED) {
+  //   Serial.print("Attempting to connect to SSID: ");
+  //   Serial.println(ssid);
+  //   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+  //   status = WiFi.begin(ssid, pass);
+
+  //   // wait 5 seconds for connection:
+  //   delay(5000);
+  // }
+
+  status = WiFi.beginAP(ssid, pass);
+  if (status != WL_AP_LISTENING) {
+    Serial.println("Creating access point failed");
+    // don't continue
+    while (true)
+      ;
   }
+
+  delay(5000);
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();

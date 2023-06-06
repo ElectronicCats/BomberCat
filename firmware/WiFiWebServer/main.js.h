@@ -19,6 +19,7 @@ let reload = localStorage.getItem("reload");
 console.log("Reload: " + reload);
 console.log("Location: " + currentLocation);
 
+// Check if magspoof.html is loaded
 if (magspoof != null) {
     magspoofForm.addEventListener("submit", (event) => {
         event.preventDefault();
