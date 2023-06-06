@@ -94,6 +94,7 @@ void setup() {
 
   // Set a static IP address
   IPAddress ip(10, 42, 0, 103);
+  // TODO: Set a static IP address with the user preferences
   // WiFi.config(ip);
 
   String fv = WiFi.firmwareVersion();
@@ -104,17 +105,7 @@ void setup() {
   Serial.print("Creating access point named: ");
   Serial.println(ssid);
 
-  // // attempt to connect to WiFi network:
-  // while (status != WL_CONNECTED) {
-  //   Serial.print("Attempting to connect to SSID: ");
-  //   Serial.println(ssid);
-  //   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-  //   status = WiFi.begin(ssid, pass);
-
-  //   // wait 5 seconds for connection:
-  //   delay(5000);
-  // }
-
+  // TODO: Set ssid and pass with user preferences
   status = WiFi.beginAP(ssid, pass);
   if (status != WL_AP_LISTENING) {
     Serial.println("Creating access point failed");
@@ -124,9 +115,7 @@ void setup() {
   }
 
   server.begin();
-  // you're connected now, so print out the status:
   printWifiStatus();
-
   setupMagspoof();
   setupTracks();
 }
