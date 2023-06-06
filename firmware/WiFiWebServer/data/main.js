@@ -6,10 +6,6 @@ if (btnConfig != null) {
     btnConfig.addEventListener("click", () => { alert("Not available yet!") });
 }
 
-// if (btnNfc != null) {
-//     btnNfc.addEventListener("click", () => { alert("Not available yet!") });
-// }
-
 // Magspoof
 let magspoof = document.querySelector("#magspoof");
 let magspoofForm = document.querySelector("#magspoofForm");
@@ -23,6 +19,7 @@ let reload = localStorage.getItem("reload");
 console.log("Reload: " + reload);
 console.log("Location: " + currentLocation);
 
+// Check if magspoof.html is loaded
 if (magspoof != null) {
     magspoofForm.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -30,15 +27,11 @@ if (magspoof != null) {
         localStorage.setItem("track1", track1.value);
         localStorage.setItem("track2", track2.value);
 
-        if (track1.value == "") {
-            alert("Track 1 is empty!");
-        } else {
-            currentLocation = `magspoof.html?track1=${track1.value}&track2=${track2.value}&button=${btnField.value}#`;
-            localStorage.setItem("location", currentLocation);
-            localStorage.setItem("counter", 0);
-            localStorage.setItem("reload", true);
-            window.location.reload();
-        }
+        currentLocation = `magspoof.html?track1=${track1.value}&track2=${track2.value}&button=${btnField.value}#`;
+        localStorage.setItem("location", currentLocation);
+        localStorage.setItem("counter", 0);
+        localStorage.setItem("reload", true);
+        window.location.reload();
     });
 
     btnSave.addEventListener("click", (event) => {
@@ -56,7 +49,6 @@ if (magspoof != null) {
     track2.value = localStorage.getItem("track2");
 
     if (reload == "true") {
-        console.log("Here");
         if (localStorage.getItem("counter") == 0) {
             localStorage.setItem("counter", 1);
             window.location.href = currentLocation;
@@ -76,5 +68,8 @@ if (magspoof != null) {
 let btnSendMail = document.querySelector("#btnSendMail");
 
 if (btnSendMail != null) {
-    btnSendMail.addEventListener("click", () => { alert("Not available yet!") });
+    btnSendMail.addEventListener("click", (event) => {
+        event.preventDefault();
+        alert("Not available yet!")
+    });
 }

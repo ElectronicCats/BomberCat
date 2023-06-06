@@ -1,5 +1,5 @@
 BOARD_TAG = electroniccats:mbed_rp2040:bombercat
-MONITOR_PORT = /dev/cu.usbmodem11201
+MONITOR_PORT = /dev/cu.usbmodem101
 
 transcode:
 	python3 web_files_converter.py

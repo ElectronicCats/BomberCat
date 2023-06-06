@@ -68,7 +68,7 @@ int webRequest = LOGIN_URL;
 
 String decodeURL(char* url);
 void setupTracks();
-void loadTracks(String url);
+void updateTracks(String url);
 void loadPageContent(WiFiClient client);
 void runServer();
 void printWifiStatus();
@@ -184,7 +184,7 @@ void setupTracks() {
   Serial.println(tracks[1]);
 }
 
-void loadTracks(String url) {
+void updateTracks(String url) {
   // Store tracks from url into String variables
   String track1 = url.substring(url.indexOf("track1=") + 7, url.indexOf("&track2="));
   String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
@@ -293,7 +293,7 @@ void runServer() {
 
           // ? is the start of request parameters
           if (url.startsWith("/magspoof.html?")) {
-            loadTracks(url);
+            updateTracks(url);
 
             // Get the button value from the url
             String button = url.substring(url.indexOf("button=") + 7, url.length());
