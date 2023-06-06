@@ -124,6 +124,10 @@ void loop() {
   magspoof();
 }
 
+/// @brief Decode a URL-encoded string
+/// @param url
+/// @author https://arduino.stackexchange.com/questions/18007/simple-url-decoding?newreg=32c11952781c413592b3e837a3785e84
+/// @return String
 String decodeURL(char* url) {
   // Create two pointers that point to the start of the data
   char* leader = url;
@@ -197,15 +201,12 @@ void loadTracks(String url) {
   track1.replace("+", " ");
   track2.replace("+", " ");
 
-  track1 = "%" + track1 + "?";
+  track1 = "%B" + track1 + "?";
   track2 = ";" + track2 + "?";
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
-
-  // Track 1 real content:      8^SABAS+JIMENEZ/ANDRES+EDUAR^2
-  // Track 1 expected content:  8^SABAS JIMENEZ/ANDRES EDUAR^2
 }
 
 void loadPageContent(WiFiClient client) {
@@ -270,9 +271,9 @@ void runServer() {
 
         // Only check for URL if it's a GET <url options> HTTP
         if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
-          Serial.println("\nRequest: " + currentLine);
+          // Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
-          Serial.println("URL: " + url);
+          // Serial.println("URL: " + url);
 
           if (url.startsWith("/styles.css")) {
             webRequest = CSS_URL;
@@ -305,8 +306,8 @@ void runServer() {
         }
       }
     }
-    client.stop();  // close the connection:
-    Serial.println("client disconnected");
+    client.stop();
+    // Serial.println("client disconnected");
   }
 }
 
