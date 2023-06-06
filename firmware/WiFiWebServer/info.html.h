@@ -100,7 +100,7 @@ const char* info_html = R"=====(<!DOCTYPE html>
                             <p>Send us an e-mail</p>
                             <form action="#" class="form">
                                 <input type="username" required id="username" placeholder="your@email.com" class="input input-username input-contact">
-                                <input type="submit" value="contact" class="primary-button send-button" id="btnSendMail">
+                                <input type="submit" value="Contact" class="primary-button send-button" id="btnSendMail">
                             </form>
                         </div>
                     </section>

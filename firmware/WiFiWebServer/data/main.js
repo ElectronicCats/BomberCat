@@ -16,8 +16,10 @@ let btnEmulate = document.querySelector("#btnEmulate");
 let btnField = document.querySelector("#btnField");
 
 if (btnSave != null) {
-    btnSave.addEventListener("click", () => {
-        btnField.setAttribute("value", "Save");
+    btnSave.addEventListener("click", (event) => {
+        // btnField.setAttribute("value", "Save");
+        event.preventDefault();
+        alert("Not available yet!");
     });
 }
 
