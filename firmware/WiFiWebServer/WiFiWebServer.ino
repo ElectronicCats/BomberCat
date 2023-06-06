@@ -123,7 +123,6 @@ void setup() {
       ;
   }
 
-  delay(5000);
   server.begin();
   // you're connected now, so print out the status:
   printWifiStatus();
@@ -326,6 +325,8 @@ void runServer() {
 
 void printWifiStatus() {
   Serial.println("SSID: " + String(WiFi.SSID()));
+  Serial.print("Password: ");
+  Serial.println(pass);
   Serial.print("IP Address: http://");
   Serial.println(WiFi.localIP());
   Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
