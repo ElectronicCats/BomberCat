@@ -61,6 +61,7 @@ void reverseTrack(int track) {
 
 // plays out a full track, calculating CRCs and LRC
 void playTrack(int track) {
+  Serial.println("Playing track " + String(track));
   int tmp, crc, lrc = 0;
   dir = 0;
   track--;  // index 0
@@ -79,9 +80,11 @@ void playTrack(int track) {
       crc ^= tmp & 1;
       lrc ^= (tmp & 1) << j;
       playBit(tmp & 1);
+      Serial.print(" " + String(tmp & 1));
       tmp >>= 1;
     }
     playBit(crc);
+    Serial.print(" " + String(crc));
   }
 
   // finish calculating and send last "byte" (LRC)
@@ -111,6 +114,7 @@ void playTrack(int track) {
 
   digitalWrite(PIN_A, LOW);
   digitalWrite(PIN_B, LOW);
+  Serial.println();
 }
 
 // stores track for reverse usage later

@@ -50,7 +50,6 @@
 #define NFC_URL 6
 
 bool runMagspoof = false;
-// char tracks[2][128];
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
@@ -59,20 +58,20 @@ uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = "BomberCat";  // your network SSID (name)
-char pass[] = "password";  // your network password (use for WPA, or use as key for WEP)
+char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;           // your network key index number (needed only for WEP)
 
 WiFiServer server(80);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
-String decodeURL(char* url);
+String decodeURL(char *url);
 void setupTracks();
 void updateTracks(String url);
 void loadPageContent(WiFiClient client);
 void runServer();
 void printWifiStatus();
-void showPageContent(WiFiClient client, const char* pageContent);
+void showPageContent(WiFiClient client, const char *pageContent);
 
 void setup() {
   // Initialize serial and wait for port to open:
@@ -84,7 +83,7 @@ void setup() {
   }
 #endif
 
-  // check for the WiFi module:
+  // Check for the WiFi module
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
@@ -129,10 +128,10 @@ void loop() {
 /// @param url
 /// @author https://arduino.stackexchange.com/questions/18007/simple-url-decoding?newreg=32c11952781c413592b3e837a3785e84
 /// @return String
-String decodeURL(char* url) {
+String decodeURL(char *url) {
   // Create two pointers that point to the start of the data
-  char* leader = url;
-  char* follower = leader;
+  char *leader = url;
+  char *follower = leader;
 
   // While we're not at the end of the string (current character not NULL)
   while (*leader) {
@@ -145,11 +144,13 @@ String decodeURL(char* url) {
       char low = *leader;
 
       // Convert ASCII 0-9A-F to a value 0-15
-      if (high > 0x39) high -= 7;
+      if (high > 0x39)
+        high -= 7;
       high &= 0x0f;
 
       // Same again for the low byte:
-      if (low > 0x39) low -= 7;
+      if (low > 0x39)
+        low -= 7;
       low &= 0x0f;
 
       // Combine the two into a single byte and store in follower:
@@ -191,8 +192,8 @@ void updateTracks(String url) {
   String track2 = url.substring(url.indexOf("track2=") + 7, url.indexOf("&button="));
 
   // Decode urls
-  track1 = decodeURL((char*)track1.c_str());
-  track2 = decodeURL((char*)track2.c_str());
+  track1 = decodeURL((char *)track1.c_str());
+  track2 = decodeURL((char *)track2.c_str());
 
   // Remove any trailing characters
   track1.trim();
@@ -310,15 +311,17 @@ void runServer() {
 }
 
 void printWifiStatus() {
+#ifdef DEBUG
   Serial.println("SSID: " + String(WiFi.SSID()));
   Serial.print("Password: ");
   Serial.println(pass);
   Serial.print("IP Address: http://");
   Serial.println(WiFi.localIP());
   Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
+#endif
 }
 
-void showPageContent(WiFiClient client, const char* pageContent) {
+void showPageContent(WiFiClient client, const char *pageContent) {
   String contentType;
   if (webRequest == LOGIN_URL) {
     contentType = "text/html";
@@ -335,7 +338,7 @@ void showPageContent(WiFiClient client, const char* pageContent) {
   // Flag to indicate if we've reached the end of the page content
   boolean lastString = false;
   // Pointer to determine where we are in the page content
-  char* charPtr = (char*)pageContent;
+  char *charPtr = (char *)pageContent;
 
   // Loop to read the page content in chunks of 1000 bytes
   while (1) {
@@ -351,7 +354,8 @@ void showPageContent(WiFiClient client, const char* pageContent) {
     }
     // Send the temporary string to the client
     client.print(tempString);
-    if (lastString == true) break;  // Exit the loop if we've reached the end of the page content
+    if (lastString == true)
+      break;  // Exit the loop if we've reached the end of the page content
   }
   client.println("");  // Send a blank line to indicate the end of the page content
 }
@@ -363,7 +367,7 @@ void ResetMode() {  // Reset the configuration mode after each reading
   nfc.StartDiscovery(mode);
 }
 
-void PrintBuf(const byte* data, const uint32_t numBytes) {  // Print hex data buffer in format
+void PrintBuf(const byte *data, const uint32_t numBytes) {  // Print hex data buffer in format
   WiFiClient client = server.available();
   uint32_t szPos;
   for (szPos = 0; szPos < numBytes; szPos++) {
@@ -455,7 +459,8 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         break;
     }
     if (RfIntf.MoreTags) {  // It will try to identify more NFC cards if they are the same technology
-      if (nfc.ReaderActivateNext(&RfIntf) == NFC_ERROR) break;
+      if (nfc.ReaderActivateNext(&RfIntf) == NFC_ERROR)
+        break;
     } else
       break;
   }
