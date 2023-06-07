@@ -202,9 +202,6 @@ void updateTracks(String url) {
   track1.replace("+", " ");
   track2.replace("+", " ");
 
-  track1 = "%B" + track1 + "?";
-  track2 = ";" + track2 + "?";
-
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
