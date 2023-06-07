@@ -6,7 +6,7 @@ Author(s): Francisco Torres
 
 Status: Draft
 
-Last updated: 2023/05/18
+Last updated: 2023/06/7
 
 ## Contents
 
@@ -31,13 +31,25 @@ Choose one of the following options:
 * [Arduino IDE](https://www.arduino.cc/en/main/software)
 * [arduino-cli](https://arduino.github.io/arduino-cli/latest/installation/)
 
-### Setup
-1. Modify the `ssid` and `password` variables in the `arduino_secrets.h` file to match your network credentials.
+### Libraries required
 
 ```
-#define SECRET_SSID "deimos" // Name of your WiFi network
-#define SECRET_PASS "hello123" // Password of your WiFi network
+Used library           Version Path
+
+SPI
+WiFiNINA               1.8.14
+Electronic Cats PN7150 1.8.0
+Wire
 ```
+
+### Platform required
+
+```
+Used platform              Version Path
+electroniccats:mbed_rp2040 2.0.0
+```
+
+### Setup
 
 1. Connect your BomberCat to your computer using the USB-C cable.
 2. Open the `WiFiWebServer.ino` sketch using Arduino IDE or your favorite editor.
@@ -49,10 +61,20 @@ Choose one of the following options:
 
 ### Run
 
-1. Open the serial monitor.
-2. Wait for the board to connect to the network.
-3. Copy the IP address shown in the serial monitor.
-4. Open a web browser and paste the IP address.
-5. You should see the web page served by the BomberCat.
+1. Uncomment the line `#define DEBUG` in the `WiFiWebServer.ino` sketch. It's located at the beginning of the file.
+```
+#define DEBUG
+```
 
-> Note: the BomberCat and your device must be connected to the same network.
+2. Open the serial monitor.
+3. Wait for the board to create the WiFi network. You should see something like this:
+```
+Creating access point named: BomberCat
+SSID: BomberCat
+Password: password
+IP Address: http://192.168.4.1
+Signal strength (RSSI): 0 dBm
+```
+4. Connect your device to the WiFi network using the password shown in the serial monitor.
+5. Copy the IP address shown in the serial monitor.
+6. Open a web browser and paste the IP address. You should see the web page served by the BomberCat.
