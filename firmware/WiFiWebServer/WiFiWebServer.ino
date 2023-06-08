@@ -110,9 +110,15 @@ void setup() {
 }
 
 void loop() {
+  static unsigned long lastTime = millis();
+
   runServer();
   magspoof();
-  // detectTags();
+
+  if (millis() - lastTime > 500) {
+    lastTime = millis();
+    detectTags();
+  }
 }
 
 /// @brief Decode a URL-encoded string

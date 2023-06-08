@@ -32,6 +32,7 @@ void PrintBuf(const byte* data, const uint32_t numBytes) {  // Print hex data bu
   }
   Serial.println();
 }
+
 void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s in te field
   char tmp[16];
   while (1) {
@@ -140,7 +141,7 @@ void setupNFC() {
 }
 
 void detectTags() {
-  if (!nfc.WaitForDiscoveryNotification(&RfInterface)) {  // Waiting to detect cards
+  if (!nfc.WaitForDiscoveryNotification(&RfInterface, 1000)) {  // Waiting to detect cards
     displayCardInfo(RfInterface);
     switch (RfInterface.Protocol) {
       case PROT_T1T:
@@ -173,5 +174,4 @@ void detectTags() {
     nfc.StartDiscovery(mode);
   }
   ResetMode();
-  delay(500);
 }
