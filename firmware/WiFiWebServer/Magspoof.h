@@ -13,6 +13,7 @@
 //     ";123456781234567=112220100000000000000?\0"                              // Track 2
 // };
 
+bool runMagspoof = false;
 char tracks[2][128];
 
 char revTrack[41];
