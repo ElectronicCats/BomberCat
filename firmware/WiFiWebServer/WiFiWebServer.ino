@@ -25,8 +25,8 @@
 #include <WiFiNINA.h>
 // #include <Preferences.h>
 // #include "Electroniccats_PN7150.h"
-#include "Magspoof.h"
 #include "DetectTags.h"
+#include "Magspoof.h"
 #include "arduino_secrets.h"
 #include "home.html.h"
 #include "info.html.h"
@@ -115,7 +115,7 @@ void loop() {
   runServer();
   magspoof();
 
-  if (millis() - lastTime > 500) {
+  if (millis() - lastTime > 1000 && webRequest == NFC_URL) {
     lastTime = millis();
     detectTags();
   }
