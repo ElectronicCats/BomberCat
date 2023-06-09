@@ -49,6 +49,9 @@
 char ssid[] = "BomberCat";  // your network SSID (name)
 char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
 
+const char *testCode = "console.log('Test');";
+String main_js_modified = String(main_js) + testCode;
+
 WiFiServer server(80);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
@@ -71,6 +74,9 @@ void setup() {
     ;  // wait for serial port to connect. Needed for native USB port only
   }
 #endif
+
+  // Convertir de nuevo a una cadena de caracteres (char array)
+  // strcpy(main_js, main_js_modificado.c_str());
 
   // Check for the WiFi module
   if (WiFi.status() == WL_NO_MODULE) {
@@ -107,6 +113,7 @@ void setup() {
   setupMagspoof();
   setupTracks();
   setupNFC();
+  strcpy(main_js, main_js_modified.c_str());
 }
 
 void loop() {

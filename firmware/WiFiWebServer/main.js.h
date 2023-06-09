@@ -1,4 +1,4 @@
-const char* main_js = R"=====(// Home
+char main_js[] = R"=====(// Home
 let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
 

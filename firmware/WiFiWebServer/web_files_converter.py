@@ -18,7 +18,11 @@ for filename in os.listdir(input_dir):
             content = file.read()
             
         header_variable_name = os.path.splitext(filename)[0] + '_' + file_extension[1:]
-        header_content = 'const char* {} = R"=====({})=====";'.format(header_variable_name, content)
+
+        if file_extension[1:] == 'js':
+            header_content = 'char {}[] = R"=====({})=====";'.format(header_variable_name, content)
+        else:
+            header_content = 'const char* {} = R"=====({})=====";'.format(header_variable_name, content)
 
         with open(output_filename, 'w') as file:
             file.write(header_content)
