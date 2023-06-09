@@ -7,3 +7,5 @@ Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a gl
 RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
 
 uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
+
+String pollMode;

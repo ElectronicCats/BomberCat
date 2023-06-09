@@ -73,3 +73,14 @@ if (btnSendMail != null) {
         alert("Not available yet!")
     });
 }
+
+let nfc = document.querySelector("#nfc");
+let tvPollMode = document.querySelector("#tvPollMode");
+
+// Check if nfcf.html is loaded
+if (nfc != null) {
+    console.log('From BomberCat: ');
+    console.log(pollMode);
+
+    tvPollMode.textContent = pollMode;
+}

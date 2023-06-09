@@ -335,6 +335,10 @@ void showPageContent(WiFiClient client, const char *pageContent) {
   client.println("Content-type:" + contentType);
   client.println();
 
+  if (webRequest == JAVASCRIPT_URL) {
+    client.println("let pollMode = `" + pollMode + "`;");
+  }
+
   // Create a temporary string to hold the page content
   char tempString[1001];
   tempString[1000] = 0;
@@ -359,10 +363,6 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     client.print(tempString);
     if (lastString == true)
       break;  // Exit the loop if we've reached the end of the page content
-  }
-
-  if (webRequest == JAVASCRIPT_URL) {
-    client.println("console.log('Javascript added from Arduino code')");
   }
 
   client.println("");  // Send a blank line to indicate the end of the page content

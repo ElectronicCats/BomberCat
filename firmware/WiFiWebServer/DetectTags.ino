@@ -42,16 +42,20 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
       case PROT_T3T:
       case PROT_ISODEP:
         Serial.print(" - POLL MODE: Remote activated tag type: ");
+        pollMode = "POLL MODE: Remote activated tag type: " + String(RfIntf.Protocol);
         Serial.println(RfIntf.Protocol);
         break;
       case PROT_ISO15693:
         Serial.println(" - POLL MODE: Remote ISO15693 card activated");
+        pollMode = "POLL MODE: Remote ISO15693 card activated";
         break;
       case PROT_MIFARE:
         Serial.println(" - POLL MODE: Remote MIFARE card activated");
+        pollMode = "POLL MODE: Remote MIFARE card activated";
         break;
       default:
         Serial.println(" - POLL MODE: Undetermined target");
+        pollMode = "POLL MODE: Undetermined target";
         return;
     }
 

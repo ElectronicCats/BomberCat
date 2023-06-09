@@ -1,4 +1,4 @@
-char main_js[] = R"=====(// Home
+const char* main_js = R"=====(// Home
 let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
 
@@ -72,4 +72,15 @@ if (btnSendMail != null) {
         event.preventDefault();
         alert("Not available yet!")
     });
+}
+
+let nfc = document.querySelector("#nfc");
+let tvPollMode = document.querySelector("#tvPollMode");
+
+// Check if nfcf.html is loaded
+if (nfc != null) {
+    console.log('From BomberCat: ');
+    console.log(pollMode);
+
+    tvPollMode.textContent = pollMode;
 })=====";
