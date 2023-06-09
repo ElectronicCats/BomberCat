@@ -49,9 +49,6 @@
 char ssid[] = "BomberCat";  // your network SSID (name)
 char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
 
-const char *testCode = "console.log('Test');";
-String main_js_modified = String(main_js) + testCode;
-
 WiFiServer server(80);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
@@ -113,7 +110,6 @@ void setup() {
   setupMagspoof();
   setupTracks();
   setupNFC();
-  strcpy(main_js, main_js_modified.c_str());
 }
 
 void loop() {
@@ -331,7 +327,10 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     contentType = "text/html";
   } else if (webRequest == CSS_URL) {
     contentType = "text/css";
+  } else if (webRequest == JAVASCRIPT_URL) {
+    contentType = "application/javascript";
   }
+  
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:" + contentType);
   client.println();
@@ -361,5 +360,10 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     if (lastString == true)
       break;  // Exit the loop if we've reached the end of the page content
   }
+
+  if (webRequest == JAVASCRIPT_URL) {
+    client.println("console.log('Javascript added from Arduino code')");
+  }
+
   client.println("");  // Send a blank line to indicate the end of the page content
 }
