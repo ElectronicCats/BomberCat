@@ -381,6 +381,10 @@ a {
         margin-left: 0px;
     }
 
+    .main-background {
+        justify-content: start;
+    }
+
     .logo {
         display: block;
     }

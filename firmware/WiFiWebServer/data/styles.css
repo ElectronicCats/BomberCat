@@ -295,7 +295,6 @@ a {
 .input-date,
 .text-date {
     grid-area: main1;
-    /* width: 145px; */
     margin-right: 8px;
     border: none;
 }
@@ -303,7 +302,6 @@ a {
 .input-code,
 .text-code {
     grid-area: main2;
-    /* width: 145px; */
     margin-left: 8px;
     border: none;
 }
@@ -381,6 +379,10 @@ a {
         margin-left: 0px;
     }
 
+    .main-background {
+        justify-content: start;
+    }
+
     .logo {
         display: block;
     }
@@ -408,7 +410,7 @@ a {
     .text-date,
     .text-code {
         font-size: var(--xsm);
-        width: 120px;
+        width: 128px;
     }
 
     .save-button,
