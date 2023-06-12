@@ -118,9 +118,15 @@ void loop() {
   runServer();
   magspoof();
 
-  if (millis() - lastTime > 1000 && webRequest == NFC_URL) {
+  if (millis() - lastTime > 1000 && webRequest == NFC_URL && runDetectTags) {
     lastTime = millis();
     detectTags();
+    nfcExecutionCounter++;
+
+    if (nfcExecutionCounter == 5) {
+      nfcExecutionCounter = 0;
+      runDetectTags = false;
+    }
   }
 }
 
@@ -300,6 +306,15 @@ void runServer() {
 
             if (button.startsWith("Emulate")) {
               runMagspoof = true;
+            }
+          }
+
+          if (url.startsWith("/nfc.html?")) {
+            String button = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
+
+            if (button.startsWith("true")) {
+              runDetectTags = true;
+              nfcExecutionCounter = 0;
             }
           }
         }

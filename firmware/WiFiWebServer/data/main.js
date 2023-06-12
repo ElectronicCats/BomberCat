@@ -101,8 +101,34 @@ if (nfc != null) {
     tvSensRes.value = sensRes;
     tvSelRes.value = selRes;
 
+    if (reload == "true") {
+        btnRead.value = "Reading...";
+    } else {
+        btnRead.value = "Read";
+    }
+
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
-        alert("Not available yet!");
+
+        currentLocation = `nfc.html?runDetectTags=true#`;
+        localStorage.setItem("location", currentLocation);
+        localStorage.setItem("counter", 0);
+        localStorage.setItem("reload", true);
+        window.location.reload();
     });
+
+    if (reload == "true") {
+        if (localStorage.getItem("counter") == 0) {
+            localStorage.setItem("counter", 1);
+            window.location.href = currentLocation;
+        }
+        // Reload page to "nfc.html" after 5000 ms
+        if (localStorage.getItem("counter") == 1) {
+            setTimeout(() => {
+                localStorage.setItem("reload", false);
+                console.log("Reloaded!");
+                window.location.replace("nfc.html?runDetectTags=false#");
+            }, 5000);
+        }
+    }
 }
