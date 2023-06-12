@@ -8,4 +8,4 @@ RfIntf_t RfInterface;                                            // Intarface to
 
 uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
 
-String pollMode;
+String pollMode, nfcID, sensRes, selRes;

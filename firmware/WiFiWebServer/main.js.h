@@ -1,4 +1,10 @@
-const char* main_js = R"=====(// Home
+const char* main_js = R"=====(// Uncomment this for testing on a local environment
+// let pollMode;
+// let nfcID;
+// let sensRes;
+// let selRes;
+
+// Home
 let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
 
@@ -74,13 +80,29 @@ if (btnSendMail != null) {
     });
 }
 
+// NFC
 let nfc = document.querySelector("#nfc");
 let tvPollMode = document.querySelector("#tvPollMode");
+let tvNfcID = document.querySelector("#tvNfcID");
+let tvSensRes = document.querySelector("#tvSensRes");
+let tvSelRes = document.querySelector("#tvSelRes");
+let btnRead = document.querySelector("#btnRead");
 
-// Check if nfcf.html is loaded
+// Check if nfc.html is loaded
 if (nfc != null) {
     console.log('From BomberCat: ');
     console.log(pollMode);
+    console.log(`NFC ID: ${nfcID}`);
+    console.log(`SENS RES: ${sensRes}`);
+    console.log(`SEL RES: ${selRes}`);
 
     tvPollMode.textContent = pollMode;
+    tvNfcID.value = nfcID;
+    tvSensRes.value = sensRes;
+    tvSelRes.value = selRes;
+
+    btnRead.addEventListener("click", (event) => {
+        event.preventDefault();
+        alert("Not available yet!");
+    });
 })=====";

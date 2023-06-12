@@ -336,7 +336,11 @@ void showPageContent(WiFiClient client, const char *pageContent) {
   client.println();
 
   if (webRequest == JAVASCRIPT_URL) {
+    client.println("// BomberCat Variables");
     client.println("let pollMode = `" + pollMode + "`;");
+    client.println("let sensRes = `" + sensRes + "`;");
+    client.println("let selRes = `" + selRes + "`;");
+    client.println("let nfcID = `" + nfcID + "`;");
   }
 
   // Create a temporary string to hold the page content

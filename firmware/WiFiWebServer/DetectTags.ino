@@ -18,6 +18,7 @@ void ResetMode() {  // Reset the configuration mode after each reading
   nfc.StartDiscovery(mode);
 }
 
+// TODO: replace PrintBuf by getHexRepresentation
 void PrintBuf(const byte* data, const uint32_t numBytes) {  // Print hex data buffer in format
   uint32_t szPos;
   for (szPos = 0; szPos < numBytes; szPos++) {
@@ -31,6 +32,20 @@ void PrintBuf(const byte* data, const uint32_t numBytes) {  // Print hex data bu
     }
   }
   Serial.println();
+}
+
+String getHexRepresentation(const byte* data, const uint32_t numBytes) {
+  String hexString;
+  for (uint32_t szPos = 0; szPos < numBytes; szPos++) {
+    hexString += "0x";
+    if (data[szPos] <= 0xF)
+      hexString += "0";
+    hexString += String(data[szPos] & 0xFF, HEX);
+    if ((numBytes > 1) && (szPos != numBytes - 1)) {
+      hexString += " ";
+    }
+  }
+  return hexString;
 }
 
 void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s in te field
@@ -64,18 +79,23 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         Serial.print("\tSENS_RES = ");
         sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SensRes[0]);
         Serial.print(tmp);
+        sensRes = tmp;
         Serial.print(" ");
         sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SensRes[1]);
         Serial.print(tmp);
+        sensRes += " " + String(tmp);
         Serial.println(" ");
 
         Serial.print("\tNFCID = ");
         PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
+        nfcID = getHexRepresentation(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
+        Serial.println(nfcID);
 
         if (RfIntf.Info.NFC_APP.SelResLen != 0) {
           Serial.print("\tSEL_RES = ");
           sprintf(tmp, "0x%.2X", RfIntf.Info.NFC_APP.SelRes[0]);
           Serial.print(tmp);
+          selRes = tmp;
           Serial.println(" ");
         }
         break;
@@ -84,6 +104,7 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         if (RfIntf.Info.NFC_BPP.SensResLen != 0) {
           Serial.print("\tSENS_RES = ");
           PrintBuf(RfIntf.Info.NFC_BPP.SensRes, RfIntf.Info.NFC_BPP.SensResLen);
+          sensRes = String(RfIntf.Info.NFC_BPP.SensRes, RfIntf.Info.NFC_BPP.SensResLen);
         }
         break;
 
