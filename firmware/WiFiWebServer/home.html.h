@@ -85,7 +85,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
         </div>
     </header>
     <main>
-        <div class="main-container">
+        <div class="main-container background">
             <div class="main-background">
                 <div class="main-content">
                     <div class="menu-container">

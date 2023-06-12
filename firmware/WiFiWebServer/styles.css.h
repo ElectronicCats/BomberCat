@@ -18,7 +18,7 @@ body {
     font-family: 'Segoe UI';
 }
 
-.main-container {
+.main-container.background {
     background-color: var(--main-logo-background);
 }
 
@@ -35,10 +35,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.main-content {
-    max-width: 500px;
+    justify-content: center;
 }
 
 .header-container {
@@ -115,9 +112,8 @@ body {
     align-items: center;
 }
 
-
-
-input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
     display: none;
 }
 
@@ -135,7 +131,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 }
 
 .inputC {
-    width: 250px;
+    width: 380px;
     height: 26px;
     background-color: var(--fill-input-field);
     border: 1px solid var(--border);
@@ -147,7 +143,8 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     color: var(--text);
 }
 
-.input-ap, .input-pass {
+.input-ap,
+.input-pass {
     margin-left: 19px;
 }
 
@@ -163,7 +160,8 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     background-size: contain;
 }
 
-.input-password::placeholder, .input-pass::placeholder {
+.input-password::placeholder,
+.input-pass::placeholder {
     /* background-image: url(./pass.png); */
     background-repeat: no-repeat;
     background-position: left;
@@ -177,16 +175,6 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     background-position: left;
     background-size: contain;
     margin-bottom: 30px;
-}
-
-.primary-button {
-    width: 275px;
-    height: 40px;
-    background-color: var(--main-logo-background);
-    border: none;
-    border-radius: 24px;
-    font-size: var(--md);
-    color: var(--white);
 }
 
 .ok-button {
@@ -208,7 +196,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     margin: 20px;
 }
 
-.logoPTitle{
+.logoPTitle {
     vertical-align: middle;
     text-align: left;
     font-size: var(--md);
@@ -250,14 +238,19 @@ a {
     margin: 0 auto;
     margin-top: 40px;
     display: grid;
-    max-width: 343px;
+    max-width: 380px;
     grid-auto-flow: column;
     grid-template-columns: 1fr 100px;
     justify-content: center;
     align-items: center;
 }
 
-.mags-container, .nfc-container {
+.card-icon {
+    text-align: right;
+}
+
+.mags-container,
+.nfc-container {
     margin-top: 40px;
     display: flex;
     margin: 0 auto;
@@ -265,7 +258,8 @@ a {
     align-items: center;
 }
 
-.card-form, .read-form {
+.card-form,
+.read-form {
     margin-top: 50px;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -281,9 +275,9 @@ a {
     grid-template-areas: "header header" "main1 main2" "footer footer";
 }
 
-.input-card, .text-card {
-   grid-area: header;
-   width: 280px;
+.input-card,
+.text-card {
+    grid-area: header;
 }
 
 .text-card {
@@ -292,35 +286,47 @@ a {
 
 .input-track1 {
     grid-area: header;
-    width: 280px;
 }
 
 .input-track2 {
     grid-area: main;
-    width: 280px;
 }
 
-.input-date, .text-date {
+.input-date,
+.text-date {
     grid-area: main1;
-    width: 125px;
+    /* width: 145px; */
     margin-right: 8px;
     border: none;
 }
 
-.input-code, .text-code {
+.input-code,
+.text-code {
     grid-area: main2;
-    width: 125px;
+    /* width: 145px; */
     margin-left: 8px;
     border: none;
 }
 
-.text-date, .text-code {
+.text-date,
+.text-code {
     font-size: var(--xsm);
+    width: 175px;
+}
+
+.primary-button {
+    width: 275px;
+    height: 40px;
+    background-color: var(--main-logo-background);
+    border: none;
+    border-radius: 24px;
+    font-size: var(--md);
+    color: var(--white);
 }
 
 .save-button {
     grid-area: top-footer;
-    width: 292px;
+    width: 392px;
     background-color: var(--white);
     border: 1px solid var(--border);
     border-radius: 24px;
@@ -328,9 +334,10 @@ a {
     color: var(--text);
 }
 
-.send-button, .read-button {
+.send-button,
+.read-button {
     grid-area: footer;
-    width: 292px;
+    width: 392px;
 }
 
 /* Footer */
@@ -374,24 +381,46 @@ a {
         margin-left: 0px;
     }
 
-    .logo{
+    .logo {
         display: block;
     }
-    .logoTitle{
+
+    .logoTitle {
         display: block;
-    }  
+    }
+
+    .inputC {
+        width: 280px;
+    }
+
     .menu-container {
         width: 320px;
     }
-    .footer-home{
+
+    .card-container {
+        min-width: 280px;
+    }
+
+    .text-card {
+        border: none;
+    }
+
+    .text-date,
+    .text-code {
+        font-size: var(--xsm);
+        width: 120px;
+    }
+
+    .save-button,
+    .send-button,
+    .read-button {
+        width: 292px;
+    }
+
+    .footer-home {
         display: block;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-    }
-    .card-container {
-        margin: 0 auto;
-        width: 400px;
-        justify-items: center;
     }
 }
 

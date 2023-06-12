@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Refresh every 5 seconds -->
     <meta http-equiv="refresh" content="2">
     <title>NFC</title>
     <!-- <link rel="shortcut icon" href="./Símbolo EC.svg" type="image/x-icon"> -->
@@ -23,7 +22,7 @@
             <div class="main-content">
                 <section class="card">
                     <div class="card-container">
-                        <h3 class="i-title">Read VISA</h3>
+                        <h3 class="i-title">Read NFC Tag</h3>
                         <!-- <img src="./visa.png" alt="visa" class="card-icon"> -->
                     </div>
                 </section>
@@ -31,32 +30,15 @@
                     <div class="nfc-container">
                         <p id="tvPollMode"></p>
                         <form action="#" class="read-form">
-                            <input type="number" id="card-number" placeholder="Card number will appear here"
+                            <input type="number" id="card-number" placeholder="NFCID will appear here"
                                 class="inputC text-card" readonly>
-                            <input type="number" id="card-date" placeholder="Card date will appear here"
+                            <input type="number" id="card-date" placeholder="SENS RES will appear here"
                                 class="inputC text-date" readonly>
-                            <input type="number" id="card-code" placeholder="Card code will appear here"
+                            <input type="number" id="card-code" placeholder="SEL RES will appear here"
                                 class="inputC text-code" readonly>
                             <input type="submit" value="Read" class="primary-button read-button">
                         </form>
                     </div>
-                </section>
-                <section class="card">
-                    <div class="card-container">
-                        <h3 class="i-title">Insert</h3>
-                        <!-- <img src="./card.png" alt="card" class="card-icon"> -->
-                    </div>
-                </section>
-                <section class="mags-container">
-                    <form action="#" class="card-form" method="get">
-                        <input type="text" name="track1" id="track1" placeholder="Enter track 1"
-                            class="inputC input-card">
-                        <input type="text" name="track2" id="track2" placeholder="Enter track 2"
-                            class="inputC input-track2">
-                        <input type="hidden" name="button" value="" id="btnField">
-                        <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
-                        <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
-                    </form>
                 </section>
             </div>
         </div>

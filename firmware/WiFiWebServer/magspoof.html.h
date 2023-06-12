@@ -17,33 +17,37 @@ const char* magspoof_html = R"=====(<!DOCTYPE html>
         </div>
     </header>
     <main>
-        <div class="main-content">
-            <section class="card-container">
-                <div class="i-title-container">
-                    <h3 class="i-title">Insert</h3>
-                </div>
-                <div class="card-icon">
-                    <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-                    <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3.5 10H20.5" stroke="#666666" stroke-width="2" stroke-linecap="round" />
-                        <path d="M6 14H8" stroke="#666666" stroke-width="2" stroke-linecap="round" />
-                        <path d="M11 14H13" stroke="#666666" stroke-width="2" stroke-linecap="round" />
-                        <path
-                            d="M3 9C3 7.11438 3 6.17157 3.58579 5.58579C4.17157 5 5.11438 5 7 5H12H17C18.8856 5 19.8284 5 20.4142 5.58579C21 6.17157 21 7.11438 21 9V12V15C21 16.8856 21 17.8284 20.4142 18.4142C19.8284 19 18.8856 19 17 19H12H7C5.11438 19 4.17157 19 3.58579 18.4142C3 17.8284 3 16.8856 3 15V12V9Z"
-                            stroke="#666666" stroke-width="2" stroke-linejoin="round" />
-                    </svg>
-                </div>
-            </section>
-            <section class="mags-container">
-                <form action="#" class="card-form" method="get" id="magspoofForm">
-                    <input type="text" name="track1" id="track1" placeholder="Enter track 1" class="inputC input-card">
-                    <input type="text" name="track2" id="track2" placeholder="Enter track 2"
-                        class="inputC input-track2">
-                    <input type="hidden" name="button" value="" id="btnField">
-                    <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
-                    <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
-                </form>
-            </section>
+        <div class="main-background">
+            <div class="main-content">
+                <section class="card-container">
+                    <div class="i-title-container">
+                        <h3 class="i-title">Insert</h3>
+                    </div>
+                    <div class="card-icon">
+                        <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+                        <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3.5 10H20.5" stroke="#666666" stroke-width="2" stroke-linecap="round" />
+                            <path d="M6 14H8" stroke="#666666" stroke-width="2" stroke-linecap="round" />
+                            <path d="M11 14H13" stroke="#666666" stroke-width="2" stroke-linecap="round" />
+                            <path
+                                d="M3 9C3 7.11438 3 6.17157 3.58579 5.58579C4.17157 5 5.11438 5 7 5H12H17C18.8856 5 19.8284 5 20.4142 5.58579C21 6.17157 21 7.11438 21 9V12V15C21 16.8856 21 17.8284 20.4142 18.4142C19.8284 19 18.8856 19 17 19H12H7C5.11438 19 4.17157 19 3.58579 18.4142C3 17.8284 3 16.8856 3 15V12V9Z"
+                                stroke="#666666" stroke-width="2" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </section>
+                <section class="mags-container">
+                    <form action="#" class="card-form" method="get" id="magspoofForm">
+                        <input type="text" name="track1" id="track1" placeholder="Enter track 1"
+                            class="inputC input-card">
+                        <input type="text" name="track2" id="track2" placeholder="Enter track 2"
+                            class="inputC input-track2">
+                        <input type="hidden" name="button" value="" id="btnField">
+                        <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
+                        <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
+                    </form>
+                </section>
+            </div>
         </div>
     </main>
     <footer>
