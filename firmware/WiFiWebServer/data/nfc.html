@@ -19,44 +19,46 @@
         </div>
     </header>
     <main>
-        <div class="main-content">
-            <section class="card">
-                <div class="card-container">
-                    <h3 class="i-title">Read VISA</h3>
-                    <!-- <img src="./visa.png" alt="visa" class="card-icon"> -->
-                </div>
-            </section>
-            <section class="nfc">
-                <div class="nfc-container">
-                    <p id="tvPollMode"></p>
-                    <form action="#" class="read-form">
-                        <input type="number" id="card-number" placeholder="Card number will appear here"
-                            class="inputC text-card" readonly>
-                        <input type="number" id="card-date" placeholder="Card date will appear here"
-                            class="inputC text-date" readonly>
-                        <input type="number" id="card-code" placeholder="Card code will appear here"
-                            class="inputC text-code" readonly>
-                        <input type="submit" value="Read" class="primary-button read-button">
+        <div class="main-background">
+            <div class="main-content">
+                <section class="card">
+                    <div class="card-container">
+                        <h3 class="i-title">Read VISA</h3>
+                        <!-- <img src="./visa.png" alt="visa" class="card-icon"> -->
+                    </div>
+                </section>
+                <section class="nfc">
+                    <div class="nfc-container">
+                        <p id="tvPollMode"></p>
+                        <form action="#" class="read-form">
+                            <input type="number" id="card-number" placeholder="Card number will appear here"
+                                class="inputC text-card" readonly>
+                            <input type="number" id="card-date" placeholder="Card date will appear here"
+                                class="inputC text-date" readonly>
+                            <input type="number" id="card-code" placeholder="Card code will appear here"
+                                class="inputC text-code" readonly>
+                            <input type="submit" value="Read" class="primary-button read-button">
+                        </form>
+                    </div>
+                </section>
+                <section class="card">
+                    <div class="card-container">
+                        <h3 class="i-title">Insert</h3>
+                        <!-- <img src="./card.png" alt="card" class="card-icon"> -->
+                    </div>
+                </section>
+                <section class="mags-container">
+                    <form action="#" class="card-form" method="get">
+                        <input type="text" name="track1" id="track1" placeholder="Enter track 1"
+                            class="inputC input-card">
+                        <input type="text" name="track2" id="track2" placeholder="Enter track 2"
+                            class="inputC input-track2">
+                        <input type="hidden" name="button" value="" id="btnField">
+                        <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
+                        <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
                     </form>
-                </div>
-            </section>
-
-            <section class="card">
-                <div class="card-container">
-                    <h3 class="i-title">Insert</h3>
-                    <!-- <img src="./card.png" alt="card" class="card-icon"> -->
-                </div>
-            </section>
-            <section class="mags-container">
-                <form action="#" class="card-form" method="get">
-                    <input type="text" name="track1" id="track1" placeholder="Enter track 1" class="inputC input-card">
-                    <input type="text" name="track2" id="track2" placeholder="Enter track 2"
-                        class="inputC input-track2">
-                    <input type="hidden" name="button" value="" id="btnField">
-                    <input type="submit" value="Save" class="primary-button save-button" id="btnSave">
-                    <input type="submit" value="Emulate" class="primary-button send-button" id="btnEmulate">
-                </form>
-            </section>
+                </section>
+            </div>
         </div>
     </main>
     <footer>

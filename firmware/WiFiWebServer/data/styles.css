@@ -18,7 +18,7 @@ body {
     font-family: 'Segoe UI';
 }
 
-.main-container {
+.main-container.background {
     background-color: var(--main-logo-background);
 }
 
@@ -117,7 +117,8 @@ body {
 
 
 
-input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
     display: none;
 }
 
@@ -147,7 +148,8 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     color: var(--text);
 }
 
-.input-ap, .input-pass {
+.input-ap,
+.input-pass {
     margin-left: 19px;
 }
 
@@ -163,7 +165,8 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     background-size: contain;
 }
 
-.input-password::placeholder, .input-pass::placeholder {
+.input-password::placeholder,
+.input-pass::placeholder {
     /* background-image: url(./pass.png); */
     background-repeat: no-repeat;
     background-position: left;
@@ -208,7 +211,7 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     margin: 20px;
 }
 
-.logoPTitle{
+.logoPTitle {
     vertical-align: middle;
     text-align: left;
     font-size: var(--md);
@@ -257,7 +260,8 @@ a {
     align-items: center;
 }
 
-.mags-container, .nfc-container {
+.mags-container,
+.nfc-container {
     margin-top: 40px;
     display: flex;
     margin: 0 auto;
@@ -265,7 +269,8 @@ a {
     align-items: center;
 }
 
-.card-form, .read-form {
+.card-form,
+.read-form {
     margin-top: 50px;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -281,9 +286,10 @@ a {
     grid-template-areas: "header header" "main1 main2" "footer footer";
 }
 
-.input-card, .text-card {
-   grid-area: header;
-   width: 280px;
+.input-card,
+.text-card {
+    grid-area: header;
+    width: 280px;
 }
 
 .text-card {
@@ -300,21 +306,24 @@ a {
     width: 280px;
 }
 
-.input-date, .text-date {
+.input-date,
+.text-date {
     grid-area: main1;
     width: 125px;
     margin-right: 8px;
     border: none;
 }
 
-.input-code, .text-code {
+.input-code,
+.text-code {
     grid-area: main2;
     width: 125px;
     margin-left: 8px;
     border: none;
 }
 
-.text-date, .text-code {
+.text-date,
+.text-code {
     font-size: var(--xsm);
 }
 
@@ -328,7 +337,8 @@ a {
     color: var(--text);
 }
 
-.send-button, .read-button {
+.send-button,
+.read-button {
     grid-area: footer;
     width: 292px;
 }
@@ -374,20 +384,24 @@ a {
         margin-left: 0px;
     }
 
-    .logo{
+    .logo {
         display: block;
     }
-    .logoTitle{
+
+    .logoTitle {
         display: block;
-    }  
+    }
+
     .menu-container {
         width: 320px;
     }
-    .footer-home{
+
+    .footer-home {
         display: block;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
     }
+
     .card-container {
         margin: 0 auto;
         width: 400px;
