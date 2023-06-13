@@ -13,3 +13,4 @@ uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
 String pollMode, nfcID, sensRes, selRes;
 bool runDetectTags = false;
 uint8_t nfcExecutionCounter = 0;
+bool nfcDiscoverySuccess = false;

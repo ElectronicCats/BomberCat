@@ -17,6 +17,7 @@ void cleartTagsValues() {
   nfcID = "";
   sensRes = "";
   selRes = "";
+  nfcDiscoverySuccess = false;
 }
 
 void ResetMode() {  // Reset the configuration mode after each reading
@@ -201,6 +202,7 @@ void detectTags() {
     //* Wait for card removal
     nfc.ProcessReaderMode(RfInterface, PRESENCE_CHECK);
     Serial.println("CARD REMOVED!");
+    nfcDiscoverySuccess = true;
 
     nfc.StopDiscovery();
     nfc.StartDiscovery(mode);

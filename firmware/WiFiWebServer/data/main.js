@@ -3,12 +3,14 @@
 // let nfcID;
 // let sensRes;
 // let selRes;
+// let nfcDiscoverySuccess = false;
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
 let reload = localStorage.getItem("reload");
 console.log(`Reload: ${reload}`);
 console.log(`counter: ${localStorage.getItem("counter")}`);
+console.log(`NFC discovery success: ${nfcDiscoverySuccess}`);
 
 // Update current page location
 function updateLocation(location) {
@@ -98,7 +100,8 @@ let tvNfcID = document.querySelector("#tvNfcID");
 let tvSensRes = document.querySelector("#tvSensRes");
 let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
-let detectTagsDelay = 1000;
+let detectTagsDelay = 500;
+let tagReaded = localStorage.getItem("tagReaded");
 
 // Check if nfc.html is loaded
 if (nfc != null) {
@@ -109,12 +112,12 @@ if (nfc != null) {
 
     if (reload == "true") {
         btnRead.value = "Reading...";
-        console.log("here");
         reloadPageListener("nfc.html?runDetectTags=false#", detectTagsDelay);
 
         if (localStorage.getItem("counter") == 1) {
             setTimeout(() => {
                 alert("Remove card from the reader!");
+                localStorage.setItem("tagReaded", true);
             }, detectTagsDelay);
         }
     } else {
@@ -125,4 +128,17 @@ if (nfc != null) {
         event.preventDefault();
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
+
+    console.log(`tag readed: ${tagReaded}`);
+    if (tagReaded == "true") {
+        console.log("here");
+        localStorage.setItem("tagReaded", false);
+        tagReaded = localStorage.getItem("tagReaded");
+        
+        // NFC read failed
+        if (nfcDiscoverySuccess == false) {
+            alert("Could not read NFC tag!");
+        }
+    }
+    console.log(`tag readed: ${tagReaded}`);
 }

@@ -128,16 +128,17 @@ void loop() {
       nfc.StopDiscovery();
       nfcExecutionCounter = 0;
       runDetectTags = false;
+      nfcDiscoverySuccess = false;
     }
   }
 
-  // Reset variables and stop discovery when the page loaded is not related with NFC
+  // Reset variables when the page loaded is not related with NFC
   if (webRequest != NFC_URL) {
     cleartTagsValues();
   }
 }
 
-/// @brief Decode a URL-encoded string
+/// @brief Decode an URL-encoded string
 /// @param url
 /// @author https://arduino.stackexchange.com/questions/18007/simple-url-decoding?newreg=32c11952781c413592b3e837a3785e84
 /// @return String
@@ -363,6 +364,7 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     client.println("let sensRes = `" + sensRes + "`;");
     client.println("let selRes = `" + selRes + "`;");
     client.println("let nfcID = `" + nfcID + "`;");
+    client.println("let nfcDiscoverySuccess = " + String(nfcDiscoverySuccess ? "true" : "false") + ";");
   }
 
   // Create a temporary string to hold the page content
