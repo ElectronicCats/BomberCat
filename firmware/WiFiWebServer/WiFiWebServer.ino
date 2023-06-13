@@ -36,7 +36,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -345,7 +345,7 @@ void showPageContent(WiFiClient client, const char *pageContent) {
   } else if (webRequest == JAVASCRIPT_URL) {
     contentType = "application/javascript";
   }
-  
+
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:" + contentType);
   client.println();

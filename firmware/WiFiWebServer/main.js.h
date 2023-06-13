@@ -1,8 +1,38 @@
-const char* main_js = R"=====(// Uncomment this for testing on a local environment
+const char* main_js = R"=====(// Uncomment this to test on a local environment
 // let pollMode;
 // let nfcID;
 // let sensRes;
 // let selRes;
+// Comment the above lines to upload to the BomberCat
+
+let currentLocation = localStorage.getItem("location");
+let reload = localStorage.getItem("reload");
+
+// Update current page location
+function updateLocation(location) {
+    currentLocation = location;
+    localStorage.setItem("location", currentLocation);
+    localStorage.setItem("counter", 0);
+    localStorage.setItem("reload", "true");
+    window.location.reload();
+}
+
+function reloadPageListener(page, delay) {
+    if (reload == "true") {
+        if (localStorage.getItem("counter") == 0) {
+            localStorage.setItem("counter", 1);
+            window.location.href = currentLocation;
+        }
+
+        // Reload page to "page.html" after delay in ms
+        if (localStorage.getItem("counter") == 1) {
+            setTimeout(() => {
+                localStorage.setItem("reload", false);
+                window.location.replace(page);
+            }, delay);
+        }
+    }
+}
 
 // Home
 let btnConfig = document.querySelector("#btnConfig");
@@ -20,10 +50,6 @@ let btnEmulate = document.querySelector("#btnEmulate");
 let btnField = document.querySelector("#btnField");
 let track1 = document.querySelector("#track1");
 let track2 = document.querySelector("#track2");
-let currentLocation = localStorage.getItem("location");
-let reload = localStorage.getItem("reload");
-console.log("Reload: " + reload);
-console.log("Location: " + currentLocation);
 
 // Check if magspoof.html is loaded
 if (magspoof != null) {
@@ -33,11 +59,7 @@ if (magspoof != null) {
         localStorage.setItem("track1", track1.value);
         localStorage.setItem("track2", track2.value);
 
-        currentLocation = `magspoof.html?track1=${track1.value}&track2=${track2.value}&button=${btnField.value}#`;
-        localStorage.setItem("location", currentLocation);
-        localStorage.setItem("counter", 0);
-        localStorage.setItem("reload", true);
-        window.location.reload();
+        updateLocation(`magspoof.html?track1=${track1.value}&track2=${track2.value}&button=${btnField.value}#`);
     });
 
     btnSave.addEventListener("click", (event) => {
@@ -54,20 +76,7 @@ if (magspoof != null) {
     track1.value = localStorage.getItem("track1");
     track2.value = localStorage.getItem("track2");
 
-    if (reload == "true") {
-        if (localStorage.getItem("counter") == 0) {
-            localStorage.setItem("counter", 1);
-            window.location.href = currentLocation;
-        }
-        // Reload page to "magspoof.html" after 500 ms
-        if (localStorage.getItem("counter") == 1) {
-            setTimeout(() => {
-                localStorage.setItem("reload", false);
-                console.log("Reloaded!");
-                window.location.replace("magspoof.html");
-            }, 500);
-        }
-    }
+    reloadPageListener("magspoof.html", 500);
 }
 
 // Info
@@ -109,26 +118,8 @@ if (nfc != null) {
 
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
-
-        currentLocation = `nfc.html?runDetectTags=true#`;
-        localStorage.setItem("location", currentLocation);
-        localStorage.setItem("counter", 0);
-        localStorage.setItem("reload", true);
-        window.location.reload();
+        updateLocation(`nfc.html?runDetectTags=true#`);
     });
 
-    if (reload == "true") {
-        if (localStorage.getItem("counter") == 0) {
-            localStorage.setItem("counter", 1);
-            window.location.href = currentLocation;
-        }
-        // Reload page to "nfc.html" after 5000 ms
-        if (localStorage.getItem("counter") == 1) {
-            setTimeout(() => {
-                localStorage.setItem("reload", false);
-                console.log("Reloaded!");
-                window.location.replace("nfc.html?runDetectTags=false#");
-            }, 5000);
-        }
-    }
+    reloadPageListener("nfc.html?runDetectTags=false#", 5000);
 })=====";
