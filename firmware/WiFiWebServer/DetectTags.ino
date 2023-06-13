@@ -12,6 +12,13 @@
  * Distributed as-is; no warranty is given.
  */
 
+void cleartTagsValues() {
+  pollMode = "Waiting for NFC tag...";
+  nfcID = "";
+  sensRes = "";
+  selRes = "";
+}
+
 void ResetMode() {  // Reset the configuration mode after each reading
   Serial.println("Re-initializing...");
   nfc.ConfigMode(mode);

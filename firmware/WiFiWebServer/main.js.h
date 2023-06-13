@@ -1,5 +1,5 @@
 const char* main_js = R"=====(// Uncomment this to test on a local environment
-// let pollMode;
+// let pollMode = "POLL MODE: Remote MIFARE card activated";
 // let nfcID;
 // let sensRes;
 // let selRes;
@@ -7,6 +7,8 @@ const char* main_js = R"=====(// Uncomment this to test on a local environment
 
 let currentLocation = localStorage.getItem("location");
 let reload = localStorage.getItem("reload");
+console.log(`Reload: ${reload}`);
+console.log(`counter: ${localStorage.getItem("counter")}`);
 
 // Update current page location
 function updateLocation(location) {
@@ -23,7 +25,7 @@ function reloadPageListener(page, delay) {
             localStorage.setItem("counter", 1);
             window.location.href = currentLocation;
         }
-
+        
         // Reload page to "page.html" after delay in ms
         if (localStorage.getItem("counter") == 1) {
             setTimeout(() => {
@@ -96,15 +98,10 @@ let tvNfcID = document.querySelector("#tvNfcID");
 let tvSensRes = document.querySelector("#tvSensRes");
 let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
+let detectTagsDelay = 1000;
 
 // Check if nfc.html is loaded
 if (nfc != null) {
-    console.log('From BomberCat: ');
-    console.log(pollMode);
-    console.log(`NFC ID: ${nfcID}`);
-    console.log(`SENS RES: ${sensRes}`);
-    console.log(`SEL RES: ${selRes}`);
-
     tvPollMode.textContent = pollMode;
     tvNfcID.value = nfcID;
     tvSensRes.value = sensRes;
@@ -112,6 +109,14 @@ if (nfc != null) {
 
     if (reload == "true") {
         btnRead.value = "Reading...";
+        console.log("here");
+        reloadPageListener("nfc.html?runDetectTags=false#", detectTagsDelay);
+
+        if (localStorage.getItem("counter") == 1) {
+            setTimeout(() => {
+                alert("Remove card from the reader!");
+            }, detectTagsDelay);
+        }
     } else {
         btnRead.value = "Read";
     }
@@ -120,6 +125,4 @@ if (nfc != null) {
         event.preventDefault();
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
-
-    reloadPageListener("nfc.html?runDetectTags=false#", 3000);
 })=====";

@@ -113,20 +113,27 @@ void setup() {
 }
 
 void loop() {
-  static unsigned long lastTime = millis();
+  static unsigned long detectTagsTime = millis();
 
   runServer();
   magspoof();
 
-  if (millis() - lastTime > 1000 && webRequest == NFC_URL && runDetectTags) {
-    lastTime = millis();
+  // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
+  if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
+    detectTagsTime = millis();
     detectTags();
     nfcExecutionCounter++;
 
-    if (nfcExecutionCounter == 5) {
+    if (nfcExecutionCounter == READ_ATTEMPTS) {
+      nfc.StopDiscovery();
       nfcExecutionCounter = 0;
       runDetectTags = false;
     }
+  }
+
+  // Reset variables and stop discovery when the page loaded is not related with NFC
+  if (webRequest != NFC_URL) {
+    cleartTagsValues();
   }
 }
 
