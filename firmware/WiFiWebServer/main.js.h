@@ -121,5 +121,5 @@ if (nfc != null) {
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
 
-    reloadPageListener("nfc.html?runDetectTags=false#", 5000);
+    reloadPageListener("nfc.html?runDetectTags=false#", 3000);
 })=====";
