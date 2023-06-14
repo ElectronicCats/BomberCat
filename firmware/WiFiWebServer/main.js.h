@@ -9,14 +9,10 @@ const char* main_js = R"=====(// Uncomment this to test on a local environment
 let currentLocation = localStorage.getItem("location");
 let reload = localStorage.getItem("reload");
 let reloaded = localStorage.getItem("reloaded");
-console.log(`Reload: ${reload}`);
-console.log(`counter: ${localStorage.getItem("counter")}`);
-console.log(`NFC discovery success: ${nfcDiscoverySuccess}`);
 
 // Update current page location
 function updateLocation(location) {
-    currentLocation = location;
-    localStorage.setItem("location", currentLocation);
+    localStorage.setItem("location", location);
     localStorage.setItem("reload", true);
     localStorage.setItem("reloaded", false);
     window.location.reload();
@@ -24,14 +20,16 @@ function updateLocation(location) {
 
 function reloadPageListener(page, delay) {
     if (reload == "true") {
+        // Update location and reload page
         if (reloaded == "false") {
             localStorage.setItem("reloaded", true);
             window.location.href = currentLocation;
         }
         
-        // Reload page to "page.html" after delay in ms
+        // Reload page again with the new location
         if (reloaded == "true") {
             setTimeout(() => {
+                // alert("Second reload");
                 localStorage.setItem("reload", false);
                 window.location.replace(page);
             }, delay);
@@ -111,35 +109,37 @@ if (nfc != null) {
     tvSensRes.value = sensRes;
     tvSelRes.value = selRes;
 
-    if (reload == "true") {
-        btnRead.value = "Reading...";
-        reloadPageListener("nfc.html?runDetectTags=false#", detectTagsDelay);
-
-        if (reloaded == "true") {
-            setTimeout(() => {
-                alert("Remove card from the reader!");
-                localStorage.setItem("tagReaded", true);
-            }, detectTagsDelay);
-        }
-    } else {
-        btnRead.value = "Read";
-    }
+    console.log(`Reload: ${reload}`);
+    console.log(`reloaded: ${reloaded}`);
 
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
 
-    console.log(`tag readed: ${tagReaded}`);
+    if (reload == "true") {
+        btnRead.value = "Reading...";
+
+        if (reloaded == "true") {
+            setTimeout(() => {
+                localStorage.setItem("tagReaded", true);
+                alert("Remove card from the reader!");
+            }, detectTagsDelay);
+        }
+
+        reloadPageListener("nfc.html?runDetectTags=false#", detectTagsDelay);
+    } else {
+        btnRead.value = "Read";
+    }
+
     if (tagReaded == "true") {
-        console.log("here");
         localStorage.setItem("tagReaded", false);
         tagReaded = localStorage.getItem("tagReaded");
-        
+
         // NFC read failed
         if (nfcDiscoverySuccess == false) {
             alert("Could not read NFC tag!");
         }
     }
-    console.log(`tag readed: ${tagReaded}`);
-})=====";
+}
+)=====";

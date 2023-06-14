@@ -121,18 +121,21 @@ void loop() {
   // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
   if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
     detectTagsTime = millis();
-    detectTags();
     nfcExecutionCounter++;
+
+    // Wait one attempt before starting the NFC discovery
+    if (nfcExecutionCounter > 2) {
+      detectTags();
+    }
 
     if (nfcExecutionCounter == READ_ATTEMPTS) {
       nfc.StopDiscovery();
       nfcExecutionCounter = 0;
       runDetectTags = false;
-      nfcDiscoverySuccess = false;
     }
   }
 
-  // Reset variables when the page loaded is not related with NFC
+  // Reset NFC variables when the page loaded is not related with NFC
   if (webRequest != NFC_URL) {
     cleartTagsValues();
   }
@@ -323,6 +326,7 @@ void runServer() {
             if (button.startsWith("true")) {
               runDetectTags = true;
               nfcExecutionCounter = 0;
+              nfcDiscoverySuccess = false;
             }
           }
         }
