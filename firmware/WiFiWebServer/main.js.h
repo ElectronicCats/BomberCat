@@ -99,6 +99,7 @@ let tvNfcID = document.querySelector("#tvNfcID");
 let tvSensRes = document.querySelector("#tvSensRes");
 let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
+let btnClearNFC = document.querySelector("#btnClearNFC");
 let detectTagsDelay = 500;
 let tagReaded = localStorage.getItem("tagReaded");
 
@@ -109,15 +110,19 @@ if (nfc != null) {
     tvSensRes.value = sensRes;
     tvSelRes.value = selRes;
 
-    console.log(`Reload: ${reload}`);
-    console.log(`reloaded: ${reloaded}`);
+    btnClearNFC.addEventListener("click", (event) => {
+        event.preventDefault();
+        updateLocation(`nfc.html?clear=true#`);
+    });
 
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
 
-    if (reload == "true") {
+    reloadPageListener("nfc.html?clear=false#", detectTagsDelay);
+
+    if (reload == "true" && window.location.href.includes("runDetectTags=true")) {
         btnRead.value = "Reading...";
 
         if (reloaded == "true") {

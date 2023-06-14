@@ -272,7 +272,7 @@ a {
 
 .read-form {
     grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main1 main2" "footer footer";
+    grid-template-areas: "header header" "main1 main2" "top-footer top-footer" "footer footer";
 }
 
 .input-card,
@@ -322,6 +322,7 @@ a {
     color: var(--white);
 }
 
+.clear-button,
 .save-button {
     grid-area: top-footer;
     width: 392px;
@@ -413,6 +414,7 @@ a {
         width: 128px;
     }
 
+    .clear-button,
     .save-button,
     .send-button,
     .read-button {

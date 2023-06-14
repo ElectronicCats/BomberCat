@@ -136,7 +136,8 @@ void loop() {
   }
 
   // Reset NFC variables when the page loaded is not related with NFC
-  if (webRequest != NFC_URL) {
+  if (webRequest != NFC_URL || clearNFCValues) {
+    clearNFCValues = false;
     cleartTagsValues();
   }
 }
@@ -321,9 +322,14 @@ void runServer() {
           }
 
           if (url.startsWith("/nfc.html?")) {
-            String button = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
+            String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
+            String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
 
-            if (button.startsWith("true")) {
+            if (btnClear.startsWith("true")) {
+              clearNFCValues = true;
+            }
+
+            if (btnRunDetectTags.startsWith("true")) {
               runDetectTags = true;
               nfcExecutionCounter = 0;
               nfcDiscoverySuccess = false;
