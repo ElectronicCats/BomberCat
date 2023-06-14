@@ -96,6 +96,8 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
 
         Serial.print("\tNFCID = ");
         PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
+        Serial.print("\tID = ");
+        PrintBuf(RfIntf.Info.NFC_VPP.ID, sizeof(RfIntf.Info.NFC_VPP.ID));
         nfcID = getHexRepresentation(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
         Serial.println(nfcID);
 
@@ -108,33 +110,41 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         }
         break;
 
+      // Not tested
       case (MODE_POLL | TECH_PASSIVE_NFCB):
         if (RfIntf.Info.NFC_BPP.SensResLen != 0) {
           Serial.print("\tSENS_RES = ");
           PrintBuf(RfIntf.Info.NFC_BPP.SensRes, RfIntf.Info.NFC_BPP.SensResLen);
-          sensRes = String(RfIntf.Info.NFC_BPP.SensRes, RfIntf.Info.NFC_BPP.SensResLen);
+          sensRes = getHexRepresentation(RfIntf.Info.NFC_BPP.SensRes, RfIntf.Info.NFC_BPP.SensResLen);
         }
         break;
 
+      // Not tested
       case (MODE_POLL | TECH_PASSIVE_NFCF):
         Serial.print("\tBitrate = ");
         Serial.println((RfIntf.Info.NFC_FPP.BitRate == 1) ? "212" : "424");
+        bitRate = (RfIntf.Info.NFC_FPP.BitRate == 1) ? "212" : "424";
 
         if (RfIntf.Info.NFC_FPP.SensResLen != 0) {
           Serial.print("\tSENS_RES = ");
           PrintBuf(RfIntf.Info.NFC_FPP.SensRes, RfIntf.Info.NFC_FPP.SensResLen);
+          sensRes = getHexRepresentation(RfIntf.Info.NFC_FPP.SensRes, RfIntf.Info.NFC_FPP.SensResLen);
         }
         break;
-
+      
+      // Not tested
       case (MODE_POLL | TECH_PASSIVE_15693):
         Serial.print("\tID = ");
         PrintBuf(RfIntf.Info.NFC_VPP.ID, sizeof(RfIntf.Info.NFC_VPP.ID));
+        nfcID = getHexRepresentation(RfIntf.Info.NFC_VPP.ID, sizeof(RfIntf.Info.NFC_VPP.ID));
 
         Serial.print("\ntAFI = ");
         Serial.println(RfIntf.Info.NFC_VPP.AFI);
+        afi = String(RfIntf.Info.NFC_VPP.AFI);
 
         Serial.print("\tDSFID = ");
         Serial.println(RfIntf.Info.NFC_VPP.DSFID, HEX);
+        dsfid = String(RfIntf.Info.NFC_VPP.DSFID, HEX);
         break;
 
       default:
