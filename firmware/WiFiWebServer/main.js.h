@@ -8,6 +8,7 @@ const char* main_js = R"=====(// Uncomment this to test on a local environment
 
 let currentLocation = localStorage.getItem("location");
 let reload = localStorage.getItem("reload");
+let reloaded = localStorage.getItem("reloaded");
 console.log(`Reload: ${reload}`);
 console.log(`counter: ${localStorage.getItem("counter")}`);
 console.log(`NFC discovery success: ${nfcDiscoverySuccess}`);
@@ -16,20 +17,20 @@ console.log(`NFC discovery success: ${nfcDiscoverySuccess}`);
 function updateLocation(location) {
     currentLocation = location;
     localStorage.setItem("location", currentLocation);
-    localStorage.setItem("counter", 0);
-    localStorage.setItem("reload", "true");
+    localStorage.setItem("reload", true);
+    localStorage.setItem("reloaded", false);
     window.location.reload();
 }
 
 function reloadPageListener(page, delay) {
     if (reload == "true") {
-        if (localStorage.getItem("counter") == 0) {
-            localStorage.setItem("counter", 1);
+        if (reloaded == "false") {
+            localStorage.setItem("reloaded", true);
             window.location.href = currentLocation;
         }
         
         // Reload page to "page.html" after delay in ms
-        if (localStorage.getItem("counter") == 1) {
+        if (reloaded == "true") {
             setTimeout(() => {
                 localStorage.setItem("reload", false);
                 window.location.replace(page);
@@ -114,7 +115,7 @@ if (nfc != null) {
         btnRead.value = "Reading...";
         reloadPageListener("nfc.html?runDetectTags=false#", detectTagsDelay);
 
-        if (localStorage.getItem("counter") == 1) {
+        if (reloaded == "true") {
             setTimeout(() => {
                 alert("Remove card from the reader!");
                 localStorage.setItem("tagReaded", true);
