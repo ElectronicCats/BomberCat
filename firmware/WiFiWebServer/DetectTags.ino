@@ -20,9 +20,38 @@ void cleartTagsValues() {
   nfcDiscoverySuccess = false;
 }
 
-void ResetMode() {  // Reset the configuration mode after each reading
+void resetMode() {  // Reset the configuration mode after each reading
   Serial.println("Re-initializing...");
-  nfc.ConfigMode(mode);
+  Serial.println("Mode: " + String(mode));
+
+  if (nfc.connectNCI()) {  // Wake up the board
+    Serial.println("Error while setting up the mode, check connections!");
+    while (1)
+      ;
+  }
+
+  if (mode == 1) {
+    if (nfc.ConfigureSettings()) {
+      Serial.println("The Configure Settings is failed!");
+      while (1)
+        ;
+    }
+  } else if (mode == 2) {
+    Serial.print("Emulating: ");
+    Serial.println(getHexRepresentation(uidcf, uidlen + 10));
+    if (nfc.ConfigureSettings(uidcf, uidlen)) {
+      Serial.println("The Configure Settings is failed!");
+      while (1)
+        ;
+    }
+  }
+
+  if (nfc.ConfigMode(mode)) {  // Set up the configuration mode
+    Serial.println("The Configure Mode is failed!!");
+    while (1)
+      ;
+  }
+
   nfc.StartDiscovery(mode);
 }
 
@@ -95,11 +124,27 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         Serial.println(" ");
 
         Serial.print("\tNFCID = ");
-        PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
-        Serial.print("\tID = ");
-        PrintBuf(RfIntf.Info.NFC_VPP.ID, sizeof(RfIntf.Info.NFC_VPP.ID));
+        // PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
         nfcID = getHexRepresentation(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
         Serial.println(nfcID);
+
+        uidcf[2] = 7 + RfInterface.Info.NFC_APP.NfcIdLen;
+        uidcf[3] = 0x02;
+        uidcf[8] = 0x33;
+        uidcf[9] = RfInterface.Info.NFC_APP.NfcIdLen;
+
+        uidlen = RfInterface.Info.NFC_APP.NfcIdLen;
+
+        memcpy(&uidcf[10], RfInterface.Info.NFC_APP.NfcId, RfInterface.Info.NFC_APP.NfcIdLen);
+
+        Serial.print("\tUIDCF: ");
+        Serial.println(getHexRepresentation(uidcf, uidlen + 10));
+
+        // uidcf ready to fill CORE_CONF
+        if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
+          Serial.println("Ooops ... this doesn't seem to be a Mifare Classic card!");
+          return;
+        }
 
         if (RfIntf.Info.NFC_APP.SelResLen != 0) {
           Serial.print("\tSEL_RES = ");
@@ -131,7 +176,7 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
           sensRes = getHexRepresentation(RfIntf.Info.NFC_FPP.SensRes, RfIntf.Info.NFC_FPP.SensResLen);
         }
         break;
-      
+
       // Not tested
       case (MODE_POLL | TECH_PASSIVE_15693):
         Serial.print("\tID = ");
@@ -158,8 +203,6 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
 }
 
 void setupNFC() {
-  Serial.println("Detect NFC tags with PN7150");
-
   Serial.println("Initializing NFC...");
   if (nfc.connectNCI()) {  // Wake up the board
     Serial.println("Error while setting up the mode, check connections!");
@@ -178,9 +221,6 @@ void setupNFC() {
     while (1)
       ;
   }
-  nfc.StartDiscovery(mode);  // NCI Discovery mode
-  Serial.println("BomberCat, Yes Sir!");
-  Serial.println("Waiting for an Card ...");
 }
 
 void detectTags() {
@@ -217,5 +257,5 @@ void detectTags() {
     nfc.StopDiscovery();
     nfc.StartDiscovery(mode);
   }
-  ResetMode();
+  resetMode();
 }

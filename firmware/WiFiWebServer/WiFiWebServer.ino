@@ -25,9 +25,9 @@
 #include <WiFiNINA.h>
 // #include <Preferences.h>
 // #include "Electroniccats_PN7150.h"
+#include "CloneNFCID.h"
 #include "DetectTags.h"
 #include "Magspoof.h"
-#include "arduino_secrets.h"
 #include "home.html.h"
 #include "info.html.h"
 #include "login.html.h"
@@ -116,7 +116,7 @@ void loop() {
   static unsigned long detectTagsTime = millis();
 
   runServer();
-  magspoof();
+  // magspoof();
 
   // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
   if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
@@ -139,6 +139,21 @@ void loop() {
   if (webRequest != NFC_URL || clearNFCValues) {
     clearNFCValues = false;
     cleartTagsValues();
+  }
+
+  if (digitalRead(NPIN) == 0) {
+    mifare();
+    visamsd();
+    // mode = 2;
+    // resetMode();
+    // Serial.print("Emulating: ");
+    // Serial.println(getHexRepresentation(uidcf, uidlen + 10));
+    // nfc.CardModeSend(uidcf, uidlen);
+    // seekTrack2();
+
+    // mode = 1;
+    // resetMode();
+    // nfc.StopDiscovery();
   }
 }
 
