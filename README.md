@@ -54,6 +54,11 @@ Magspoof mode can emulate magnetic stripes cards by emulating the electromagneti
 
 [Getting Started in our Wiki](https://github.com/ElectronicCats/BomberCat/wiki)
   
+## Disclaimer
+BomberCat is a wireless penetration testing tool intended solely for use in authorized security audits, where such usage is permitted by applicable laws and regulations. Before utilizing this tool, it is crucial to ensure compliance with all relevant legal requirements and obtain appropriate permissions from the relevant authorities.
+
+It is essential to note that the board does not provide any means or authorization to utilize credit cards or engage in any financial transactions that are not legally authorized. Electronic Cats holds no responsibility for any unauthorized use of the tool or any resulting damages.
+ 
  ## Supported by
  
  Thanks [Wallee](https://en.wallee.com/) for support this project open source
