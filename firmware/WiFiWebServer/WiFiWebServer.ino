@@ -142,7 +142,7 @@ void loop() {
   }
 
   if (digitalRead(NPIN) == 0) {
-    mifare();
+    // mifare();
     visamsd();
     // mode = 2;
     // resetMode();

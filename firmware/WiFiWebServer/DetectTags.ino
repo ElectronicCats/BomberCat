@@ -37,8 +37,6 @@ void resetMode() {  // Reset the configuration mode after each reading
         ;
     }
   } else if (mode == 2) {
-    Serial.print("Emulating: ");
-    Serial.println(getHexRepresentation(uidcf, uidlen + 10));
     if (nfc.ConfigureSettings(uidcf, uidlen)) {
       Serial.println("The Configure Settings is failed!");
       while (1)
@@ -124,7 +122,6 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
         Serial.println(" ");
 
         Serial.print("\tNFCID = ");
-        // PrintBuf(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
         nfcID = getHexRepresentation(RfIntf.Info.NFC_APP.NfcId, RfIntf.Info.NFC_APP.NfcIdLen);
         Serial.println(nfcID);
 

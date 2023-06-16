@@ -379,7 +379,7 @@ void detectcard() {
         case PROT_MIFARE:
           Serial.println(" - Found MIFARE card");
 
-          readingmifare();
+          // readingmifare();
           break;
 
         default:
