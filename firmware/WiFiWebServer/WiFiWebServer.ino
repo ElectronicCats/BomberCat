@@ -142,18 +142,8 @@ void loop() {
   }
 
   if (digitalRead(NPIN) == 0) {
-    // mifare();
-    visamsd();
-    // mode = 2;
-    // resetMode();
-    // Serial.print("Emulating: ");
-    // Serial.println(getHexRepresentation(uidcf, uidlen + 10));
-    // nfc.CardModeSend(uidcf, uidlen);
-    // seekTrack2();
-
-    // mode = 1;
-    // resetMode();
-    // nfc.StopDiscovery();
+    emulateNFCID();
+    nfc.StopDiscovery();
   }
 }
 
@@ -345,6 +335,8 @@ void runServer() {
             }
 
             if (btnRunDetectTags.startsWith("true")) {
+              mode = 1;
+              resetMode();
               runDetectTags = true;
               nfcExecutionCounter = 0;
               nfcDiscoverySuccess = false;
