@@ -139,24 +139,6 @@ uint8_t treatPDOL(uint8_t* apdu) {
   return plen;
 }
 
-void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
-  char tmp[1];
-  if (cmd == 1)
-    Serial.print("\nCommand: ");
-  else if (cmd == 2)
-    Serial.print("\nReader command: ");
-  else if (cmd == 3)
-    Serial.print("\nHunter Cat answer: ");
-  else
-    Serial.print("\nCard answer: ");
-
-  for (uint8_t u = 0; u < lenbuffer; u++) {
-    sprintf(tmp, "0x%.2X", buff[u]);
-    Serial.print(tmp);
-    Serial.print(" ");
-  }
-}
-
 // Find Track 2 in the NFC reading transaction
 void seekTrack2() {
   bool chktoken = false, existpdol = false;

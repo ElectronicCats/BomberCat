@@ -1,3 +1,21 @@
+void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
+  char tmp[1];
+  if (cmd == 1)
+    Serial.print("\nCommand: ");
+  else if (cmd == 2)
+    Serial.print("\nReader command: ");
+  else if (cmd == 3)
+    Serial.print("\nHunter Cat answer: ");
+  else
+    Serial.print("\nCard answer: ");
+
+  for (uint8_t u = 0; u < lenbuffer; u++) {
+    sprintf(tmp, "0x%.2X", buff[u]);
+    Serial.print(tmp);
+    Serial.print(" ");
+  }
+}
+
 void emulateNFCID() {
   mode = 2;
   resetMode();
@@ -9,11 +27,15 @@ void emulateNFCID() {
   uint8_t apdusLen2[] = {sizeof(ppsea), sizeof(visaa), sizeof(processinga), sizeof(card), sizeof(finished), sizeof(finished)};
 
   unsigned long lastTime = millis();
-  int counter = 0;
+  uint8_t counter = 0;
+
+  // while(true) {
+  //   nfc.CardModeSend(apdus2[0], apdusLen2[0]);
+  //   printData(apdus2[0], apdusLen2[0], 3);
+  // }
 
   for (uint8_t i = 0; i < 6; i++) {
-    Serial.println("Waiting for APDU");
-    Serial.println("i = " + String(i));
+    // Serial.println("i = " + String(i));
 
     if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) {  // Data in buffer?
 
@@ -25,13 +47,13 @@ void emulateNFCID() {
       nfc.CardModeSend(apdus2[i], apdusLen2[i]);
 
       printData(apdus2[i], apdusLen2[i], 3);
+      Serial.println("counter = " + String(++counter));
+      // counter++;
+
+      // if (++counter == 6) break;
 
     } else {
       i--;
     }
-    // if (millis() - lastTime > 10000) {
-    //   Serial.println("Timeout");
-    //   break;
-    // }
   }
 }
