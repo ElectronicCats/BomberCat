@@ -17,36 +17,12 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
 }
 
 void emulateNFCID() {
-  uint8_t requestCmd[] = {0x00, 0xB0, 0x00, 0x00, 0x0F};
-  mode = 2;
-  resetMode();
-  int attempts = 0;
-  unsigned long time = millis();
+  if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) {  // Receive command from reader
+  #ifdef DEBUG
+    printData(Cmd, CmdSize, 1);
+    printData(dummyData, sizeof(dummyData), 3);
+  #endif
 
-  Serial.println("\nWaiting for reader command...");
-
-  while (true) {
-    if (millis() - time > 10000) {
-      Serial.println("Timeout, exiting...");
-      break;
-    }
-
-    if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) {  // Receive command from reader
-      printData(Cmd, CmdSize, 1);
-      printData(data, sizeof(data), 3);
-      Serial.println("\nAttempts = " + String(attempts));
-      attempts++;
-
-      nfc.CardModeSend(data, sizeof(data));  // Emulate the dummy data and the NFCID
-
-      // If Cmd is equal to requestCmd, then the reader is asking for the NFCID
-      if (memcmp(Cmd, requestCmd, sizeof(requestCmd)) == 0) {
-        Serial.println("Reader is asking for the NFCID");
-        Serial.println("NFCID: " + getHexRepresentation(uidcf, sizeof(uidcf)));
-        // break;
-      }
-    }
+    nfc.CardModeSend(dummyData, sizeof(dummyData));  // Emulate the dummy dummyData and the NFC ID
   }
-
-  nfc.StopDiscovery();
 }

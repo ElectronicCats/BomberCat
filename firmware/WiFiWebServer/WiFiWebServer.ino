@@ -36,7 +36,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-// #define DEBUG
+#define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -138,10 +138,11 @@ void loop() {
   // Reset NFC variables when the page loaded is not related with NFC
   if (webRequest != NFC_URL || clearNFCValues) {
     clearNFCValues = false;
+    emulateNFCFlag = false;
     cleartTagsValues();
   }
 
-  if (digitalRead(NPIN) == 0) {
+  if (emulateNFCFlag && webRequest == NFC_URL) {
     emulateNFCID();
   }
 }
@@ -328,6 +329,11 @@ void runServer() {
           if (url.startsWith("/nfc.html?")) {
             String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
             String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
+            String btnEmulateNFC = "";
+            int index = url.indexOf("emulateState=");
+            if (index != -1) {
+              btnEmulateNFC = url.substring(index + 13);
+            }
 
             if (btnClear.startsWith("true")) {
               clearNFCValues = true;
@@ -339,6 +345,19 @@ void runServer() {
               runDetectTags = true;
               nfcExecutionCounter = 0;
               nfcDiscoverySuccess = false;
+              emulateNFCFlag = false;
+            }
+
+            if (btnEmulateNFC.startsWith("true")) {
+              Serial.println("true");
+              mode = 2;
+              resetMode();
+              emulateNFCFlag = true;
+              Serial.println("\nWaiting for reader command...");
+            } else if (btnEmulateNFC.startsWith("false")) {
+              Serial.println("false");
+              emulateNFCFlag = false;
+              nfc.StopDiscovery();
             }
           }
         }

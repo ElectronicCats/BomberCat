@@ -1,4 +1,4 @@
-#define KEY_MFC      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF        // Default Mifare Classic key
+#define KEY_MFC 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  // Default Mifare Classic key
 
 unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 
@@ -23,7 +23,8 @@ uint8_t card[25] = {};
 uint8_t statusapdu[2] = {0x90, 0x00};
 uint8_t finished[] = {0x6f, 0x00};
 
-uint8_t data[]= {0x90, 0x00};
+uint8_t dummyData[] = {0x90, 0x00};
+bool emulateNFCFlag = false;
 
 boolean detectCardFlag = false;
 
