@@ -116,7 +116,10 @@ void loop() {
   static unsigned long detectTagsTime = millis();
 
   runServer();
-  // magspoof();
+  
+  if (webRequest == MAGSPOOF_URL) {
+    magspoof();
+  }
 
   // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
   if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {

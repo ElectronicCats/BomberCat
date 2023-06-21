@@ -52,7 +52,6 @@ let magspoofForm = document.querySelector("#magspoofForm");
 let btnSave = document.querySelector("#btnSave");
 let btnEmulate = document.querySelector("#btnEmulate");
 let btnField = document.querySelector("#btnField");
-let btnEmulateNFC = document.querySelector("#btnEmulateNFC");
 let track1 = document.querySelector("#track1");
 let track2 = document.querySelector("#track2");
 
@@ -102,6 +101,7 @@ let tvSensRes = document.querySelector("#tvSensRes");
 let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
 let btnClearNFC = document.querySelector("#btnClearNFC");
+let btnEmulateNFC = document.querySelector("#btnEmulateNFC");
 
 let detectTagsDelay = 500;
 let tagReaded = localStorage.getItem("tagReaded");

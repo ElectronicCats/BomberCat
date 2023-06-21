@@ -38,11 +38,27 @@ const char* nfc_html = R"=====(<!DOCTYPE html>
                                 class="inputC text-code" readonly>
                             <input type="submit" value="Clear" class="primary-button clear-button" id="btnClearNFC">
                             <input type="submit" value="Read" class="primary-button read-button" id="btnRead">
-                            <input type="submit" value="Emulate" class="primary-button emulate-nfc-button" id="btnEmulateNFC">
                         </form>
                     </div>
                 </section>
             </div>
+            <section class="emulate-nfc-container">
+                <button class="emulate-nfc-button" id="btnEmulateNFC">
+                    <p class="nfc-button-text">Stop</p>
+                </button>
+                <div class="scroller">
+                    <div class="lds-roller">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
     <footer>

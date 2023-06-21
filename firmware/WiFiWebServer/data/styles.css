@@ -18,6 +18,163 @@ body {
     font-family: 'Segoe UI';
 }
 
+/* Animations */
+.lds-roller {
+    display: inline-block;
+    position: relative;
+    width: 160px;
+    /* Doble de tamaño */
+    height: 160px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div {
+    animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    transform-origin: 80px 80px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:after {
+    content: " ";
+    display: block;
+    position: absolute;
+    width: 14px;
+    /* Doble de tamaño */
+    height: 14px;
+    /* Doble de tamaño */
+    border-radius: 50%;
+    background: #53dda1;
+    margin: -8px 0 0 -8px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(1) {
+    animation-delay: -0.036s;
+}
+
+.lds-roller div:nth-child(1):after {
+    top: 126px;
+    /* Doble de tamaño */
+    left: 126px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(2) {
+    animation-delay: -0.072s;
+}
+
+.lds-roller div:nth-child(2):after {
+    top: 136px;
+    /* Doble de tamaño */
+    left: 112px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(3) {
+    animation-delay: -0.108s;
+}
+
+.lds-roller div:nth-child(3):after {
+    top: 142px;
+    /* Doble de tamaño */
+    left: 96px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(4) {
+    animation-delay: -0.144s;
+}
+
+.lds-roller div:nth-child(4):after {
+    top: 144px;
+    /* Doble de tamaño */
+    left: 80px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(5) {
+    animation-delay: -0.18s;
+}
+
+.lds-roller div:nth-child(5):after {
+    top: 142px;
+    /* Doble de tamaño */
+    left: 64px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(6) {
+    animation-delay: -0.216s;
+}
+
+.lds-roller div:nth-child(6):after {
+    top: 136px;
+    /* Doble de tamaño */
+    left: 48px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(7) {
+    animation-delay: -0.252s;
+}
+
+.lds-roller div:nth-child(7):after {
+    top: 126px;
+    /* Doble de tamaño */
+    left: 34px;
+    /* Doble de tamaño */
+}
+
+.lds-roller div:nth-child(8) {
+    animation-delay: -0.288s;
+}
+
+.lds-roller div:nth-child(8):after {
+    top: 112px;
+    /* Doble de tamaño */
+    left: 24px;
+    /* Doble de tamaño */
+}
+
+@keyframes lds-roller {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* End animations */
+.emulate-nfc-container {
+    /* position: relative; */
+    width: 160px;
+    height: 160px;
+}
+
+.emulate-nfc-button {
+    all: unset;
+    width: 160px;
+    height: 160px;
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.nfc-button-text {
+    font-size: var(--lg);
+}
+
+.scroller {
+    position: absolute;
+    z-index: 1;
+}
+
 .main-container.background {
     background-color: var(--main-logo-background);
 }
@@ -339,12 +496,6 @@ a {
     width: 392px;
 }
 
-.emulate-nfc-button {
-    margin-top: 12px;
-    grid-area: bottom3;
-    width: 392px;
-}
-
 /* Footer */
 
 .footer-home {
@@ -357,6 +508,7 @@ a {
     place-items: center;
     align-content: center;
     display: none;
+    z-index: 3;
 }
 
 .footer-icon-link {
@@ -423,8 +575,7 @@ a {
     .clear-button,
     .save-button,
     .send-button,
-    .read-button,
-    .emulate-nfc-button {
+    .read-button {
         width: 292px;
     }
 

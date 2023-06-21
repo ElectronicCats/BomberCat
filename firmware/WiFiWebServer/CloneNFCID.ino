@@ -18,10 +18,10 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
 
 void emulateNFCID() {
   if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) {  // Receive command from reader
-  #ifdef DEBUG
+    #ifdef DEBUG
     printData(Cmd, CmdSize, 1);
     printData(dummyData, sizeof(dummyData), 3);
-  #endif
+    #endif
 
     nfc.CardModeSend(dummyData, sizeof(dummyData));  // Emulate the dummy dummyData and the NFC ID
   }
