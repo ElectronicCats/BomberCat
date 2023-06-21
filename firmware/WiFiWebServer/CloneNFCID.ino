@@ -17,7 +17,7 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
 }
 
 void emulateNFCID() {
-  uint8_t requestCmd[] = {0x00, 0xB0, 0x00, 0x00, 0x0F}; // 
+  uint8_t requestCmd[] = {0x00, 0xB0, 0x00, 0x00, 0x0F};
   mode = 2;
   resetMode();
   int attempts = 0;
@@ -47,4 +47,6 @@ void emulateNFCID() {
       }
     }
   }
+
+  nfc.StopDiscovery();
 }

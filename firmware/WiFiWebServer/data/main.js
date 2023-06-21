@@ -9,6 +9,7 @@
 let currentLocation = localStorage.getItem("location");
 let reload = localStorage.getItem("reload");
 let reloaded = localStorage.getItem("reloaded");
+console.log(`Current location: ${currentLocation}`);
 
 // Update current page location
 function updateLocation(location) {
@@ -51,6 +52,7 @@ let magspoofForm = document.querySelector("#magspoofForm");
 let btnSave = document.querySelector("#btnSave");
 let btnEmulate = document.querySelector("#btnEmulate");
 let btnField = document.querySelector("#btnField");
+let btnEmulateNFC = document.querySelector("#btnEmulateNFC");
 let track1 = document.querySelector("#track1");
 let track2 = document.querySelector("#track2");
 
@@ -100,8 +102,11 @@ let tvSensRes = document.querySelector("#tvSensRes");
 let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
 let btnClearNFC = document.querySelector("#btnClearNFC");
+
 let detectTagsDelay = 500;
 let tagReaded = localStorage.getItem("tagReaded");
+let emulateState = localStorage.getItem("emulateState");
+console.log(`Emulate state: ${emulateState}`);
 
 // Check if nfc.html is loaded
 if (nfc != null) {
@@ -118,6 +123,21 @@ if (nfc != null) {
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
         updateLocation(`nfc.html?runDetectTags=true#`);
+    });
+
+    btnEmulateNFC.addEventListener("click", (event) => {
+        event.preventDefault();
+        
+        // Toggle emulate state
+        if (emulateState == "true") {
+            localStorage.setItem("emulateState", false);
+            emulateState = localStorage.getItem("emulateState");
+        } else {
+            localStorage.setItem("emulateState", true);
+            emulateState = localStorage.getItem("emulateState");
+        }
+
+        window.location.href = `nfc.html?emulateState=${emulateState}#`;
     });
 
     reloadPageListener("nfc.html?clear=false#", detectTagsDelay);

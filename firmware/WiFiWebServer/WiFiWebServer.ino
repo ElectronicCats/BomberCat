@@ -142,9 +142,7 @@ void loop() {
   }
 
   if (digitalRead(NPIN) == 0) {
-    // mifare();
     emulateNFCID();
-    nfc.StopDiscovery();
   }
 }
 

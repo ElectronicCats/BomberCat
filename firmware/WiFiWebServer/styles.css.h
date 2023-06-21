@@ -264,7 +264,7 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main main" "top-footer top-footer" "footer footer";
+    grid-template-areas: "header header" "main main" "bottom1 bottom1" "bottom2 bottom2";
     align-items: center;
     justify-items: center;
     margin-bottom: 90px;
@@ -272,7 +272,7 @@ a {
 
 .read-form {
     grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main1 main2" "top-footer top-footer" "footer footer";
+    grid-template-areas: "header header" "main1 main2" "bottom1 bottom1" "bottom2 bottom2" "bottom3 bottom3";
 }
 
 .input-card,
@@ -324,7 +324,7 @@ a {
 
 .clear-button,
 .save-button {
-    grid-area: top-footer;
+    grid-area: bottom1;
     width: 392px;
     background-color: var(--white);
     border: 1px solid var(--border);
@@ -335,7 +335,13 @@ a {
 
 .send-button,
 .read-button {
-    grid-area: footer;
+    grid-area: bottom2;
+    width: 392px;
+}
+
+.emulate-nfc-button {
+    margin-top: 12px;
+    grid-area: bottom3;
     width: 392px;
 }
 
@@ -417,7 +423,8 @@ a {
     .clear-button,
     .save-button,
     .send-button,
-    .read-button {
+    .read-button,
+    .emulate-nfc-button {
         width: 292px;
     }
 
