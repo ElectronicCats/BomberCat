@@ -277,7 +277,9 @@ void runServer() {
   WiFiClient client = server.available();  // listen for incoming clients
 
   if (client) {                   // if you get a client,
+    unsigned long speedTestTime = millis();
     String currentLine = "";      // make a String to hold incoming data from the client
+
     while (client.connected()) {  // loop while the client's connected
       if (client.available()) {   // if there's bytes to read from the client,
         char c = client.read();   // read a byte, then
@@ -351,6 +353,15 @@ void runServer() {
               emulateNFCFlag = false;
             }
 
+            // Uncommenting this code makes emulating NFC ID slower
+            // if (btnEmulateNFC.startsWith("true") || btnEmulateNFC.startsWith("false")) {
+            //   static int doubleCounter = 1;
+            //   // Toggle emulateNFCState
+            //   emulateNFCState = !emulateNFCState;
+            //   Serial.println("emulateNFCState: " + String(emulateNFCState));
+            //   doubleCounter++;
+            // }
+
             if (btnEmulateNFC.startsWith("true")) {
               Serial.println("true");
               mode = 2;
@@ -369,6 +380,9 @@ void runServer() {
     }
     client.stop();
     // Serial.println("client disconnected");
+    #ifdef DEBUG
+    Serial.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
+    #endif
   }
 }
 
