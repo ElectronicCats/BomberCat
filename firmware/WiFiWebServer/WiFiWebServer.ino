@@ -360,6 +360,7 @@ void runServer() {
             } else if (btnEmulateNFC.startsWith("false")) {
               Serial.println("false");
               emulateNFCFlag = false;
+              attempts = 0;
               nfc.StopDiscovery();
             }
           }

@@ -23,8 +23,10 @@ uint8_t card[25] = {};
 uint8_t statusapdu[2] = {0x90, 0x00};
 uint8_t finished[] = {0x6f, 0x00};
 
-uint8_t dummyData[] = {0x90, 0x00};
+uint8_t data[] = {0x90, 0x00};
+uint8_t requestCmd[] = {0x00, 0xB0, 0x00, 0x00, 0x0F};
 bool emulateNFCFlag = false;
+int attempts = 0;
 
 boolean detectCardFlag = false;
 
