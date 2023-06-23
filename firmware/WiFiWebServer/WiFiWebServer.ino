@@ -363,13 +363,11 @@ void runServer() {
             // }
 
             if (btnEmulateNFC.startsWith("true")) {
-              Serial.println("true");
               mode = 2;
               resetMode();
               emulateNFCFlag = true;
               Serial.println("\nWaiting for reader command...");
             } else if (btnEmulateNFC.startsWith("false")) {
-              Serial.println("false");
               emulateNFCFlag = false;
               attempts = 0;
               nfc.StopDiscovery();
@@ -381,7 +379,7 @@ void runServer() {
     client.stop();
     // Serial.println("client disconnected");
     #ifdef DEBUG
-    Serial.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
+    // Serial.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
     #endif
   }
 }

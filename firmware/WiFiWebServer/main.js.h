@@ -1,9 +1,9 @@
 const char* main_js = R"=====(// Uncomment this to test on a local environment
-let pollMode = "POLL MODE: Remote MIFARE card activated";
-let nfcID;
-let sensRes;
-let selRes;
-let nfcDiscoverySuccess = false;
+// let pollMode = "POLL MODE: Remote MIFARE card activated";
+// let nfcID;
+// let sensRes;
+// let selRes;
+// let nfcDiscoverySuccess = false;
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
