@@ -13,6 +13,7 @@
  */
 
 void cleartTagsValues() {
+  emulateNFCFlag = false;
   pollMode = "Waiting for NFC tag";
   nfcID = "";
   sensRes = "";

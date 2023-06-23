@@ -49,7 +49,8 @@
 char ssid[] = "BomberCat";  // your network SSID (name)
 char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
 
-WiFiServer server(80);
+int port = 80;
+WiFiServer server(port);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
@@ -66,18 +67,17 @@ void setup() {
   // Initialize serial and wait for port to open:
   Serial.begin(9600);
 
-#ifdef DEBUG
+  #ifdef DEBUG
   while (!Serial) {
     ;  // wait for serial port to connect. Needed for native USB port only
   }
-#endif
-
-  // Convertir de nuevo a una cadena de caracteres (char array)
-  // strcpy(main_js, main_js_modificado.c_str());
+  #endif
 
   // Check for the WiFi module
   if (WiFi.status() == WL_NO_MODULE) {
+    #ifdef DEBUG
     Serial.println("Communication with WiFi module failed!");
+    #endif
     // don't continue
     while (true)
       ;
@@ -90,11 +90,15 @@ void setup() {
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+    #ifdef DEBUG
     Serial.println("Please upgrade the firmware");
+    #endif
   }
 
+  #ifdef DEBUG
   Serial.print("Creating access point named: ");
   Serial.println(ssid);
+  #endif
 
   // TODO: Set ssid and pass with user preferences
   status = WiFi.beginAP(ssid, pass);
@@ -141,7 +145,6 @@ void loop() {
   // Reset NFC variables when the page loaded is not related with NFC
   if (webRequest != NFC_URL || clearNFCValues) {
     clearNFCValues = false;
-    emulateNFCFlag = false;
     cleartTagsValues();
   }
 
@@ -205,11 +208,13 @@ void setupTracks() {
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
 
+  #ifdef DEBUG
   Serial.println("Default tracks:");
   Serial.print("Track 1: ");
   Serial.println(tracks[0]);
   Serial.print("Track 2: ");
   Serial.println(tracks[1]);
+  #endif
 }
 
 void updateTracks(String url) {
@@ -300,7 +305,9 @@ void runServer() {
         if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
           // Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
+          #ifdef DEBUG
           // Serial.println("URL: " + url);
+          #endif
 
           if (url.startsWith("/styles.css")) {
             webRequest = CSS_URL;
@@ -366,7 +373,9 @@ void runServer() {
               mode = 2;
               resetMode();
               emulateNFCFlag = true;
+              #ifdef DEBUG
               Serial.println("\nWaiting for reader command...");
+              #endif
             } else if (btnEmulateNFC.startsWith("false")) {
               emulateNFCFlag = false;
               attempts = 0;
@@ -377,8 +386,8 @@ void runServer() {
       }
     }
     client.stop();
-    // Serial.println("client disconnected");
     #ifdef DEBUG
+    // Serial.println("client disconnected");
     // Serial.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
     #endif
   }
