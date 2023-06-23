@@ -278,17 +278,98 @@ void loadPageContent(WiFiClient client) {
   }
 }
 
+void updateWebRequest(String url) {
+  if (url.startsWith("/styles.css")) {
+    webRequest = CSS_URL;
+  } else if (url.startsWith("/main.js")) {
+    webRequest = JAVASCRIPT_URL;
+  } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
+    webRequest = HOME_URL;
+  } else if (url.startsWith("/login.html")) {
+    webRequest = LOGIN_URL;
+  } else if (url.startsWith("/info.html")) {
+    webRequest = INFO_URL;
+  } else if (url.startsWith("/magspoof.html")) {
+    webRequest = MAGSPOOF_URL;
+  } else if (url.startsWith("/nfc.html")) {
+    webRequest = NFC_URL;
+  }
+}
+
+void handleURLParameters(String url) {
+  // ? is the start of request parameters
+  if (url.startsWith("/magspoof.html?")) {
+    updateTracks(url);
+
+    // Get the button value from the url
+    String button = url.substring(url.indexOf("button=") + 7, url.length());
+    // Serial.println("Button: " + button);
+
+    if (button.startsWith("Emulate")) {
+      runMagspoof = true;
+    }
+  }
+
+  if (url.startsWith("/nfc.html?")) {
+    String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
+    String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
+    String btnEmulateNFC = "";
+    int index = url.indexOf("emulateState=");
+    if (index != -1) {
+      btnEmulateNFC = url.substring(index + 13);
+    }
+
+    if (btnClear.startsWith("true")) {
+      clearNFCValues = true;
+    }
+
+    if (btnRunDetectTags.startsWith("true")) {
+      mode = 1;
+      resetMode();
+      runDetectTags = true;
+      nfcExecutionCounter = 0;
+      nfcDiscoverySuccess = false;
+      emulateNFCFlag = false;
+    }
+
+    // Uncommenting this code makes emulating NFC ID slower
+    // if (btnEmulateNFC.startsWith("true") || btnEmulateNFC.startsWith("false")) {
+    //   static int doubleCounter = 1;
+    //   // Toggle emulateNFCState
+    //   emulateNFCState = !emulateNFCState;
+    //   Serial.println("emulateNFCState: " + String(emulateNFCState));
+    //   doubleCounter++;
+    // }
+
+    if (btnEmulateNFC.startsWith("true")) {
+      mode = 2;
+      resetMode();
+      emulateNFCFlag = true;
+      #ifdef DEBUG
+      Serial.println("\nWaiting for reader command...");
+      #endif
+    } else if (btnEmulateNFC.startsWith("false")) {
+      emulateNFCFlag = false;
+      attempts = 0;
+      nfc.StopDiscovery();
+    }
+  }
+}
+
 void runServer() {
   WiFiClient client = server.available();  // listen for incoming clients
 
-  if (client) {                   // if you get a client,
+  if (client) {  // if you get a client,
     unsigned long speedTestTime = millis();
-    String currentLine = "";      // make a String to hold incoming data from the client
+    String currentLine = "";  // make a String to hold incoming data from the client
 
-    while (client.connected()) {  // loop while the client's connected
-      if (client.available()) {   // if there's bytes to read from the client,
-        char c = client.read();   // read a byte, then
-        // Serial.write(c);                    // print it out the serial monitor
+    while (client.connected()) { // loop while the client's connected
+      if (client.available()) {  // if there's bytes to read from the client,
+        char c = client.read();  // read a byte, then
+        #ifdef DEBUG
+        // Serial.write(c);  // print it out the serial monitor
+        #endif
+
         if (c == '\n') {  // if the byte is a newline character
           if (currentLine.length() == 0) {
             loadPageContent(client);
@@ -298,90 +379,19 @@ void runServer() {
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;      // add it to the end of the currentLine
+          currentLine += c;  // add it to the end of the currentLine
         }
 
         // Only check for URL if it's a GET <url options> HTTP
         if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
-          // Serial.println("\nRequest: " + currentLine);
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
           #ifdef DEBUG
+          // Serial.println("\nRequest: " + currentLine);
           // Serial.println("URL: " + url);
           #endif
 
-          if (url.startsWith("/styles.css")) {
-            webRequest = CSS_URL;
-          } else if (url.startsWith("/main.js")) {
-            webRequest = JAVASCRIPT_URL;
-          } else if (url.startsWith("/home.html?") || url.startsWith("/home.html")) {
-            webRequest = HOME_URL;
-          } else if (url.startsWith("/login.html")) {
-            webRequest = LOGIN_URL;
-          } else if (url.startsWith("/info.html")) {
-            webRequest = INFO_URL;
-          } else if (url.startsWith("/magspoof.html")) {
-            webRequest = MAGSPOOF_URL;
-          } else if (url.startsWith("/nfc.html")) {
-            webRequest = NFC_URL;
-          }
-
-          // ? is the start of request parameters
-          if (url.startsWith("/magspoof.html?")) {
-            updateTracks(url);
-
-            // Get the button value from the url
-            String button = url.substring(url.indexOf("button=") + 7, url.length());
-            // Serial.println("Button: " + button);
-
-            if (button.startsWith("Emulate")) {
-              runMagspoof = true;
-            }
-          }
-
-          if (url.startsWith("/nfc.html?")) {
-            String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
-            String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
-            String btnEmulateNFC = "";
-            int index = url.indexOf("emulateState=");
-            if (index != -1) {
-              btnEmulateNFC = url.substring(index + 13);
-            }
-
-            if (btnClear.startsWith("true")) {
-              clearNFCValues = true;
-            }
-
-            if (btnRunDetectTags.startsWith("true")) {
-              mode = 1;
-              resetMode();
-              runDetectTags = true;
-              nfcExecutionCounter = 0;
-              nfcDiscoverySuccess = false;
-              emulateNFCFlag = false;
-            }
-
-            // Uncommenting this code makes emulating NFC ID slower
-            // if (btnEmulateNFC.startsWith("true") || btnEmulateNFC.startsWith("false")) {
-            //   static int doubleCounter = 1;
-            //   // Toggle emulateNFCState
-            //   emulateNFCState = !emulateNFCState;
-            //   Serial.println("emulateNFCState: " + String(emulateNFCState));
-            //   doubleCounter++;
-            // }
-
-            if (btnEmulateNFC.startsWith("true")) {
-              mode = 2;
-              resetMode();
-              emulateNFCFlag = true;
-              #ifdef DEBUG
-              Serial.println("\nWaiting for reader command...");
-              #endif
-            } else if (btnEmulateNFC.startsWith("false")) {
-              emulateNFCFlag = false;
-              attempts = 0;
-              nfc.StopDiscovery();
-            }
-          }
+          updateWebRequest(url);
+          handleURLParameters(url);
         }
       }
     }
@@ -394,14 +404,14 @@ void runServer() {
 }
 
 void printWifiStatus() {
-#ifdef DEBUG
+  #ifdef DEBUG
   Serial.println("SSID: " + String(WiFi.SSID()));
   Serial.print("Password: ");
   Serial.println(pass);
   Serial.print("IP Address: http://");
   Serial.println(WiFi.localIP());
   Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
-#endif
+  #endif
 }
 
 void showPageContent(WiFiClient client, const char *pageContent) {

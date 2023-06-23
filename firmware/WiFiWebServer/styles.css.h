@@ -150,7 +150,6 @@ body {
     width: 392px;
 }
 
-/* End animations */
 .nfc-animation-container {
     /* position: relative; */
     width: 160px;
@@ -174,7 +173,7 @@ body {
     height: 30px;
     font-size: var(--lg);
     background-color: #f0f0f04e;
-    padding: 0px 10px 0px 10px;
+    padding: 3px 10px 3px 10px;
     border: 1px solid #0000001a;
     border-radius: 15px;
     cursor: pointer;
@@ -184,6 +183,7 @@ body {
     position: absolute;
     z-index: 1;
 }
+/* End animations */
 
 .main-container.background {
     background-color: var(--main-logo-background);
