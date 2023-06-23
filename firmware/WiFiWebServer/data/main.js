@@ -1,9 +1,9 @@
 // Uncomment this to test on a local environment
-// let pollMode = "POLL MODE: Remote MIFARE card activated";
-// let nfcID;
-// let sensRes;
-// let selRes;
-// let nfcDiscoverySuccess = false;
+let pollMode = "POLL MODE: Remote MIFARE card activated";
+let nfcID;
+let sensRes;
+let selRes;
+let nfcDiscoverySuccess = false;
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
@@ -102,7 +102,6 @@ let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
 let btnClearNFC = document.querySelector("#btnClearNFC");
 let btnEmulateNFC = document.querySelector("#btnEmulateNFC");
-let nfcButtonText = document.querySelector("#nfcButtonText");
 let loadingScroller = document.querySelector("#loadingScroller");
 
 let detectTagsDelay = 500;
@@ -174,15 +173,16 @@ if (nfcPage != null) {
         }
     }
 
+    // Change text and state of the Emulate NFC ID button
     if (emulateState == "true") {
-        nfcButtonText.textContent = "Stop";
+        btnEmulateNFC.textContent = "Stop";
         loadingScroller.classList.add("lds-roller");
 
         setTimeout(() => {
-            nfcButtonText.scrollIntoView({ behavior: "smooth" });
+            btnEmulateNFC.scrollIntoView({ behavior: "smooth" });
         }, 500);
     } else {
-        nfcButtonText.textContent = "Emulate";
+        btnEmulateNFC.textContent = "Emulate";
         loadingScroller.classList.remove("lds-roller");
     }
 }

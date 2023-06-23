@@ -147,13 +147,13 @@ body {
 }
 
 /* End animations */
-.emulate-nfc-button-container {
+.nfc-animation-container {
     /* position: relative; */
     width: 160px;
     height: 160px;
 }
 
-.emulate-nfc-button {
+.emulate-nfc-button-container {
     all: unset;
     width: 160px;
     height: 160px;
@@ -166,13 +166,19 @@ body {
     cursor: pointer;
 }
 
-.nfc-button-text {
+.emulate-nfc-button {
+    all: unset;
+    height: 30px;
     font-size: var(--lg);
     background-color: #f0f0f04e;
     padding: 0px 10px 0px 10px;
     border: 1px solid #0000001a;
     border-radius: 15px;
 }
+
+/* .nfc-button-text {
+    font-size: var(--lg);
+} */
 
 .scroller {
     position: absolute;
