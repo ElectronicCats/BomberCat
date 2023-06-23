@@ -42,12 +42,17 @@ const char* nfc_html = R"=====(<!DOCTYPE html>
                     </div>
                 </section>
             </div>
-            <section class="emulate-nfc-container">
+            <section class="card">
+                <div class="card-container">
+                    <h3 class="i-title">Emulate NFC ID</h3>
+                </div>
+            </section>
+            <section class="emulate-nfc-button-container">
                 <button class="emulate-nfc-button" id="btnEmulateNFC">
-                    <p class="nfc-button-text">Stop</p>
+                    <p class="nfc-button-text" id="nfcButtonText">Stop</p>
                 </button>
                 <div class="scroller">
-                    <div class="lds-roller">
+                    <div class="lds-roller" id="loadingScroller">
                         <div></div>
                         <div></div>
                         <div></div>

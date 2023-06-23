@@ -147,7 +147,7 @@ body {
 }
 
 /* End animations */
-.emulate-nfc-container {
+.emulate-nfc-button-container {
     /* position: relative; */
     width: 160px;
     height: 160px;
@@ -168,6 +168,10 @@ body {
 
 .nfc-button-text {
     font-size: var(--lg);
+    background-color: #f0f0f04e;
+    padding: 0px 10px 0px 10px;
+    border: 1px solid #0000001a;
+    border-radius: 15px;
 }
 
 .scroller {
@@ -429,7 +433,7 @@ a {
 
 .read-form {
     grid-template-rows: 1fr 1fr 1fr;
-    grid-template-areas: "header header" "main1 main2" "bottom1 bottom1" "bottom2 bottom2" "bottom3 bottom3";
+    grid-template-areas: "header header" "main1 main2" "bottom1 bottom1" "bottom2 bottom2";
 }
 
 .input-card,

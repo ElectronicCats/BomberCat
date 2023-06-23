@@ -26,7 +26,7 @@ function reloadPageListener(page, delay) {
             localStorage.setItem("reloaded", true);
             window.location.href = currentLocation;
         }
-        
+
         // Reload page again with the new location
         if (reloaded == "true") {
             setTimeout(() => {
@@ -47,7 +47,7 @@ if (btnConfig != null) {
 }
 
 // Magspoof
-let magspoof = document.querySelector("#magspoof");
+let magspoofPage = document.querySelector("#magspoof");
 let magspoofForm = document.querySelector("#magspoofForm");
 let btnSave = document.querySelector("#btnSave");
 let btnEmulate = document.querySelector("#btnEmulate");
@@ -56,7 +56,7 @@ let track1 = document.querySelector("#track1");
 let track2 = document.querySelector("#track2");
 
 // Check if magspoof.html is loaded
-if (magspoof != null) {
+if (magspoofPage != null) {
     magspoofForm.addEventListener("submit", (event) => {
         event.preventDefault();
         // Save tracks in local storage
@@ -94,7 +94,7 @@ if (btnSendMail != null) {
 }
 
 // NFC
-let nfc = document.querySelector("#nfc");
+let nfcPage = document.querySelector("#nfc");
 let tvPollMode = document.querySelector("#tvPollMode");
 let tvNfcID = document.querySelector("#tvNfcID");
 let tvSensRes = document.querySelector("#tvSensRes");
@@ -102,14 +102,21 @@ let tvSelRes = document.querySelector("#tvSelRes");
 let btnRead = document.querySelector("#btnRead");
 let btnClearNFC = document.querySelector("#btnClearNFC");
 let btnEmulateNFC = document.querySelector("#btnEmulateNFC");
+let nfcButtonText = document.querySelector("#nfcButtonText");
+let loadingScroller = document.querySelector("#loadingScroller");
 
 let detectTagsDelay = 500;
 let tagReaded = localStorage.getItem("tagReaded");
 let emulateState = localStorage.getItem("emulateState");
 console.log(`Emulate state: ${emulateState}`);
 
+// Set emulate state to false if the user leave the page
+if (nfcPage == null) {
+    localStorage.setItem("emulateState", false);
+}
+
 // Check if nfc.html is loaded
-if (nfc != null) {
+if (nfcPage != null) {
     tvPollMode.textContent = pollMode;
     tvNfcID.value = nfcID;
     tvSensRes.value = sensRes;
@@ -127,7 +134,7 @@ if (nfc != null) {
 
     btnEmulateNFC.addEventListener("click", (event) => {
         event.preventDefault();
-        
+
         // Toggle emulate state
         if (emulateState == "true") {
             localStorage.setItem("emulateState", false);
@@ -165,6 +172,18 @@ if (nfc != null) {
         if (nfcDiscoverySuccess == false) {
             alert("Could not read NFC tag!");
         }
+    }
+
+    if (emulateState == "true") {
+        nfcButtonText.textContent = "Stop";
+        loadingScroller.classList.add("lds-roller");
+
+        setTimeout(() => {
+            nfcButtonText.scrollIntoView({ behavior: "smooth" });
+        }, 500);
+    } else {
+        nfcButtonText.textContent = "Emulate";
+        loadingScroller.classList.remove("lds-roller");
     }
 }
 )=====";
