@@ -146,14 +146,18 @@ body {
     }
 }
 
+.emulate-nfc-container {
+    width: 392px;
+}
+
 /* End animations */
-.emulate-nfc-button-container {
+.nfc-animation-container {
     /* position: relative; */
     width: 160px;
     height: 160px;
 }
 
-.emulate-nfc-button {
+.emulate-nfc-button-container {
     all: unset;
     width: 160px;
     height: 160px;
@@ -163,15 +167,17 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
 }
 
-.nfc-button-text {
+.emulate-nfc-button {
+    all: unset;
+    height: 30px;
     font-size: var(--lg);
     background-color: #f0f0f04e;
     padding: 0px 10px 0px 10px;
     border: 1px solid #0000001a;
     border-radius: 15px;
+    cursor: pointer;
 }
 
 .scroller {
@@ -219,10 +225,12 @@ body {
 }
 
 .signin {
-    width: 100%;
+    width: 100vw;
     height: 100%;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .ssid {
@@ -240,7 +248,6 @@ body {
 .form-container {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    width: 300px;
 }
 
 .title {
@@ -279,7 +286,7 @@ input::-webkit-inner-spin-button {
 }
 
 .input {
-    width: 265px;
+    width: 365px;
     height: 26px;
     background-color: var(--fill-input-field);
     border: 1px solid var(--border);
@@ -474,13 +481,14 @@ a {
 }
 
 .primary-button {
-    width: 275px;
+    width: 392px;
     height: 40px;
     background-color: var(--main-logo-background);
     border: none;
     border-radius: 24px;
     font-size: var(--md);
     color: var(--white);
+    cursor: pointer;
 }
 
 .clear-button,
@@ -546,12 +554,20 @@ a {
         justify-content: start;
     }
 
+    .emulate-nfc-container {
+        width: 292px;
+    }
+
     .logo {
         display: block;
     }
 
     .logoTitle {
         display: block;
+    }
+
+    .input {
+        width: 265px;
     }
 
     .inputC {
@@ -576,6 +592,7 @@ a {
         width: 128px;
     }
 
+    .primary-button,
     .clear-button,
     .save-button,
     .send-button,

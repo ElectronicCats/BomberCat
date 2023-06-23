@@ -176,6 +176,8 @@ if (nfcPage != null) {
     // Change text and state of the Emulate NFC ID button
     if (emulateState == "true") {
         btnEmulateNFC.textContent = "Stop";
+        btnEmulateNFC.classList.remove("primary-button");
+        btnEmulateNFC.classList.add("emulate-nfc-button");
         loadingScroller.classList.add("lds-roller");
 
         setTimeout(() => {
@@ -183,6 +185,8 @@ if (nfcPage != null) {
         }, 500);
     } else {
         btnEmulateNFC.textContent = "Emulate";
+        btnEmulateNFC.classList.add("primary-button");
+        btnEmulateNFC.classList.remove("emulate-nfc-button");
         loadingScroller.classList.remove("lds-roller");
     }
 }
