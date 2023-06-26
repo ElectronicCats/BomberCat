@@ -147,7 +147,8 @@ void loop() {
     cleartTagsValues();
   }
 
-  if (emulateNFCFlag && webRequest == NFC_URL) {
+  // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
+  if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
     emulateNFCID();
   }
 }
@@ -333,6 +334,7 @@ void handleURLParameters(String url) {
       resetMode();
       emulateNFCFlag = true;
       debug.println("\nWaiting for reader command...");
+      emulateNFCIDTimer = millis();
     } else if (btnEmulateNFC.startsWith("false")) {
       emulateNFCFlag = false;
       attempts = 0;

@@ -11,3 +11,6 @@ uint8_t data[] = {0x90, 0x00};
 uint8_t requestCmd[] = {0x00, 0xB0, 0x00, 0x00, 0x0F};
 bool emulateNFCFlag = false;
 int attempts = 0;
+
+const int EMULATE_NFCID_DELAY_MS = 1000;
+unsigned long emulateNFCIDTimer = 0;
