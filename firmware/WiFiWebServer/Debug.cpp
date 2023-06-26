@@ -8,8 +8,11 @@ bool Debug::isEnabled() {
   return this->enabled;
 }
 
-void Debug::waitUntilSerial() {
-  while (!Serial) { // Wait for the serial connection to be established
+void Debug::waitForSerialConnection() {
+  if (!this->enabled) {
+    return;
+  }
+  while (!Serial) {  // Wait for the serial connection to be established
     delay(1);
   }
 }

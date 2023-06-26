@@ -58,17 +58,18 @@ int webRequest = LOGIN_URL;
 Debug debug;
 
 // Function prototypes
+void setupWiFi();
 String decodeURL(char *url);
 void setupTracks();
 void updateTracks(String url);
 void loadPageContent(WiFiClient client);
 void runServer();
+void handleRequests();
 void printWifiStatus();
 void showPageContent(WiFiClient client, const char *pageContent);
 
 void setup() {
-  // Initialize serial and wait for port to open:
-  Serial.begin(9600);
+  Serial.begin(9600);  // Initialize serial communications with the PC
 
 #ifdef DEBUG
   debug.setEnabled(true);
@@ -76,8 +77,20 @@ void setup() {
   debug.setEnabled(false);
 #endif
 
-  debug.waitUntilSerial();
+  debug.waitForSerialConnection();  // Only if debugging is enabled
 
+  setupWiFi();
+  setupMagspoof();
+  setupTracks();
+  setupNFC();
+}
+
+void loop() {
+  runServer();       // Listen for incoming clients and serve the page content when connected
+  handleRequests();  // Handle the requests from the client
+}
+
+void setupWiFi() {
   // Check for the WiFi module
   if (WiFi.status() == WL_NO_MODULE) {
     debug.println("Communication with WiFi module failed!");
@@ -110,47 +123,6 @@ void setup() {
 
   server.begin();
   printWifiStatus();
-  setupMagspoof();
-  setupTracks();
-  setupNFC();
-}
-
-void loop() {
-  static unsigned long detectTagsTime = millis();
-
-  runServer();
-
-  if (webRequest == MAGSPOOF_URL) {
-    magspoof();
-  }
-
-  // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
-  if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
-    detectTagsTime = millis();
-    nfcExecutionCounter++;
-
-    // Wait one attempt before starting the NFC discovery
-    if (nfcExecutionCounter > 1) {
-      detectTags();
-    }
-
-    if (nfcExecutionCounter == READ_ATTEMPTS) {
-      nfc.StopDiscovery();
-      nfcExecutionCounter = 0;
-      runDetectTags = false;
-    }
-  }
-
-  // Reset NFC variables when the page loaded is not related with NFC
-  if (webRequest != NFC_URL || clearNFCValues) {
-    clearNFCValues = false;
-    cleartTagsValues();
-  }
-
-  // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
-  if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
-    emulateNFCID();
-  }
 }
 
 /// @brief Decode an URL-encoded string
@@ -380,6 +352,42 @@ void runServer() {
     client.stop();
     // debug.println("client disconnected");
     // debug.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
+  }
+}
+
+void handleRequests() {
+  static unsigned long detectTagsTime = millis();
+
+  if (webRequest == MAGSPOOF_URL) {
+    magspoof();
+  }
+
+  // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
+  if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
+    detectTagsTime = millis();
+    nfcExecutionCounter++;
+
+    // Wait one attempt before starting the NFC discovery
+    if (nfcExecutionCounter > 1) {
+      detectTags();
+    }
+
+    if (nfcExecutionCounter == READ_ATTEMPTS) {
+      nfc.StopDiscovery();
+      nfcExecutionCounter = 0;
+      runDetectTags = false;
+    }
+  }
+
+  // Reset NFC variables when the page loaded is not related with NFC
+  if (webRequest != NFC_URL || clearNFCValues) {
+    clearNFCValues = false;
+    cleartTagsValues();
+  }
+
+  // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
+  if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
+    emulateNFCID();
   }
 }
 
