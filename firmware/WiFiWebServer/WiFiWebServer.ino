@@ -26,6 +26,7 @@
 // #include <Preferences.h>
 // #include "Electroniccats_PN7150.h"
 #include "CloneNFCID.h"
+#include "Debug.h"
 #include "DetectTags.h"
 #include "Magspoof.h"
 #include "home.html.h"
@@ -46,13 +47,15 @@
 #define MAGSPOOF_URL 5
 #define NFC_URL 6
 
+// Constants for the WiFi module
 char ssid[] = "BomberCat";  // your network SSID (name)
 char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
-
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
+
+Debug debug;
 
 // Function prototypes
 String decodeURL(char *url);
@@ -67,17 +70,17 @@ void setup() {
   // Initialize serial and wait for port to open:
   Serial.begin(9600);
 
-  #ifdef DEBUG
-  while (!Serial) {
-    ;  // wait for serial port to connect. Needed for native USB port only
-  }
-  #endif
+#ifdef DEBUG
+  debug.setEnabled(true);
+#else
+  debug.setEnabled(false);
+#endif
+
+  debug.waitUntilSerial();
 
   // Check for the WiFi module
   if (WiFi.status() == WL_NO_MODULE) {
-    #ifdef DEBUG
-    Serial.println("Communication with WiFi module failed!");
-    #endif
+    debug.println("Communication with WiFi module failed!");
     // don't continue
     while (true)
       ;
@@ -90,20 +93,16 @@ void setup() {
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    #ifdef DEBUG
-    Serial.println("Please upgrade the firmware");
-    #endif
+    debug.println("Please upgrade the firmware");
   }
 
-  #ifdef DEBUG
-  Serial.print("Creating access point named: ");
-  Serial.println(ssid);
-  #endif
+  debug.print("Creating access point named: ");
+  debug.println(ssid);
 
   // TODO: Set ssid and pass with user preferences
   status = WiFi.beginAP(ssid, pass);
   if (status != WL_AP_LISTENING) {
-    Serial.println("Creating access point failed");
+    debug.println("Creating access point failed");
     // don't continue
     while (true)
       ;
@@ -120,7 +119,7 @@ void loop() {
   static unsigned long detectTagsTime = millis();
 
   runServer();
-  
+
   if (webRequest == MAGSPOOF_URL) {
     magspoof();
   }
@@ -208,13 +207,11 @@ void setupTracks() {
   strcpy(tracks[0], track1.c_str());
   strcpy(tracks[1], track2.c_str());
 
-  #ifdef DEBUG
-  Serial.println("Default tracks:");
-  Serial.print("Track 1: ");
-  Serial.println(tracks[0]);
-  Serial.print("Track 2: ");
-  Serial.println(tracks[1]);
-  #endif
+  debug.println("Default tracks:");
+  debug.print("Track 1: ");
+  debug.println(tracks[0]);
+  debug.print("Track 2: ");
+  debug.println(tracks[1]);
 }
 
 void updateTracks(String url) {
@@ -303,7 +300,6 @@ void handleURLParameters(String url) {
 
     // Get the button value from the url
     String button = url.substring(url.indexOf("button=") + 7, url.length());
-    // Serial.println("Button: " + button);
 
     if (button.startsWith("Emulate")) {
       runMagspoof = true;
@@ -332,22 +328,11 @@ void handleURLParameters(String url) {
       emulateNFCFlag = false;
     }
 
-    // Uncommenting this code makes emulating NFC ID slower
-    // if (btnEmulateNFC.startsWith("true") || btnEmulateNFC.startsWith("false")) {
-    //   static int doubleCounter = 1;
-    //   // Toggle emulateNFCState
-    //   emulateNFCState = !emulateNFCState;
-    //   Serial.println("emulateNFCState: " + String(emulateNFCState));
-    //   doubleCounter++;
-    // }
-
     if (btnEmulateNFC.startsWith("true")) {
       mode = 2;
       resetMode();
       emulateNFCFlag = true;
-      #ifdef DEBUG
-      Serial.println("\nWaiting for reader command...");
-      #endif
+      debug.println("\nWaiting for reader command...");
     } else if (btnEmulateNFC.startsWith("false")) {
       emulateNFCFlag = false;
       attempts = 0;
@@ -363,32 +348,27 @@ void runServer() {
     unsigned long speedTestTime = millis();
     String currentLine = "";  // make a String to hold incoming data from the client
 
-    while (client.connected()) { // loop while the client's connected
-      if (client.available()) {  // if there's bytes to read from the client,
-        char c = client.read();  // read a byte, then
-        #ifdef DEBUG
-        // Serial.write(c);  // print it out the serial monitor
-        #endif
+    while (client.connected()) {  // loop while the client's connected
+      if (client.available()) {   // if there's bytes to read from the client,
+        char c = client.read();   // read a byte, then
+        // debug.write(c);  // print it out the serial monitor
 
         if (c == '\n') {  // if the byte is a newline character
           if (currentLine.length() == 0) {
             loadPageContent(client);
             break;
           } else {
-            // if you got a newline, then clear currentLine:
-            currentLine = "";
+            currentLine = "";  // if you got a newline, then clear currentLine:
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;  // add it to the end of the currentLine
+          currentLine += c;      // add it to the end of the currentLine
         }
 
         // Only check for URL if it's a GET <url options> HTTP
         if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
           String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
-          #ifdef DEBUG
-          // Serial.println("\nRequest: " + currentLine);
-          // Serial.println("URL: " + url);
-          #endif
+          // debug.println("\nRequest: " + currentLine);
+          // debug.println("URL: " + url);
 
           updateWebRequest(url);
           handleURLParameters(url);
@@ -396,22 +376,18 @@ void runServer() {
       }
     }
     client.stop();
-    #ifdef DEBUG
-    // Serial.println("client disconnected");
-    // Serial.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
-    #endif
+    // debug.println("client disconnected");
+    // debug.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
   }
 }
 
 void printWifiStatus() {
-  #ifdef DEBUG
-  Serial.println("SSID: " + String(WiFi.SSID()));
-  Serial.print("Password: ");
-  Serial.println(pass);
-  Serial.print("IP Address: http://");
-  Serial.println(WiFi.localIP());
-  Serial.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
-  #endif
+  debug.println("SSID: " + String(WiFi.SSID()));
+  debug.print("Password: ");
+  debug.println(pass);
+  debug.print("To access the web interface, go to: http://");
+  debug.println(WiFi.localIP());
+  debug.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
 }
 
 void showPageContent(WiFiClient client, const char *pageContent) {

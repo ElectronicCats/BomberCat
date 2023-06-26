@@ -61,7 +61,6 @@ void reverseTrack(int track) {
 
 // plays out a full track, calculating CRCs and LRC
 void playTrack(int track) {
-  Serial.println("Playing track " + String(track));
   int tmp, crc, lrc = 0;
   dir = 0;
   track--;  // index 0
@@ -80,11 +79,9 @@ void playTrack(int track) {
       crc ^= tmp & 1;
       lrc ^= (tmp & 1) << j;
       playBit(tmp & 1);
-      Serial.print(" " + String(tmp & 1));
       tmp >>= 1;
     }
     playBit(crc);
-    Serial.print(" " + String(crc));
   }
 
   // finish calculating and send last "byte" (LRC)
@@ -114,7 +111,6 @@ void playTrack(int track) {
 
   digitalWrite(PIN_A, LOW);
   digitalWrite(PIN_B, LOW);
-  Serial.println();
 }
 
 // stores track for reverse usage later
@@ -153,11 +149,12 @@ void storeRevTrack(int track) {
 void magspoof() {
   if (digitalRead(NPIN) == 0 || runMagspoof) {
     runMagspoof = false;
-    Serial.println("Activating MagSpoof...");
-    Serial.print("Track 1: ");
-    Serial.println(tracks[0]);
-    Serial.print("Track 2: ");
-    Serial.println(tracks[1]);
+    debug.println("Activating MagSpoof...");
+    debug.print("Track 1: ");
+    debug.println(tracks[0]);
+    debug.print("Track 2: ");
+    debug.println(tracks[1]);
+
     playTrack(1 + (curTrack++ % 2));
     blink(L1, 150, 3);
     delay(400);
@@ -171,9 +168,8 @@ void setupMagspoof() {
   pinMode(NPIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  // while(!Serial);
 
   // blink to show we started up
   blink(L1, 200, 2);
-  Serial.println("Press the MagSpoof button");
+  debug.println("Press the MagSpoof button");
 }
