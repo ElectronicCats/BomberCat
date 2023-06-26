@@ -130,7 +130,7 @@ void loop() {
     nfcExecutionCounter++;
 
     // Wait one attempt before starting the NFC discovery
-    if (nfcExecutionCounter > 2) {
+    if (nfcExecutionCounter > 1) {
       detectTags();
     }
 
