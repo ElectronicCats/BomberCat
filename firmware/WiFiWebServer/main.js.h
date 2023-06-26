@@ -123,11 +123,13 @@ if (nfcPage != null) {
 
     btnClearNFC.addEventListener("click", (event) => {
         event.preventDefault();
+        localStorage.setItem("emulateState", false);
         updateLocation(`nfc.html?clear=true#`);
     });
 
     btnRead.addEventListener("click", (event) => {
         event.preventDefault();
+        localStorage.setItem("emulateState", false);
         updateLocation(`nfc.html?runDetectTags=true#`);
     });
 
