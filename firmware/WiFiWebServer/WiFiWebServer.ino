@@ -48,8 +48,8 @@
 #define NFC_URL 6
 
 // Constants for the WiFi module
-char ssid[] = "BomberCat";  // your network SSID (name)
-char pass[] = "password";   // your network password (use for WPA, or use as key for WEP)
+String ssid;  // your network SSID (name)
+String pass;   // your network password (use for WPA, or use as key for WEP)
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
@@ -98,7 +98,7 @@ void setupPreferences() {
   // has to use a namespace name to prevent key name collisions. We will open storage in
   // RW-mode (second parameter has to be false).
   // Note: Namespace name is limited to 15 chars.
-  const char *namespaceName = "my-app";
+  const char *namespaceName = "bombercat";
   bool readOnly = false;
   preferences.begin(namespaceName, readOnly);
 
@@ -111,6 +111,8 @@ void setupPreferences() {
   // Get the rebootCounter value, if the key does not exist, return a default value of 0
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
+  ssid = preferences.getString("ssid", "BomberCat");
+  pass = preferences.getString("pass", "password");
 
   // Increase rebootCounter by 1
   rebootCounter++;
@@ -145,7 +147,7 @@ void setupWiFi() {
   debug.println(ssid);
 
   // TODO: Set ssid and pass with user preferences
-  status = WiFi.beginAP(ssid, pass);
+  status = WiFi.beginAP(ssid.c_str(), pass.c_str());
   if (status != WL_AP_LISTENING) {
     debug.println("Creating access point failed");
     // don't continue
