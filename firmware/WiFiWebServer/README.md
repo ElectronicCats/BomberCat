@@ -6,7 +6,7 @@ Author(s): Francisco Torres
 
 Status: Draft
 
-Last updated: 2023/06/7
+Last updated: 2023/06/27
 
 ## Contents
 
@@ -36,11 +36,20 @@ Choose one of the following options:
 ```
 Used library           Version Path
 
+Preferences            2.1.0
 SPI
 WiFiNINA               1.8.14
 Electronic Cats PN7150 1.8.0
 Wire
 ```
+
+Install the WiFiNINA and Electronic Cats PN7150 libraries using the Arduino IDE Library Manager or the arduino-cli command line tool. If you are using the arduino-cli command line tool, you can install the libraries using the following commands:
+```
+arduino-cli lib install WiFiNINA
+arduino-cli lib install 'ElectronicCats PN7150'
+```
+
+> Note: Install the Preferences library manually. You can download it from [here](https://github.com/ElectronicCats/Preferences.git).
 
 ### Platform required
 
@@ -72,7 +81,7 @@ electroniccats:mbed_rp2040 2.0.0
 Creating access point named: BomberCat
 SSID: BomberCat
 Password: password
-IP Address: http://192.168.4.1
+To access the web interface, go to: http://192.168.4.1
 Signal strength (RSSI): 0 dBm
 ```
 4. Connect your device to the WiFi network using the password shown in the serial monitor.
