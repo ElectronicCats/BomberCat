@@ -21,10 +21,10 @@
   please buy us a round!
   Distributed as-is; no warranty is given.
 ***********************************************************************************/
+#include <Preferences.h>
 #include <SPI.h>
 #include <WiFiNINA.h>
-// #include <Preferences.h>
-// #include "Electroniccats_PN7150.h"
+
 #include "CloneNFCID.h"
 #include "Debug.h"
 #include "DetectTags.h"
@@ -56,8 +56,10 @@ int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
 
 Debug debug;
+Preferences preferences;
 
 // Function prototypes
+void setupPreferences();
 void setupWiFi();
 String decodeURL(char *url);
 void setupTracks();
@@ -79,6 +81,7 @@ void setup() {
 
   debug.waitForSerialConnection();  // Only if debugging is enabled
 
+  setupPreferences();
   setupWiFi();
   setupMagspoof();
   setupTracks();
@@ -88,6 +91,35 @@ void setup() {
 void loop() {
   runServer();       // Listen for incoming clients and serve the page content when connected
   handleRequests();  // Handle the requests from the client
+}
+
+void setupPreferences() {
+  // Open Preferences with my-app namespace. Each application module, library, etc
+  // has to use a namespace name to prevent key name collisions. We will open storage in
+  // RW-mode (second parameter has to be false).
+  // Note: Namespace name is limited to 15 chars.
+  const char *namespaceName = "my-app";
+  bool readOnly = false;
+  preferences.begin(namespaceName, readOnly);
+
+  // Remove all preferences under the opened namespace
+  // preferences.clear(); // Does not work with WiFiNINA
+
+  // Or remove the rebootCounter key only
+  // preferences.remove("rebootCounter");
+
+  // Get the rebootCounter value, if the key does not exist, return a default value of 0
+  // Note: Key name is limited to 15 chars.
+  unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
+
+  // Increase rebootCounter by 1
+  rebootCounter++;
+
+  // Print the rebootCounter to Serial Monitor
+  debug.println("The BomberCat has been rebooted " + String(rebootCounter) + " times");
+
+  // Store the rebootCounter to the Preferences
+  preferences.putUInt("rebootCounter", rebootCounter);
 }
 
 void setupWiFi() {
