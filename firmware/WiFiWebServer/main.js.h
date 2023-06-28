@@ -196,9 +196,14 @@ if (nfcPage != null) {
 // WiFi Manager
 let configPage = document.querySelector("#configPage");
 let btnSaveWiFiConfig = document.querySelector("#btnSaveWiFiConfig");
+let tvSSID = document.querySelector("#tvSSID");
+let tvPassword = document.querySelector("#tvPassword");
 
 // Check if config.html is loaded
 if (configPage != null) {
+    tvSSID.value = ssid;
+    tvPassword.value = password;
+    
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
         alert("Not available yet!");
