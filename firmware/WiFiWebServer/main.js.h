@@ -203,9 +203,13 @@ let tvPassword = document.querySelector("#tvPassword");
 if (configPage != null) {
     tvSSID.value = ssid;
     tvPassword.value = password;
-    
+
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
-        alert("Not available yet!");
+        // Update location with new SSID and password
+        updateLocation(`config.html?ssid=${tvSSID.value}&password=${tvPassword.value}#`);
     });
+
+    let delay = 500;
+    reloadPageListener("config.html", delay);
 })=====";

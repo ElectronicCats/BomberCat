@@ -63,13 +63,14 @@ Preferences preferences;
 // Function prototypes
 void setupPreferences();
 void setupWiFi();
+void printWifiStatus();
 String decodeURL(char *url);
 void setupTracks();
 void updateTracks(String url);
 void loadPageContent(WiFiClient client);
-void runServer();
 void handleRequests();
-void printWifiStatus();
+void handleURLParameters(String url);
+void runServer();
 void showPageContent(WiFiClient client, const char *pageContent);
 
 void setup() {
@@ -162,6 +163,15 @@ void setupWiFi() {
 
   server.begin();
   printWifiStatus();
+}
+
+void printWifiStatus() {
+  debug.println("SSID: " + String(WiFi.SSID()));
+  debug.print("Password: ");
+  debug.println(password);
+  debug.print("To access the web interface, go to: http://");
+  debug.println(WiFi.localIP());
+  debug.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
 }
 
 /// @brief Decode an URL-encoded string
@@ -308,12 +318,48 @@ void updateWebRequest(String url) {
     webRequest = NFC_URL;
   } else if (url.startsWith("/config.html")) {
     webRequest = CONFIG_URL;
-  } else {
-    // TODO: Add 404 page
-    webRequest = LOGIN_URL;
   }
 }
 
+void handleRequests() {
+  static unsigned long detectTagsTime = millis();
+
+  if (webRequest == MAGSPOOF_URL) {
+    magspoof();
+  }
+
+  // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
+  if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
+    detectTagsTime = millis();
+    nfcExecutionCounter++;
+
+    // Wait one attempt before starting the NFC discovery
+    if (nfcExecutionCounter > 1) {
+      detectTags();
+    }
+
+    if (nfcExecutionCounter == READ_ATTEMPTS) {
+      nfc.StopDiscovery();
+      nfcExecutionCounter = 0;
+      runDetectTags = false;
+    }
+  }
+
+  // Reset NFC variables when the page loaded is not related with NFC
+  if (webRequest != NFC_URL || clearNFCValues) {
+    clearNFCValues = false;
+    cleartTagsValues();
+  }
+
+  // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
+  if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
+    emulateNFCID();
+  }
+}
+
+/// @brief Handles the URL parameters
+/// @param url The URL to handle
+/// @details This function handles the URL parameters and updates the tracks and button values
 void handleURLParameters(String url) {
   // ? is the start of request parameters
   if (url.startsWith("/magspoof.html?")) {
@@ -361,91 +407,6 @@ void handleURLParameters(String url) {
       nfc.StopDiscovery();
     }
   }
-}
-
-void runServer() {
-  WiFiClient client = server.available();  // listen for incoming clients
-
-  if (client) {  // if you get a client,
-    unsigned long speedTestTime = millis();
-    String currentLine = "";  // make a String to hold incoming data from the client
-
-    while (client.connected()) {  // loop while the client's connected
-      if (client.available()) {   // if there's bytes to read from the client,
-        char c = client.read();   // read a byte, then
-        // debug.write(c);  // print it out the serial monitor
-
-        if (c == '\n') {  // if the byte is a newline character
-          if (currentLine.length() == 0) {
-            loadPageContent(client);
-            break;
-          } else {
-            currentLine = "";  // if you got a newline, then clear currentLine:
-          }
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;      // add it to the end of the currentLine
-        }
-
-        // Only check for URL if it's a GET <url options> HTTP
-        if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
-          String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
-          // debug.println("\nRequest: " + currentLine);
-          // debug.println("URL: " + url);
-
-          updateWebRequest(url);
-          handleURLParameters(url);
-        }
-      }
-    }
-    client.stop();
-    // debug.println("client disconnected");
-    // debug.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
-  }
-}
-
-void handleRequests() {
-  static unsigned long detectTagsTime = millis();
-
-  if (webRequest == MAGSPOOF_URL) {
-    magspoof();
-  }
-
-  // Run the NFC detect tags function every DETECT_TAGS_DELAY_MS milliseconds READ_ATTEMPTS times
-  if (millis() - detectTagsTime > DETECT_TAGS_DELAY_MS && webRequest == NFC_URL && runDetectTags) {
-    detectTagsTime = millis();
-    nfcExecutionCounter++;
-
-    // Wait one attempt before starting the NFC discovery
-    if (nfcExecutionCounter > 1) {
-      detectTags();
-    }
-
-    if (nfcExecutionCounter == READ_ATTEMPTS) {
-      nfc.StopDiscovery();
-      nfcExecutionCounter = 0;
-      runDetectTags = false;
-    }
-  }
-
-  // Reset NFC variables when the page loaded is not related with NFC
-  if (webRequest != NFC_URL || clearNFCValues) {
-    clearNFCValues = false;
-    cleartTagsValues();
-  }
-
-  // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
-  if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
-    emulateNFCID();
-  }
-}
-
-void printWifiStatus() {
-  debug.println("SSID: " + String(WiFi.SSID()));
-  debug.print("Password: ");
-  debug.println(password);
-  debug.print("To access the web interface, go to: http://");
-  debug.println(WiFi.localIP());
-  debug.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
 }
 
 void showPageContent(WiFiClient client, const char *pageContent) {
@@ -500,4 +461,44 @@ void showPageContent(WiFiClient client, const char *pageContent) {
   }
 
   client.println("");  // Send a blank line to indicate the end of the page content
+}
+
+void runServer() {
+  WiFiClient client = server.available();  // listen for incoming clients
+
+  if (client) {  // if you get a client,
+    unsigned long speedTestTime = millis();
+    String currentLine = "";  // make a String to hold incoming data from the client
+
+    while (client.connected()) {  // loop while the client's connected
+      if (client.available()) {   // if there's bytes to read from the client,
+        char c = client.read();   // read a byte, then
+        // debug.write(c);  // print it out the serial monitor
+
+        if (c == '\n') {  // if the byte is a newline character
+          if (currentLine.length() == 0) {
+            loadPageContent(client);
+            break;
+          } else {
+            currentLine = "";  // if you got a newline, then clear currentLine:
+          }
+        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          currentLine += c;      // add it to the end of the currentLine
+        }
+
+        // Only check for URL if it's a GET <url options> HTTP
+        if (currentLine.startsWith("GET /") && currentLine.endsWith("HTTP/1.1")) {
+          String url = currentLine.substring(4, currentLine.indexOf("HTTP/1.1"));
+          // debug.println("\nRequest: " + currentLine);
+          // debug.println("URL: " + url);
+
+          updateWebRequest(url);
+          handleURLParameters(url);
+        }
+      }
+    }
+    client.stop();
+    // debug.println("client disconnected");
+    // debug.println("Time to run server: " + String(millis() - speedTestTime) + " ms");
+  }
 }
