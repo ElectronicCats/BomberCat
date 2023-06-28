@@ -89,7 +89,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
             <div class="main-background">
                 <div class="main-content">
                     <div class="menu-container">
-                        <a href="#" id="btnConfig">
+                        <a href="./config.html">
                             <div class="menu-icon ssid-icon">
                                 <?xml version="1.0" standalone="no"?>
                                 <!DOCTYPE svg
@@ -114,7 +114,7 @@ const char* home_html = R"=====(<!DOCTYPE html>
                             </div>
                             <p>Config<br>Device</p>
                         </a>
-                        <a href="./nfc.html" id="btnNfc">
+                        <a href="./nfc.html">
                             <div class="menu-icon nfc-icon">
                                 <?xml version="1.0" standalone="no"?>
                                 <!DOCTYPE svg

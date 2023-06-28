@@ -43,7 +43,7 @@ let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
 
 if (btnConfig != null) {
-    btnConfig.addEventListener("click", () => { alert("Not available yet!") });
+    // btnConfig.addEventListener("click", () => { alert("Not available yet!") });
 }
 
 // Magspoof
@@ -191,4 +191,16 @@ if (nfcPage != null) {
         btnEmulateNFC.classList.remove("emulate-nfc-button");
         loadingScroller.classList.remove("lds-roller");
     }
+}
+
+// WiFi Manager
+let configPage = document.querySelector("#configPage");
+let btnSaveWiFiConfig = document.querySelector("#btnSaveWiFiConfig");
+
+// Check if config.html is loaded
+if (configPage != null) {
+    btnSaveWiFiConfig.addEventListener("click", (event) => {
+        event.preventDefault();
+        alert("Not available yet!");
+    });
 }

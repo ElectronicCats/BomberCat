@@ -23,15 +23,12 @@ body {
     display: inline-block;
     position: relative;
     width: 160px;
-    /* Doble de tamaño */
     height: 160px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div {
     animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     transform-origin: 80px 80px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:after {
@@ -39,13 +36,10 @@ body {
     display: block;
     position: absolute;
     width: 14px;
-    /* Doble de tamaño */
     height: 14px;
-    /* Doble de tamaño */
     border-radius: 50%;
     background: #53dda1;
     margin: -8px 0 0 -8px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(1) {
@@ -54,9 +48,7 @@ body {
 
 .lds-roller div:nth-child(1):after {
     top: 126px;
-    /* Doble de tamaño */
     left: 126px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(2) {
@@ -65,9 +57,7 @@ body {
 
 .lds-roller div:nth-child(2):after {
     top: 136px;
-    /* Doble de tamaño */
     left: 112px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(3) {
@@ -76,9 +66,7 @@ body {
 
 .lds-roller div:nth-child(3):after {
     top: 142px;
-    /* Doble de tamaño */
     left: 96px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(4) {
@@ -87,9 +75,7 @@ body {
 
 .lds-roller div:nth-child(4):after {
     top: 144px;
-    /* Doble de tamaño */
     left: 80px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(5) {
@@ -98,9 +84,7 @@ body {
 
 .lds-roller div:nth-child(5):after {
     top: 142px;
-    /* Doble de tamaño */
     left: 64px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(6) {
@@ -109,9 +93,7 @@ body {
 
 .lds-roller div:nth-child(6):after {
     top: 136px;
-    /* Doble de tamaño */
     left: 48px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(7) {
@@ -120,9 +102,7 @@ body {
 
 .lds-roller div:nth-child(7):after {
     top: 126px;
-    /* Doble de tamaño */
     left: 34px;
-    /* Doble de tamaño */
 }
 
 .lds-roller div:nth-child(8) {
@@ -131,9 +111,7 @@ body {
 
 .lds-roller div:nth-child(8):after {
     top: 112px;
-    /* Doble de tamaño */
     left: 24px;
-    /* Doble de tamaño */
 }
 
 @keyframes lds-roller {
@@ -146,43 +124,6 @@ body {
     }
 }
 
-.emulate-nfc-container {
-    width: 392px;
-}
-
-.nfc-animation-container {
-    /* position: relative; */
-    width: 160px;
-    height: 160px;
-}
-
-.emulate-nfc-button-container {
-    all: unset;
-    width: 160px;
-    height: 160px;
-    position: absolute;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.emulate-nfc-button {
-    all: unset;
-    height: 30px;
-    font-size: var(--lg);
-    background-color: #f0f0f04e;
-    padding: 3px 10px 3px 10px;
-    border: 1px solid #0000001a;
-    border-radius: 15px;
-    cursor: pointer;
-}
-
-.scroller {
-    position: absolute;
-    z-index: 1;
-}
 /* End animations */
 
 .main-container.background {
@@ -311,11 +252,6 @@ input::-webkit-inner-spin-button {
     color: var(--text);
 }
 
-.input-ap,
-.input-pass {
-    margin-left: 19px;
-}
-
 .input:hover {
     box-shadow: 0 1px 6px 0 #20212447;
     border-color: #dfe1e500;
@@ -343,10 +279,6 @@ input::-webkit-inner-spin-button {
     background-position: left;
     background-size: contain;
     margin-bottom: 30px;
-}
-
-.ok-button {
-    margin-left: 25px;
 }
 
 .header-home {
@@ -507,6 +439,47 @@ a {
     grid-area: bottom2;
     width: 392px;
 }
+
+/* Emulate button */
+
+.emulate-nfc-container {
+    width: 392px;
+}
+
+.nfc-animation-container {
+    width: 160px;
+    height: 160px;
+}
+
+.emulate-nfc-button-container {
+    all: unset;
+    width: 160px;
+    height: 160px;
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.emulate-nfc-button {
+    all: unset;
+    height: 30px;
+    font-size: var(--lg);
+    background-color: #f0f0f04e;
+    padding: 3px 10px 3px 10px;
+    border: 1px solid #0000001a;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.scroller {
+    position: absolute;
+    z-index: 1;
+}
+
+/* End Emulate button */
 
 /* Footer */
 

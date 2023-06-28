@@ -21,7 +21,7 @@
   please buy us a round!
   Distributed as-is; no warranty is given.
 ***********************************************************************************/
-#include <Preferences.h>
+#include <Preferences.h>  // https://github.com/ElectronicCats/Preferences
 #include <SPI.h>
 #include <WiFiNINA.h>
 
@@ -36,6 +36,7 @@
 #include "main.js.h"
 #include "nfc.html.h"
 #include "styles.css.h"
+#include "config.html.h"
 
 #define DEBUG
 
@@ -46,10 +47,11 @@
 #define INFO_URL 4
 #define MAGSPOOF_URL 5
 #define NFC_URL 6
+#define CONFIG_URL 7
 
-// Constants for the WiFi module
+// Variables for the WiFi module
 String ssid;  // your network SSID (name)
-String pass;   // your network password (use for WPA, or use as key for WEP)
+String pass;  // your network password (use for WPA, or use as key for WEP)
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
@@ -111,8 +113,10 @@ void setupPreferences() {
   // Get the rebootCounter value, if the key does not exist, return a default value of 0
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
-  ssid = preferences.getString("ssid", "BomberCat");
-  pass = preferences.getString("pass", "password");
+  String defaultSSID = "BomberCat";
+  String defaultPass = "password";
+  ssid = preferences.getString("ssid", defaultSSID);
+  pass = preferences.getString("pass", defaultPass);
 
   // Increase rebootCounter by 1
   rebootCounter++;
@@ -275,6 +279,10 @@ void loadPageContent(WiFiClient client) {
       showPageContent(client, nfc_html);
       currentHTML = NFC_URL;
       break;
+    case CONFIG_URL:
+      showPageContent(client, config_html);
+      currentHTML = CONFIG_URL;
+      break;
     default:
       showPageContent(client, login_html);
       currentHTML = LOGIN_URL;
@@ -297,6 +305,11 @@ void updateWebRequest(String url) {
     webRequest = MAGSPOOF_URL;
   } else if (url.startsWith("/nfc.html")) {
     webRequest = NFC_URL;
+  } else if (url.startsWith("/config.html")) {
+    webRequest = CONFIG_URL;
+  } else {
+    // TODO: Add 404 page
+    webRequest = LOGIN_URL;
   }
 }
 
