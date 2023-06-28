@@ -207,7 +207,7 @@ if (configPage != null) {
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
         // Update location with new SSID and password
-        updateLocation(`config.html?ssid=${tvSSID.value}&password=${tvPassword.value}#`);
+        updateLocation(`config.html?btnSaveWiFiConfig=true&ssid=${tvSSID.value}&password=${tvPassword.value}#`);
     });
 
     let delay = 500;

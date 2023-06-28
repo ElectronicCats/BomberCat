@@ -29,6 +29,7 @@
 #include "Debug.h"
 #include "DetectTags.h"
 #include "Magspoof.h"
+#include "config.html.h"
 #include "home.html.h"
 #include "info.html.h"
 #include "login.html.h"
@@ -36,7 +37,6 @@
 #include "main.js.h"
 #include "nfc.html.h"
 #include "styles.css.h"
-#include "config.html.h"
 
 #define DEBUG
 
@@ -50,7 +50,7 @@
 #define CONFIG_URL 7
 
 // Variables for the WiFi module
-String ssid;  // your network SSID (name)
+String ssid;      // your network SSID (name)
 String password;  // your network password (use for WPA, or use as key for WEP)
 int port = 80;
 WiFiServer server(port);
@@ -346,9 +346,9 @@ void handleRequests() {
   }
 
   // Reset NFC variables when the page loaded is not related with NFC
-  if (webRequest != NFC_URL || clearNFCValues) {
-    clearNFCValues = false;
-    cleartTagsValues();
+  if (webRequest != NFC_URL || clearNFCValuesFlag) {
+    clearNFCValuesFlag = false;
+    clearTagValues();
   }
 
   // Run emulateNFCID function after EMULATE_NFCID_DELAY_MS milliseconds
@@ -371,6 +371,8 @@ void handleURLParameters(String url) {
     if (button.startsWith("Emulate")) {
       runMagspoof = true;
     }
+
+    return;
   }
 
   if (url.startsWith("/nfc.html?")) {
@@ -383,7 +385,7 @@ void handleURLParameters(String url) {
     }
 
     if (btnClear.startsWith("true")) {
-      clearNFCValues = true;
+      clearNFCValuesFlag = true;
     }
 
     if (btnRunDetectTags.startsWith("true")) {
@@ -406,6 +408,24 @@ void handleURLParameters(String url) {
       attempts = 0;
       nfc.StopDiscovery();
     }
+
+    return;
+  }
+
+  if (url.startsWith("/config.html?")) {
+    // debug.println("here");
+    String btnSaveWiFiConfig = "";
+    int index = url.indexOf("btnSaveWiFiConfig=");
+    if (index != -1) {
+      // btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));
+    }
+    // debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
+
+    if (btnSaveWiFiConfig.startsWith("true")) {
+      debug.println("Saving WiFi config...");
+    }
+
+    return;
   }
 }
 

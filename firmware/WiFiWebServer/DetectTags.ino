@@ -12,7 +12,7 @@
  * Distributed as-is; no warranty is given.
  */
 
-void cleartTagsValues() {
+void clearTagValues() {
   emulateNFCFlag = false;
   pollMode = "Waiting for NFC tag";
   nfcID = "";
