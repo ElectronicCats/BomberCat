@@ -365,11 +365,27 @@ void handleURLParameters(String url) {
   if (url.startsWith("/config.html?")) {
     debug.println("here");
     String btnSaveWiFiConfig = "";
-    int index = url.indexOf("btnSaveWiFiConfig=");
+    String ssid = "";
+    String password = "";
+    int index = 0;
+
+    index = url.indexOf("btnSaveWiFiConfig=");
     if (index != -1) {
       btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));  // true or false
     }
+
+    index = url.indexOf("ssid=");
+    if (index != -1) {
+      ssid = url.substring(index + 5, url.indexOf("&password="));
+    }
+
+    // index = url.indexOf("password="); 
+    // if (index != -1) {
+    //   password = url.substring(index + 9, url.length());
+    // }
+
     debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
+    // debug.println("ssid: ", ssid);
 
     if (btnSaveWiFiConfig.startsWith("true")) {
       debug.println("Saving WiFi config...");
