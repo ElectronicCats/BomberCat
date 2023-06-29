@@ -201,8 +201,8 @@ let tvPassword = document.querySelector("#tvPassword");
 
 // Check if config.html is loaded
 if (configPage != null) {
-    tvSSID.value = ssid;
-    tvPassword.value = password;
+    tvSSID.value = ssid.trim();
+    tvPassword.value = password.trim();
 
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();

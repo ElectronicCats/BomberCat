@@ -117,8 +117,8 @@ void setupPreferences() {
   String defaultSSID = "BomberCat";
   String defaultPass = "password";
   ssid = preferences.getString("ssid", defaultSSID);
+  // preferences.remove("password");
   password = preferences.getString("password", defaultPass);
-  preferences.remove("pass");
 
   // Increase rebootCounter by 1
   rebootCounter++;
@@ -376,19 +376,23 @@ void handleURLParameters(String url) {
 
     index = url.indexOf("ssid=");
     if (index != -1) {
-      ssid = url.substring(index + 5, url.indexOf("&password="));
+      // ssid = url.substring(index + 5, url.indexOf("&password="));
     }
 
-    // index = url.indexOf("password="); 
-    // if (index != -1) {
-    //   password = url.substring(index + 9, url.length());
-    // }
+    index = url.indexOf("password=");
+    if (index != -1) {
+      password = url.substring(index + 9, url.length());
+      password = decodeURL((char *)password.c_str());
+      password.trim();
+    }
 
     debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
-    // debug.println("ssid: ", ssid);
+    debug.println("ssid: '", ssid, "'");  // Works
+    debug.println("password: '", password, "'");  // Works
 
     if (btnSaveWiFiConfig.startsWith("true")) {
       debug.println("Saving WiFi config...");
+      preferences.putString("password", password);
     }
 
     return;
