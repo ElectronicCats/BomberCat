@@ -59,9 +59,12 @@ int webRequest = LOGIN_URL;
 
 Debug debug;
 Preferences preferences;
+String defaultSSID = "BomberCat";
+String defaultPassword = "password";
 
 // Function prototypes
 void setupPreferences();
+void factoryReset();
 void setupWiFi();
 void printWifiStatus();
 String decodeURL(char *url);
@@ -85,6 +88,7 @@ void setup() {
   debug.waitForSerialConnection();  // Only if debugging is enabled
 
   setupPreferences();
+  // factoryReset();
   setupWiFi();
   setupMagspoof();
   setupTracks();
@@ -97,37 +101,28 @@ void loop() {
 }
 
 void setupPreferences() {
-  // Open Preferences with my-app namespace. Each application module, library, etc
-  // has to use a namespace name to prevent key name collisions. We will open storage in
-  // RW-mode (second parameter has to be false).
   // Note: Namespace name is limited to 15 chars.
   const char *namespaceName = "bombercat";
   bool readOnly = false;
   preferences.begin(namespaceName, readOnly);
 
-  // Remove all preferences under the opened namespace
-  // preferences.clear(); // Does not work with WiFiNINA
-
-  // Or remove the rebootCounter key only
-  // preferences.remove("rebootCounter");
-
-  // Get the rebootCounter value, if the key does not exist, return a default value of 0
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
-  String defaultSSID = "BomberCat";
-  String defaultPass = "password";
   ssid = preferences.getString("ssid", defaultSSID);
-  password = preferences.getString("password", defaultPass);
-  preferences.remove("pass");
+  password = preferences.getString("password", defaultPassword);
 
-  // Increase rebootCounter by 1
   rebootCounter++;
-
-  // Print the rebootCounter to Serial Monitor
   debug.println("The BomberCat has been rebooted " + String(rebootCounter) + " times");
 
   // Store the rebootCounter to the Preferences
   preferences.putUInt("rebootCounter", rebootCounter);
+}
+
+void factoryReset() {
+  debug.println("\nFactory reset...");
+  // preferences.clear();  // Does not work with WiFiNINA
+  preferences.putString("ssid", defaultSSID);
+  preferences.putString("password", defaultPassword);
 }
 
 void setupWiFi() {
@@ -153,6 +148,8 @@ void setupWiFi() {
   debug.println(ssid);
 
   // TODO: Set ssid and password with user preferences
+  String ssid = preferences.getString("ssid", defaultSSID);
+  String password = preferences.getString("password", defaultPassword);
   status = WiFi.beginAP(ssid.c_str(), password.c_str());
   if (status != WL_AP_LISTENING) {
     debug.println("Creating access point failed");
@@ -415,15 +412,39 @@ void handleURLParameters(String url) {
   if (url.startsWith("/config.html?")) {
     // debug.println("here");
     String btnSaveWiFiConfig = "";
-    int index = url.indexOf("btnSaveWiFiConfig=");
-    if (index != -1) {
-      // btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));
-    }
+    String ssid = "";
+    String password = "";
+
+    // int index = url.indexOf("btnSaveWiFiConfig=");
+    // if (index != -1) {
+    //   btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));
+    // }
+    // index = url.indexOf("ssid=");
+    // if (index != -1) {
+    //   ssid = url.substring(index + 5, url.indexOf("&password="));
+    // }
+    // index = url.indexOf("password=");
+    // if (index != -1) {
+    //   password = url.substring(index + 9);
+    // }
+
+    // // Decode ssid and password
+    // ssid = decodeURL((char *)ssid.c_str());
+    // password = decodeURL((char *)password.c_str());
+    // // password.trim();
+
     // debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
 
-    if (btnSaveWiFiConfig.startsWith("true")) {
-      debug.println("Saving WiFi config...");
-    }
+    // if (btnSaveWiFiConfig.startsWith("true")) {
+    //   // Save the WiFi config to preferences
+    //   preferences.putString("ssid", ssid);
+    //   preferences.putString("password", password);
+
+    //   debug.println("\nNew WiFi config:");
+    //   debug.println("SSID: ", preferences.getString("ssid"));
+    //   debug.println("Password: ", preferences.getString("password"));
+    //   debug.println("Saving WiFi config...");
+    // }
 
     return;
   }
