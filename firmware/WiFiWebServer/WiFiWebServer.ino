@@ -362,14 +362,17 @@ void handleRequests() {
 /// @details This function handles the URL parameters and updates the tracks and button values
 void handleURLParameters(String url) {
   // ? is the start of request parameters
-  if (url.startsWith("/magspoof.html?")) {
-    updateTracks(url);
+  if (url.startsWith("/config.html?")) {
+    debug.println("here");
+    String btnSaveWiFiConfig = "";
+    int index = url.indexOf("btnSaveWiFiConfig=");
+    if (index != -1) {
+      btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));  // true or false
+    }
+    debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
 
-    // Get the button value from the url
-    String button = url.substring(url.indexOf("button=") + 7, url.length());
-
-    if (button.startsWith("Emulate")) {
-      runMagspoof = true;
+    if (btnSaveWiFiConfig.startsWith("true")) {
+      debug.println("Saving WiFi config...");
     }
 
     return;
@@ -412,17 +415,14 @@ void handleURLParameters(String url) {
     return;
   }
 
-  if (url.startsWith("/config.html?")) {
-    // debug.println("here");
-    String btnSaveWiFiConfig = "";
-    int index = url.indexOf("btnSaveWiFiConfig=");
-    if (index != -1) {
-      // btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));
-    }
-    // debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
+  if (url.startsWith("/magspoof.html?")) {
+    updateTracks(url);
 
-    if (btnSaveWiFiConfig.startsWith("true")) {
-      debug.println("Saving WiFi config...");
+    // Get the button value from the url
+    String button = url.substring(url.indexOf("button=") + 7, url.length());
+
+    if (button.startsWith("Emulate")) {
+      runMagspoof = true;
     }
 
     return;
