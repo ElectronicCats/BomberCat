@@ -38,7 +38,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -56,6 +56,8 @@ int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
 int webRequest = LOGIN_URL;
+bool rebootFlag = false;
+unsigned long rebootTimer = 0;
 
 Debug debug;
 Preferences preferences;
@@ -114,6 +116,7 @@ void setupPreferences() {
   // Get the rebootCounter value, if the key does not exist, return a default value of 0
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
+  // preferences.remove("ssid");
   // preferences.remove("password");
 
   // Increase rebootCounter by 1
@@ -354,6 +357,13 @@ void handleRequests() {
   if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
     emulateNFCID();
   }
+
+  // Reset BomberCat after 1500 milliseconds
+  if (millis() - rebootTimer > 1500 && rebootFlag) {
+    // debug.println("Rebooting...");
+    // rebootFlag = false;
+    // NVIC_SystemReset();  // Reboot the RP2040
+  }
 }
 
 /// @brief Handles the URL parameters
@@ -393,7 +403,8 @@ void handleURLParameters(String url) {
       debug.println("Saving WiFi config...");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
-      NVIC_SystemReset();  // Reboot the RP2040
+      rebootFlag = true;
+      rebootTimer = millis();
     }
 
     return;

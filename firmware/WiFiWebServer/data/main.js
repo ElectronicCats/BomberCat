@@ -206,6 +206,7 @@ if (configPage != null) {
 
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
+        alert("Reboot your BomberCat");
         // Update location with new SSID and password
         updateLocation(`config.html?btnSaveWiFiConfig=true&ssid=${tvSSID.value}&password=${tvPassword.value}#`);
     });
