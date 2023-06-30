@@ -386,15 +386,14 @@ void handleURLParameters(String url) {
     }
 
     debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
-    debug.println("ssid: '", ssid, "'");  // Works
-    debug.println("password: '", password, "'");  // Works
+    debug.println("ssid: '", ssid, "'");
+    debug.println("password: '", password, "'");
 
     if (btnSaveWiFiConfig.startsWith("true")) {
       debug.println("Saving WiFi config...");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
-      // WiFi.end();
-      // setupWiFi();
+      NVIC_SystemReset();  // Reboot the RP2040
     }
 
     return;
