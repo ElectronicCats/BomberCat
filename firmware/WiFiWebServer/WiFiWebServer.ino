@@ -50,8 +50,8 @@
 #define CONFIG_URL 7
 
 // Variables for the WiFi module
-String ssid;      // your network SSID (name)
-String password;  // your network password (use for WPA, or use as key for WEP)
+String defaultSSID = "BomberCat";
+String defaultPass = "password";
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
@@ -114,11 +114,7 @@ void setupPreferences() {
   // Get the rebootCounter value, if the key does not exist, return a default value of 0
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
-  String defaultSSID = "BomberCat";
-  String defaultPass = "password";
-  ssid = preferences.getString("ssid", defaultSSID);
   // preferences.remove("password");
-  password = preferences.getString("password", defaultPass);
 
   // Increase rebootCounter by 1
   rebootCounter++;
@@ -149,10 +145,11 @@ void setupWiFi() {
     debug.println("Please upgrade the firmware");
   }
 
+  String ssid = preferences.getString("ssid", defaultSSID);
+  String password = preferences.getString("password", defaultPass);
   debug.print("Creating access point named: ");
   debug.println(ssid);
 
-  // TODO: Set ssid and password with user preferences
   status = WiFi.beginAP(ssid.c_str(), password.c_str());
   if (status != WL_AP_LISTENING) {
     debug.println("Creating access point failed");
@@ -167,8 +164,7 @@ void setupWiFi() {
 
 void printWifiStatus() {
   debug.println("SSID: " + String(WiFi.SSID()));
-  debug.print("Password: ");
-  debug.println(password);
+  debug.println("Password: ", preferences.getString("password", defaultPass));
   debug.print("To access the web interface, go to: http://");
   debug.println(WiFi.localIP());
   debug.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
@@ -397,6 +393,8 @@ void handleURLParameters(String url) {
       debug.println("Saving WiFi config...");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
+      // WiFi.end();
+      // setupWiFi();
     }
 
     return;
@@ -474,8 +472,8 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     client.println("let selRes = `" + selRes + "`;");
     client.println("let nfcID = `" + nfcID + "`;");
     client.println("let nfcDiscoverySuccess = " + String(nfcDiscoverySuccess ? "true" : "false") + ";");
-    client.println("let ssid = `" + String(WiFi.SSID()) + "`;");
-    client.println("let password = `" + password + "`;");
+    client.println("let ssid = `" + preferences.getString("ssid", defaultSSID) + "`;");
+    client.println("let password = `" + preferences.getString("password", defaultPass) + "`;");
   }
 
   // Create a temporary string to hold the page content
