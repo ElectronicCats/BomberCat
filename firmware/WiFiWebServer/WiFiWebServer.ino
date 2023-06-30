@@ -376,7 +376,9 @@ void handleURLParameters(String url) {
 
     index = url.indexOf("ssid=");
     if (index != -1) {
-      // ssid = url.substring(index + 5, url.indexOf("&password="));
+      ssid = url.substring(index + 5, url.indexOf("&password="));
+      ssid = decodeURL((char *)ssid.c_str());
+      ssid.trim();
     }
 
     index = url.indexOf("password=");
@@ -392,6 +394,7 @@ void handleURLParameters(String url) {
 
     if (btnSaveWiFiConfig.startsWith("true")) {
       debug.println("Saving WiFi config...");
+      preferences.putString("ssid", ssid);
       preferences.putString("password", password);
     }
 
