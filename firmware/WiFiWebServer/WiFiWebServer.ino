@@ -218,7 +218,10 @@ String decodeURL(char *url) {
   *follower = 0;
 
   // Return the new string
-  return String(url);
+  String decodedURL = String(url);
+  decodedURL.trim();
+  decodedURL.replace("+", " ");
+  return decodedURL;
 }
 
 void setupTracks() {
@@ -246,12 +249,12 @@ void updateTracks(String url) {
   track2 = decodeURL((char *)track2.c_str());
 
   // Remove any trailing characters
-  track1.trim();
-  track2.trim();
+  // track1.trim();
+  // track2.trim();
 
   // Replace + with spaces
-  track1.replace("+", " ");
-  track2.replace("+", " ");
+  // track1.replace("+", " ");
+  // track2.replace("+", " ");
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
@@ -378,14 +381,12 @@ void handleURLParameters(String url) {
     if (index != -1) {
       ssid = url.substring(index + 5, url.indexOf("&password="));
       ssid = decodeURL((char *)ssid.c_str());
-      ssid.trim();
     }
 
     index = url.indexOf("password=");
     if (index != -1) {
       password = url.substring(index + 9, url.length());
       password = decodeURL((char *)password.c_str());
-      password.trim();
     }
 
     debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
