@@ -206,6 +206,12 @@ if (configPage != null) {
 
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
+
+        if (tvSSID.value.length < 1) {
+            alert("SSID must be at least 1 character long!");
+            return;
+        }
+
         if (tvPassword.value.length < 8) {
             alert("Password must be at least 8 characters long!");
             return;
