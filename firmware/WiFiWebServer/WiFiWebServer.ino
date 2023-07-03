@@ -64,6 +64,7 @@ Preferences preferences;
 
 // Function prototypes
 void setupPreferences();
+void factoryReset();
 void setupWiFi();
 void printWifiStatus();
 String decodeURL(char *url);
@@ -87,6 +88,7 @@ void setup() {
   debug.waitForSerialConnection();  // Only if debugging is enabled
 
   setupPreferences();
+  // factoryReset();
   setupWiFi();
   setupMagspoof();
   setupTracks();
@@ -127,6 +129,13 @@ void setupPreferences() {
 
   // Store the rebootCounter to the Preferences
   preferences.putUInt("rebootCounter", rebootCounter);
+}
+
+void factoryReset() {
+  // Remove all preferences under the opened namespace
+  // preferences.clear();  // Does not work with WiFiNINA
+  preferences.remove("ssid");
+  preferences.remove("password");
 }
 
 void setupWiFi() {
