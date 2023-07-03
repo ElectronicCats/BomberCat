@@ -38,12 +38,27 @@ function reloadPageListener(page, delay) {
     }
 }
 
+function connectionAlert() {
+    alert("BomberCat has no internet connection, please change to another network");
+}
+
 // Home
+let homePage = document.querySelector("#homePage");
 let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
+let btnGithubExamples = document.querySelector("#btnGithubExamples");
 
 if (btnConfig != null) {
     // btnConfig.addEventListener("click", () => { alert("Not available yet!") });
+}
+
+if (homePage != null) {
+    btnGithubExamples.addEventListener("click", (event) => {
+        event.preventDefault();
+        conectionAlert();
+        url = "https://github.com/ElectronicCats/BomberCat";
+        window.open(url, '_blank');
+    });
 }
 
 // Magspoof
@@ -224,4 +239,16 @@ if (configPage != null) {
 
     let delay = 500;
     reloadPageListener("config.html", delay);
+}
+
+// Footer
+let footerSection = document.querySelector("#footerSection");
+let btnStore = document.querySelector("#btnStore");
+
+if (footerSection != null) {
+    btnStore.addEventListener("click", (event) => {
+        conectionAlert();
+        let url = "https://electroniccats.com/store/";
+        window.open(url, "_blank");
+    });
 }

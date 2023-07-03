@@ -55,7 +55,7 @@ String defaultPass = "password";
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
-int webRequest = LOGIN_URL;
+int webRequest = HOME_URL;  // Default URL
 bool rebootFlag = false;
 unsigned long rebootTimer = 0;
 
