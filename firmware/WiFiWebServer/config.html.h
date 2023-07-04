@@ -26,19 +26,6 @@ const char* config_html = R"=====(<!DOCTYPE html>
                     </form>
                 </div>
             </section>
-            <section class="ssid">
-                <div class="form-container">
-                    <h2 class="title">Configure Device</h2>
-                    <p class="subtitle">Enter login username and password</p>
-                    <form action="#" class="form" method="POST">
-                        <input type="text" required id="tvUsername" placeholder="Name" class="input"
-                            name="ssid">
-                        <input type="text" required id="tvUserPassword" placeholder="Password" class="input"
-                            name="pass">
-                        <input type="submit" id="btnSaveDeviceConfig" value="Save" class="primary-button">
-                    </form>
-                </div>
-            </section>
         </div>
     </div>
     <footer>
