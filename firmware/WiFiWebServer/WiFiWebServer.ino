@@ -38,7 +38,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-// #define DEBUG
+#define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -73,9 +73,6 @@ void updateTracks(String url);
 void loadPageContent(WiFiClient client);
 void handleRequests();
 void handleURLParameters(String url);
-void handleMagspoofParameters(String url);
-void handleNFCParameters(String url);
-void handleConfigParameters(String url);
 void runServer();
 void showPageContent(WiFiClient client, const char *pageContent);
 
@@ -111,8 +108,6 @@ void setupPreferences() {
 
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
-  // preferences.remove("ssid");
-  // preferences.remove("password");
 
   rebootCounter++;
   debug.println("The BomberCat has been rebooted " + String(rebootCounter) + " times");
@@ -370,7 +365,6 @@ void handleRequests() {
 void handleURLParameters(String url) {
   // ? is the start of request parameters
   if (url.startsWith("/config.html?")) {
-    debug.println("here");
     String btnSaveWiFiConfig = "";
     String ssid = "";
     String password = "";
@@ -405,7 +399,6 @@ void handleURLParameters(String url) {
       rebootTimer = millis();
     }
   } else if (url.startsWith("/nfc.html?")) {
-    // handleNFCParameters(url);
     String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
     String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
     String btnEmulateNFC = "";
@@ -438,90 +431,14 @@ void handleURLParameters(String url) {
       attempts = 0;
       nfc.StopDiscovery();
     }
-  } else if (url.startsWith("/config.html?")) {
-    debug.println("here");
-    // handleConfigParameters(url);
-  }
-}
-
-void handleMagspoofParameters(String url) {
-  updateTracks(url);
-
-  // Get the button value from the url
-  String button = url.substring(url.indexOf("button=") + 7, url.length());
-
-  if (button.startsWith("Emulate")) {
-    runMagspoof = true;
-  }
-}
-
-void handleNFCParameters(String url) {
-  String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
-  String btnClear = url.substring(url.indexOf("clear=") + 6, url.length());
-  String btnEmulateNFC = "";
-  int index = url.indexOf("emulateState=");
-  if (index != -1) {
-    btnEmulateNFC = url.substring(index + 13);
-  }
-
-  if (url.startsWith("/magspoof.html?")) {
+  } else if (url.startsWith("/magspoof.html?")) {
     updateTracks(url);
 
-    // Get the button value from the url
     String button = url.substring(url.indexOf("button=") + 7, url.length());
 
     if (button.startsWith("Emulate")) {
       runMagspoof = true;
     }
-
-    if (btnEmulateNFC.startsWith("true")) {
-      mode = 2;
-      resetMode();
-      emulateNFCFlag = true;
-      debug.println("\nWaiting for reader command...");
-      emulateNFCIDTimer = millis();
-    } else if (btnEmulateNFC.startsWith("false")) {
-      emulateNFCFlag = false;
-      attempts = 0;
-      nfc.StopDiscovery();
-    }
-  }
-}
-
-void handleConfigParameters(String url) {
-  String btnSaveWiFiConfig = "";
-  String ssid = "";
-  String password = "";
-
-  int index = url.indexOf("btnSaveWiFiConfig=");
-  if (index != -1) {
-    btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));
-  }
-  index = url.indexOf("ssid=");
-  if (index != -1) {
-    ssid = url.substring(index + 5, url.indexOf("&password="));
-  }
-  index = url.indexOf("password=");
-  if (index != -1) {
-    password = url.substring(index + 9);
-  }
-
-  // Decode ssid and password
-  ssid = decodeURL((char *)ssid.c_str());
-  password = decodeURL((char *)password.c_str());
-  // password.trim();
-
-  debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
-
-  if (btnSaveWiFiConfig.startsWith("true")) {
-    // Save the WiFi config to preferences
-    preferences.putString("ssid", ssid);
-    preferences.putString("password", password);
-
-    debug.println("\nNew WiFi config:");
-    debug.println("SSID: ", preferences.getString("ssid"));
-    debug.println("Password: ", preferences.getString("password"));
-    debug.println("Saving WiFi config...");
   }
 }
 
