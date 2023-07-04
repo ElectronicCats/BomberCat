@@ -39,7 +39,7 @@ const char* config_html = R"=====(<!DOCTYPE html>
                     <div class="switch-container">
                         <p class="switch-text">Debug</p>
                         <label class="switch">
-                            <input type="checkbox">
+                            <input type="checkbox" id="cbDebug">
                             <span class="slider round"></span>
                         </label>
                     </div>

@@ -38,7 +38,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -96,6 +96,14 @@ void setup() {
 }
 
 void loop() {
+  static unsigned long lastTime = millis();
+  debug.setEnabled(preferences.getBool("debug", false));
+
+  // if (millis() - lastTime > 1000) {
+  //   lastTime = millis();
+  //   Serial.println("Debug: " + String(debug.isEnabled()));
+  // }
+
   runServer();       // Listen for incoming clients and serve the page content when connected
   handleRequests();  // Handle the requests from the client
 }
@@ -368,6 +376,7 @@ void handleURLParameters(String url) {
     String btnSaveWiFiConfig = "";
     String ssid = "";
     String password = "";
+    String debugStatus = "";
     int index = 0;
 
     index = url.indexOf("btnSaveWiFiConfig=");
@@ -387,9 +396,15 @@ void handleURLParameters(String url) {
       password = decodeURL((char *)password.c_str());
     }
 
+    index = url.indexOf("debug=");
+    if (index != -1) {
+      debugStatus = url.substring(index + 6, url.length());
+    }
+
     debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
     debug.println("ssid: '", ssid, "'");
     debug.println("password: '", password, "'");
+    debug.println("debugStatus: '", debugStatus, "'");
 
     if (btnSaveWiFiConfig.startsWith("true")) {
       debug.println("Saving WiFi config...");
@@ -397,6 +412,16 @@ void handleURLParameters(String url) {
       preferences.putString("password", password);
       rebootFlag = true;
       rebootTimer = millis();
+    }
+
+    if (debugStatus.startsWith("true")) {
+      debug.println("Enabling debug...");
+      preferences.putBool("debug", true);
+      // debug.setEnabled(true);
+    } else if (debugStatus.startsWith("false")) {
+      debug.println("Disabling debug...");
+      preferences.putBool("debug", false);
+      // debug.setEnabled(false);
     }
   } else if (url.startsWith("/nfc.html?")) {
     String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());

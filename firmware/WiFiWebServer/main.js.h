@@ -4,6 +4,8 @@ const char* main_js = R"=====(// Uncomment this to test on a local environment
 // let sensRes;
 // let selRes;
 // let nfcDiscoverySuccess = false;
+// let ssid = "BomberCat";
+// let password = "12345678";
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
@@ -40,6 +42,10 @@ function reloadPageListener(page, delay) {
 
 function connectionAlert() {
     alert("BomberCat does not have Internet access, please switch to another network");
+}
+
+function rebootAlert() {
+    alert("Reboot your BomberCat to apply changes");
 }
 
 // Home
@@ -209,6 +215,7 @@ let configPage = document.querySelector("#configPage");
 let btnSaveWiFiConfig = document.querySelector("#btnSaveWiFiConfig");
 let tvSSID = document.querySelector("#tvSSID");
 let tvPassword = document.querySelector("#tvPassword");
+let cbDebug = document.querySelector("#cbDebug");
 
 // Check if config.html is loaded
 if (configPage != null) {
@@ -228,13 +235,32 @@ if (configPage != null) {
             return;
         }
 
-        alert("Reboot your BomberCat");
+        rebootAlert();
         // Update location with new SSID and password
         updateLocation(`config.html?btnSaveWiFiConfig=true&ssid=${tvSSID.value}&password=${tvPassword.value}#`);
     });
 
     let delay = 500;
     reloadPageListener("config.html", delay);
+
+    cbDebug.checked = localStorage.getItem("debug") == "true" ? true : false;
+
+    // Enable or disable debug mode
+    cbDebug.addEventListener("change", () => {
+        if (cbDebug.checked) {
+            console.log("Debug mode enabled");
+            localStorage.setItem("debug", true);
+            setTimeout(() => {
+                updateLocation(`config.html?debug=true#`);
+            }, 500);
+        } else {
+            console.log("Debug mode disabled");
+            localStorage.setItem("debug", false);
+            setTimeout(() => {
+                updateLocation(`config.html?debug=false#`);
+            }, 500);
+        }
+    });
 }
 
 // Footer
