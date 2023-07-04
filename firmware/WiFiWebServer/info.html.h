@@ -120,7 +120,7 @@ const char* info_html = R"=====(<!DOCTYPE html>
             </div>
         </div>
     </main>
-    <footer>
+    <footer id="footerSection">
         <div class="footer-home">
             <a href="./home.html" class="footer-icon-link">
                 <div class="footer-icon">
@@ -129,7 +129,7 @@ const char* info_html = R"=====(<!DOCTYPE html>
                         <path fill="#5f5f5f" d="M512 128 128 447.936V896h255.936V640H640v256h255.936V447.936z" />
                     </svg>
                 </div>
-                <p class="footer-icon-text">Home</p>
+                <p class="footer-icon-text selected">Home</p>
             </a>
             <a href="./info.html" class="footer-icon-link">
                 <div class="footer-icon">
@@ -140,18 +140,18 @@ const char* info_html = R"=====(<!DOCTYPE html>
                             d="M8,2a6,6,0,1,0,6,6A6,6,0,0,0,8,2ZM7.30274,4.28083a.95128.95128,0,0,1,1.34971,0,.92836.92836,0,0,1,.27615.67443.95244.95244,0,0,1-1.90483,0A.92362.92362,0,0,1,7.30274,4.28083ZM9.70043,12H6.29957V10.736h.83322V7.7772H6.29957V6.51325H8.88421V10.736h.81622Z" />
                     </svg>
                 </div>
-                <p class="footer-icon-text selected">Info</p>
+                <p class="footer-icon-text">Info</p>
             </a>
-            <a href="./login.html">
-                <div class="footer-icon logout">
+            <a href="" id="btnStore">
+                <div class="footer-icon">
                     <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-                    <svg fill="#5f5f5f" width="30px" height="30px" viewBox="0 0 24 24"
+                    <svg fill="#5f5f5f" width="35px" height="35px" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path
-                            d="M4,12a1,1,0,0,0,1,1h7.59l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l4-4a1,1,0,0,0,.21-.33,1,1,0,0,0,0-.76,1,1,0,0,0-.21-.33l-4-4a1,1,0,1,0-1.42,1.42L12.59,11H5A1,1,0,0,0,4,12ZM17,2H7A3,3,0,0,0,4,5V8A1,1,0,0,0,6,8V5A1,1,0,0,1,7,4H17a1,1,0,0,1,1,1V19a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V5A3,3,0,0,0,17,2Z" />
+                            d="M22 5c0-1.654-1.346-3-3-3H5C3.346 2 2 3.346 2 5v2.831c0 1.053.382 2.01 1 2.746V19c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2v-8.424c.618-.735 1-1.692 1-2.746V5zm-2 0v2.831c0 1.14-.849 2.112-1.891 2.167L18 10c-1.103 0-2-.897-2-2V4h3c.552 0 1 .449 1 1zM10 4h4v4c0 1.103-.897 2-2 2s-2-.897-2-2V4zM4 5c0-.551.448-1 1-1h3v4c0 1.103-.897 2-2 2l-.109-.003C4.849 9.943 4 8.971 4 7.831V5zm6 14v-3h4v3h-4zm6 0v-3c0-1.103-.897-2-2-2h-4c-1.103 0-2 .897-2 2v3H5v-7.131c.254.067.517.111.787.125A3.988 3.988 0 0 0 9 10.643c.733.832 1.807 1.357 3 1.357s2.267-.525 3-1.357a3.988 3.988 0 0 0 3.213 1.351c.271-.014.533-.058.787-.125V19h-3z" />
                     </svg>
                 </div>
-                <p class="footer-icon-text">Log out</p>
+                <p class="footer-icon-text store-text">Store</p>
             </a>
         </div>
     </footer>

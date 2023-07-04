@@ -509,9 +509,9 @@ a {
     font-size: var(--sm);
 }
 
-/* Center the log out icon */
-.logout {
-    padding-left: 5px;
+.store-text {
+    width: 30px;
+    margin: 0px 0px 30px 2px;
 }
 
 .selected {
