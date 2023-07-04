@@ -24,6 +24,7 @@
 #include <Preferences.h>  // https://github.com/ElectronicCats/Preferences
 #include <SPI.h>
 #include <WiFiNINA.h>
+#include <ezButton.h>
 
 #include "CloneNFCID.h"
 #include "Debug.h"
@@ -61,10 +62,12 @@ unsigned long rebootTimer = 0;
 
 Debug debug;
 Preferences preferences;
+ezButton button(NPIN);
 
 // Function prototypes
 void setupPreferences();
 void factoryReset();
+void factoryResetListener();
 void setupWiFi();
 void printWifiStatus();
 String decodeURL(char *url);
@@ -89,6 +92,29 @@ void setup() {
 
   setupPreferences();
   // factoryReset();
+  // factoryResetListener();
+
+  unsigned long lastTime = millis();
+  uint8_t exitCounter = 0;
+
+  while (true) {
+    button.loop();
+
+    if (button.isPressed()) {
+      exitCounter++;
+      debug.println("Button pressed " + String(exitCounter) + " times");
+
+      if (exitCounter == 3) {
+        factoryReset();
+        break;
+      }
+    }
+
+    if (millis() - lastTime > 3000) {
+      break;
+    }
+  }
+
   setupWiFi();
   setupMagspoof();
   setupTracks();
@@ -98,11 +124,6 @@ void setup() {
 void loop() {
   static unsigned long lastTime = millis();
   debug.setEnabled(preferences.getBool("debug", false));
-
-  // if (millis() - lastTime > 1000) {
-  //   lastTime = millis();
-  //   Serial.println("Debug: " + String(debug.isEnabled()));
-  // }
 
   runServer();       // Listen for incoming clients and serve the page content when connected
   handleRequests();  // Handle the requests from the client
@@ -128,6 +149,30 @@ void factoryReset() {
   debug.println("\nFactory reset...");
   preferences.putString("ssid", defaultSSID);
   preferences.putString("password", defaultPassword);
+}
+
+// If the button is pressed 3 times within 3 seconds, reset the preferences
+void factoryResetListener() {
+  unsigned long lastTime = millis();
+  uint8_t exitCounter = 0;
+
+  while (true) {
+    button.loop();
+
+    if (button.isPressed()) {
+      exitCounter++;
+      debug.println("Button pressed " + String(exitCounter) + " times");
+
+      if (exitCounter == 3) {
+        factoryReset();
+        break;
+      }
+    }
+
+    if (millis() - lastTime > 3000) {
+      break;
+    }
+  }
 }
 
 void setupWiFi() {
