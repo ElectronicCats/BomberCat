@@ -38,7 +38,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -50,17 +50,17 @@
 #define CONFIG_URL 7
 
 // Variables for the WiFi module
-String ssid;      // your network SSID (name)
-String password;  // your network password (use for WPA, or use as key for WEP)
+String defaultSSID = "BomberCat";
+String defaultPassword = "password";
 int port = 80;
 WiFiServer server(port);
 int status = WL_IDLE_STATUS;
-int webRequest = LOGIN_URL;
+int webRequest = HOME_URL;  // Default URL
+bool rebootFlag = false;
+unsigned long rebootTimer = 0;
 
 Debug debug;
 Preferences preferences;
-String defaultSSID = "BomberCat";
-String defaultPassword = "password";
 
 // Function prototypes
 void setupPreferences();
@@ -111,8 +111,8 @@ void setupPreferences() {
 
   // Note: Key name is limited to 15 chars.
   unsigned int rebootCounter = preferences.getUInt("rebootCounter", 0);
-  ssid = preferences.getString("ssid", defaultSSID);
-  password = preferences.getString("password", defaultPassword);
+  // preferences.remove("ssid");
+  // preferences.remove("password");
 
   rebootCounter++;
   debug.println("The BomberCat has been rebooted " + String(rebootCounter) + " times");
@@ -123,7 +123,6 @@ void setupPreferences() {
 
 void factoryReset() {
   debug.println("\nFactory reset...");
-  // preferences.clear();  // Does not work with WiFiNINA
   preferences.putString("ssid", defaultSSID);
   preferences.putString("password", defaultPassword);
 }
@@ -147,12 +146,11 @@ void setupWiFi() {
     debug.println("Please upgrade the firmware");
   }
 
+  String ssid = preferences.getString("ssid", defaultSSID);
+  String password = preferences.getString("password", defaultPassword);
   debug.print("Creating access point named: ");
   debug.println(ssid);
 
-  // TODO: Set ssid and password with user preferences
-  String ssid = preferences.getString("ssid", defaultSSID);
-  String password = preferences.getString("password", defaultPassword);
   status = WiFi.beginAP(ssid.c_str(), password.c_str());
   if (status != WL_AP_LISTENING) {
     debug.println("Creating access point failed");
@@ -167,8 +165,7 @@ void setupWiFi() {
 
 void printWifiStatus() {
   debug.println("SSID: " + String(WiFi.SSID()));
-  debug.print("Password: ");
-  debug.println(password);
+  debug.println("Password: ", preferences.getString("password", defaultPassword));
   debug.print("To access the web interface, go to: http://");
   debug.println(WiFi.localIP());
   debug.println("Signal strength (RSSI): " + String(WiFi.RSSI()) + " dBm");
@@ -218,7 +215,10 @@ String decodeURL(char *url) {
   *follower = 0;
 
   // Return the new string
-  return String(url);
+  String decodedURL = String(url);
+  decodedURL.trim();
+  decodedURL.replace("+", " ");
+  return decodedURL;
 }
 
 void setupTracks() {
@@ -246,12 +246,12 @@ void updateTracks(String url) {
   track2 = decodeURL((char *)track2.c_str());
 
   // Remove any trailing characters
-  track1.trim();
-  track2.trim();
+  // track1.trim();
+  // track2.trim();
 
   // Replace + with spaces
-  track1.replace("+", " ");
-  track2.replace("+", " ");
+  // track1.replace("+", " ");
+  // track2.replace("+", " ");
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
@@ -355,6 +355,13 @@ void handleRequests() {
   if (millis() - emulateNFCIDTimer > EMULATE_NFCID_DELAY_MS && emulateNFCFlag && webRequest == NFC_URL) {
     emulateNFCID();
   }
+
+  // Reset BomberCat after 1500 milliseconds
+  if (millis() - rebootTimer > 1500 && rebootFlag) {
+    // debug.println("Rebooting...");
+    // rebootFlag = false;
+    // NVIC_SystemReset();  // Reboot the RP2040
+  }
 }
 
 /// @brief Handles the URL parameters
@@ -362,15 +369,40 @@ void handleRequests() {
 /// @details This function handles the URL parameters and updates the tracks and button values
 void handleURLParameters(String url) {
   // ? is the start of request parameters
-  if (url.startsWith("/magspoof.html?")) {
-    // handleMagspoofParameters(url);
-    updateTracks(url);
+  if (url.startsWith("/config.html?")) {
+    debug.println("here");
+    String btnSaveWiFiConfig = "";
+    String ssid = "";
+    String password = "";
+    int index = 0;
 
-    // Get the button value from the url
-    String button = url.substring(url.indexOf("button=") + 7, url.length());
+    index = url.indexOf("btnSaveWiFiConfig=");
+    if (index != -1) {
+      btnSaveWiFiConfig = url.substring(index + 18, url.indexOf("&ssid="));  // true or false
+    }
 
-    if (button.startsWith("Emulate")) {
-      runMagspoof = true;
+    index = url.indexOf("ssid=");
+    if (index != -1) {
+      ssid = url.substring(index + 5, url.indexOf("&password="));
+      ssid = decodeURL((char *)ssid.c_str());
+    }
+
+    index = url.indexOf("password=");
+    if (index != -1) {
+      password = url.substring(index + 9, url.length());
+      password = decodeURL((char *)password.c_str());
+    }
+
+    debug.println("btnSaveWiFiConfig: ", btnSaveWiFiConfig);
+    debug.println("ssid: '", ssid, "'");
+    debug.println("password: '", password, "'");
+
+    if (btnSaveWiFiConfig.startsWith("true")) {
+      debug.println("Saving WiFi config...");
+      preferences.putString("ssid", ssid);
+      preferences.putString("password", password);
+      rebootFlag = true;
+      rebootTimer = millis();
     }
   } else if (url.startsWith("/nfc.html?")) {
     // handleNFCParameters(url);
@@ -432,29 +464,27 @@ void handleNFCParameters(String url) {
     btnEmulateNFC = url.substring(index + 13);
   }
 
-  if (btnClear.startsWith("true")) {
-    clearNFCValuesFlag = true;
-  }
+  if (url.startsWith("/magspoof.html?")) {
+    updateTracks(url);
 
-  if (btnRunDetectTags.startsWith("true")) {
-    mode = 1;
-    resetMode();
-    runDetectTags = true;
-    nfcExecutionCounter = 0;
-    nfcDiscoverySuccess = false;
-    emulateNFCFlag = false;
-  }
+    // Get the button value from the url
+    String button = url.substring(url.indexOf("button=") + 7, url.length());
 
-  if (btnEmulateNFC.startsWith("true")) {
-    mode = 2;
-    resetMode();
-    emulateNFCFlag = true;
-    debug.println("\nWaiting for reader command...");
-    emulateNFCIDTimer = millis();
-  } else if (btnEmulateNFC.startsWith("false")) {
-    emulateNFCFlag = false;
-    attempts = 0;
-    nfc.StopDiscovery();
+    if (button.startsWith("Emulate")) {
+      runMagspoof = true;
+    }
+
+    if (btnEmulateNFC.startsWith("true")) {
+      mode = 2;
+      resetMode();
+      emulateNFCFlag = true;
+      debug.println("\nWaiting for reader command...");
+      emulateNFCIDTimer = millis();
+    } else if (btnEmulateNFC.startsWith("false")) {
+      emulateNFCFlag = false;
+      attempts = 0;
+      nfc.StopDiscovery();
+    }
   }
 }
 
@@ -516,8 +546,8 @@ void showPageContent(WiFiClient client, const char *pageContent) {
     client.println("let selRes = `" + selRes + "`;");
     client.println("let nfcID = `" + nfcID + "`;");
     client.println("let nfcDiscoverySuccess = " + String(nfcDiscoverySuccess ? "true" : "false") + ";");
-    client.println("let ssid = `" + String(WiFi.SSID()) + "`;");
-    client.println("let password = `" + password + "`;");
+    client.println("let ssid = `" + preferences.getString("ssid", defaultSSID) + "`;");
+    client.println("let password = `" + preferences.getString("password", defaultPassword) + "`;");
   }
 
   // Create a temporary string to hold the page content

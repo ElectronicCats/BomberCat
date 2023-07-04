@@ -38,12 +38,27 @@ function reloadPageListener(page, delay) {
     }
 }
 
+function connectionAlert() {
+    alert("BomberCat has no internet connection, please change to another network");
+}
+
 // Home
+let homePage = document.querySelector("#homePage");
 let btnConfig = document.querySelector("#btnConfig");
 let btnNfc = document.querySelector("#btnNfc");
+let btnGithubExamples = document.querySelector("#btnGithubExamples");
 
 if (btnConfig != null) {
     // btnConfig.addEventListener("click", () => { alert("Not available yet!") });
+}
+
+if (homePage != null) {
+    btnGithubExamples.addEventListener("click", (event) => {
+        event.preventDefault();
+        conectionAlert();
+        url = "https://github.com/ElectronicCats/BomberCat";
+        window.open(url, '_blank');
+    });
 }
 
 // Magspoof
@@ -201,15 +216,39 @@ let tvPassword = document.querySelector("#tvPassword");
 
 // Check if config.html is loaded
 if (configPage != null) {
-    tvSSID.value = ssid;
-    tvPassword.value = password;
+    tvSSID.value = ssid.trim();
+    tvPassword.value = password.trim();
 
     btnSaveWiFiConfig.addEventListener("click", (event) => {
         event.preventDefault();
+
+        if (tvSSID.value.length < 1) {
+            alert("SSID must be at least 1 character long!");
+            return;
+        }
+
+        if (tvPassword.value.length < 8) {
+            alert("Password must be at least 8 characters long!");
+            return;
+        }
+
+        alert("Reboot your BomberCat");
         // Update location with new SSID and password
         updateLocation(`config.html?btnSaveWiFiConfig=true&ssid=${tvSSID.value}&password=${tvPassword.value}#`);
     });
 
     let delay = 500;
     reloadPageListener("config.html", delay);
+}
+
+// Footer
+let footerSection = document.querySelector("#footerSection");
+let btnStore = document.querySelector("#btnStore");
+
+if (footerSection != null) {
+    btnStore.addEventListener("click", (event) => {
+        conectionAlert();
+        let url = "https://electroniccats.com/store/";
+        window.open(url, "_blank");
+    });
 }
