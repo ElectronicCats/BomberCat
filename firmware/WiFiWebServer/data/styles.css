@@ -215,6 +215,14 @@ body {
     color: var(--text-section);
 }
 
+.btn-back-container {
+    display: flex;
+}
+
+.btn-back {
+    margin: 30px 0px 0px 30px;
+}
+
 .form {
     display: flex;
     flex-direction: column;

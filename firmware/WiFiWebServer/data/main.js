@@ -39,7 +39,7 @@ function reloadPageListener(page, delay) {
 }
 
 function connectionAlert() {
-    alert("BomberCat has no internet connection, please change to another network");
+    alert("BomberCat does not have Internet access, please switch to another network");
 }
 
 // Home
