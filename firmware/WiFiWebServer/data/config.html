@@ -27,12 +27,22 @@
                     <h2 class="title">Configure Network</h2>
                     <p class="subtitle">Enter device access point name and password.</p>
                     <form action="#" class="form" method="POST">
-                        <input type="text" required id="tvSSID" placeholder="Name" class="input"
-                            name="ssid">
-                        <input type="text" required id="tvPassword" placeholder="Password" class="input"
-                            name="pass">
+                        <input type="text" required id="tvSSID" placeholder="Name" class="input" name="ssid">
+                        <input type="text" required id="tvPassword" placeholder="Password" class="input" name="pass">
                         <input type="submit" id="btnSaveWiFiConfig" value="Save" class="primary-button">
                     </form>
+                </div>
+            </section>
+            <section class="device">
+                <div class="form-container">
+                    <h2 class="title">Configure Device</h2>
+                    <div class="switch-container">
+                        <p class="switch-text">Debug</p>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
             </section>
         </div>
