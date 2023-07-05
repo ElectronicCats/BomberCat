@@ -58,6 +58,10 @@ This example shows how to use the WiFi module of the BomberCat to create a web s
 	<img src="sources/Screenshot_3.png" width=250>
 </p>
 
+### Common issues
+
+- **Forgot the WiFi password:** Reset the BomberCat by pressing the `reset button`. Once the board is reset, you will have 3 seconds to press the `main button` 3 times to reset the WiFi network name and password to the default values.
+
 ## Developer guide
 
 ### Hardware required
