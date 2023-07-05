@@ -11,11 +11,52 @@ Last updated: 2023/06/27
 ## Contents
 
 * Overview
+* User guide
 * Developer guide
 
 ## Overview
 
 This example shows how to use the WiFi module of the BomberCat to create a web server that can be accessed by any device connected to the same network.
+
+### Features
+
+- [x] Web interface.
+- [x] MagSpoof (spoof/emulate any magnetic stripe or credit card).
+- [x] Read NFC tags.
+- [x] Emulate NFC ID.
+- [x] Configure the WiFi network name and password.
+
+## User guide
+
+### Hardware required
+
+* BomberCat
+* USB-C cable or battery
+
+### Software required
+
+* Web browser
+
+### Setup
+
+1. Connect your BomberCat to your computer using the USB-C cable or a battery and turn it on.
+2. Wait for the board to create the WiFi network. You should see something like this:
+
+<p align="center">
+	<img src="sources/Screenshot_1.png" width=250>
+</p>
+
+3. Connect your device to the BomberCat WiFi network using the password `password`. You can change the WiFi network name and password in the `Device Config` tab of the web interface.
+
+<p align="center">
+	<img src="sources/Screenshot_2.png" width=250>
+</p>
+
+4. Open a web browser and go to http://192.168.4.1. You should see the web page served by the BomberCat.
+
+<p align="center">
+	<img src="sources/Screenshot_3.png" width=250>
+</p>
 
 ## Developer guide
 
