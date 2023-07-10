@@ -39,7 +39,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-// #define DEBUG
+#define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1
@@ -270,8 +270,10 @@ String decodeURL(char *url) {
 }
 
 void setupTracks() {
-  String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
-  String track2 = ";123456781234567=112220100000000000000?";
+  // String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
+  // String track2 = ";123456781234567=112220100000000000000?";
+  String track1 = "%B1303030606681417&CLUB CINEPOLIS CARD&4912010218_ñ1303030606681417¿4912010218_?";
+  String track2 = ";1303030606681417&CLUB CINEPOLIS CARD&4912010218_ñ1303030606681417¿4912010218_?";
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
