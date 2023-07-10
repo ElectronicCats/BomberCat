@@ -37,3 +37,4 @@ hardware/#auto_saved_files#
 
 .vscode/
 firmware/WiFiWebServer/Magspoof/main
+firmware/WiFiWebServer/build/
