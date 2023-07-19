@@ -147,6 +147,10 @@ body {
     justify-content: center;
 }
 
+.main-content {
+    max-width: 700px;
+}
+
 .header-container {
     display: grid;
     grid-template-columns: auto auto;
