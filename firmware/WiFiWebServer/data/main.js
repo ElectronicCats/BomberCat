@@ -1,11 +1,11 @@
 // Uncomment this to test on a local environment
-let pollMode = "POLL MODE: Remote MIFARE card activated";
-let nfcID;
-let sensRes;
-let selRes;
-let nfcDiscoverySuccess = false;
-let ssid = "BomberCat";
-let password = "12345678";
+// let pollMode = "POLL MODE: Remote MIFARE card activated";
+// let nfcID;
+// let sensRes;
+// let selRes;
+// let nfcDiscoverySuccess = false;
+// let ssid = "BomberCat";
+// let password = "12345678";
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
@@ -46,20 +46,6 @@ function connectionAlert() {
 
 function rebootAlert() {
     alert("Reboot your BomberCat to apply changes");
-}
-
-// Header home
-let header = document.querySelector("#headerHome");
-let btnStoreLink = document.querySelector("#btnStoreLink");
-console.log(`Header: ${header}`);
-
-if (header != null) {
-    btnStoreLink.addEventListener("click", (event) => {
-        event.preventDefault();
-        connectionAlert();
-        url = "https://electroniccats.com/store/";
-        window.open(url, '_blank');
-    });
 }
 
 // Home
@@ -286,5 +272,36 @@ if (footerSection != null) {
         connectionAlert();
         let url = "https://electroniccats.com/store/";
         window.open(url, "_blank");
+    });
+}
+
+// Header home
+let header = document.querySelector("#headerHome");
+let btnStoreLink = document.querySelector("#btnStoreLink");
+
+function handleWindowSizeChange(event) {
+    const mediaQuery = event.currentTarget || event; // event.currentTarget is null when called from the event listener
+
+    if (mediaQuery.matches) {
+        console.log('The window has a width less than or equal to 640px');
+        if (nfcPage != null || configPage != null || magspoofPage != null) {
+            header.classList.add("header-home-hide");
+        }
+    } else {
+        console.log('The window has a width greater than 640px');
+        header.classList.remove("header-home-hide");
+    }
+}
+
+const mediaQuery = window.matchMedia('(max-width: 640px)');
+handleWindowSizeChange(mediaQuery); // Call listener function at run time
+mediaQuery.addEventListener('change', handleWindowSizeChange);
+
+if (header != null) {
+    btnStoreLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        connectionAlert();
+        url = "https://electroniccats.com/store/";
+        window.open(url, '_blank');
     });
 }

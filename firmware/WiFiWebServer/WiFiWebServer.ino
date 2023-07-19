@@ -39,7 +39,7 @@
 #include "nfc.html.h"
 #include "styles.css.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define CSS_URL 0
 #define JAVASCRIPT_URL 1

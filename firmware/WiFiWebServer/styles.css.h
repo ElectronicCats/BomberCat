@@ -138,8 +138,8 @@ body {
     padding-bottom: 70px;
     min-height: calc(100vh - 220px);
     overflow-y: auto;
-    border-top-left-radius: 30px;
-    border-top-right-radius: 30px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
     background-color: var(--white);
     display: flex;
     flex-direction: column;
@@ -239,7 +239,7 @@ input:checked+.slider {
 }
 
 input:focus+.slider {
-   box-shadow: 0 0 1px var(--seconday-color);
+    box-shadow: 0 0 1px var(--seconday-color);
 }
 
 input:checked+.slider:before {
@@ -298,6 +298,12 @@ input:checked+.slider:before {
 
 .btn-back-container {
     display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.empty-div {
+    width: 300px;
 }
 
 .btn-back {
@@ -371,14 +377,34 @@ input::-webkit-inner-spin-button {
 }
 
 .header-home {
-    margin: 0 auto;
-    width: 100%;
-    height: 160px;
+    height: 90px;
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: space-around;
     background-color: var(--main-logo-background);
     color: var(--white);
+}
+
+.header-home-hide {
+    display: none;
+}
+
+.left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.right {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Set 5px padding to the right elements */
+.right>* {
+    padding: 0 10px;
 }
 
 .logoP {
@@ -390,6 +416,10 @@ input::-webkit-inner-spin-button {
     text-align: left;
     font-size: var(--md);
     font-weight: 700;
+}
+
+.logoPTitle>* {
+    color: var(--white);
 }
 
 .menu-container {
@@ -612,8 +642,19 @@ a {
         margin-left: 0px;
     }
 
+    .header-home {
+        height: 160px;
+        justify-content: start;
+    }
+
+    .right {
+        display: none;
+    }
+
     .main-background {
         justify-content: start;
+        border-top-left-radius: 30px;
+        border-top-right-radius: 30px;
     }
 
     .emulate-nfc-container {
@@ -671,6 +712,6 @@ a {
 
 @media (min-width: 800px) {
     .header-home {
-        padding-left: 100px;
+        /* padding-left: 100px; */
     }
 })=====";

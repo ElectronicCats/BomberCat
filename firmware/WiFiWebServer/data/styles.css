@@ -298,6 +298,12 @@ input:checked+.slider:before {
 
 .btn-back-container {
     display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.empty-div {
+    width: 300px;
 }
 
 .btn-back {
@@ -378,6 +384,10 @@ input::-webkit-inner-spin-button {
     justify-content: space-around;
     background-color: var(--main-logo-background);
     color: var(--white);
+}
+
+.header-home-hide {
+    display: none;
 }
 
 .left {
