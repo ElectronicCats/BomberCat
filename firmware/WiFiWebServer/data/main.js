@@ -1,11 +1,11 @@
 // Uncomment this to test on a local environment
-// let pollMode = "POLL MODE: Remote MIFARE card activated";
-// let nfcID;
-// let sensRes;
-// let selRes;
-// let nfcDiscoverySuccess = false;
-// let ssid = "BomberCat";
-// let password = "12345678";
+let pollMode = "POLL MODE: Remote MIFARE card activated";
+let nfcID;
+let sensRes;
+let selRes;
+let nfcDiscoverySuccess = false;
+let ssid = "BomberCat";
+let password = "12345678";
 // Comment the above lines to upload to the BomberCat
 
 let currentLocation = localStorage.getItem("location");
@@ -46,6 +46,20 @@ function connectionAlert() {
 
 function rebootAlert() {
     alert("Reboot your BomberCat to apply changes");
+}
+
+// Header home
+let header = document.querySelector("#headerHome");
+let btnStoreLink = document.querySelector("#btnStoreLink");
+console.log(`Header: ${header}`);
+
+if (header != null) {
+    btnStoreLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        connectionAlert();
+        url = "https://electroniccats.com/store/";
+        window.open(url, '_blank');
+    });
 }
 
 // Home
