@@ -139,8 +139,7 @@ void displayCardInfo(RfIntf_t RfIntf) {  // Funtion in charge to show the card/s
 
         // uidcf ready to fill CORE_CONF
         if (RfInterface.Info.NFC_APP.NfcIdLen != 4) {
-          debug.println("Ooops ... this doesn't seem to be a Mifare Classic card!");
-          return;
+          debug.println("Ooops... this doesn't seem to be a Mifare Classic card!");
         }
 
         if (RfIntf.Info.NFC_APP.SelResLen != 0) {
