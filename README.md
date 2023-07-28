@@ -59,9 +59,9 @@ BomberCat is a wireless penetration testing tool intended solely for use in auth
 
 It is essential to note that the board does not provide any means or authorization to utilize credit cards or engage in any financial transactions that are not legally authorized. Electronic Cats holds no responsibility for any unauthorized use of the tool or any resulting damages.
  
- ## Supported by
+## Supported by
  
- Thanks [Wallee](https://en.wallee.com/) for support this project open source
+ Thanks [Wallee](https://en.wallee.com/) for support this open source project
  
  <a href="https://en.wallee.com/">
   <img src="https://assets-global.website-files.com/618247f2e428ac0537753ad7/618247f2e428acc566753b08_wallee_logo_RGB_turquoise.svg" width="300" height="104" />
