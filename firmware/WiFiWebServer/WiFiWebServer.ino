@@ -278,8 +278,6 @@ String decodeURL(char *url) {
 }
 
 void setupTracks() {
-  // String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
-  // String track2 = ";123456781234567=112220100000000000000?";
   String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
   String track2 = ";123456781234567=112220100000000000000?";
 
@@ -305,14 +303,6 @@ void updateTracks(String url) {
   // Decode urls
   track1 = decodeURL((char *)track1.c_str());
   track2 = decodeURL((char *)track2.c_str());
-
-  // Remove any trailing characters
-  // track1.trim();
-  // track2.trim();
-
-  // Replace + with spaces
-  // track1.replace("+", " ");
-  // track2.replace("+", " ");
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
@@ -475,11 +465,9 @@ void handleURLParameters(String url) {
     if (debugStatus.startsWith("true")) {
       debug.println("Enabling debug...");
       preferences.putBool("debug", true);
-      // debug.setEnabled(true);
     } else if (debugStatus.startsWith("false")) {
       debug.println("Disabling debug...");
       preferences.putBool("debug", false);
-      // debug.setEnabled(false);
     }
   } else if (url.startsWith("/nfc.html?")) {
     String btnRunDetectTags = url.substring(url.indexOf("runDetectTags=") + 14, url.length());
