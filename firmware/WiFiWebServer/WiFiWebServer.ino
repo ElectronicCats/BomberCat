@@ -224,6 +224,14 @@ void printWifiStatus() {
 /// @author https://arduino.stackexchange.com/questions/18007/simple-url-decoding?newreg=32c11952781c413592b3e837a3785e84
 /// @return String
 String decodeURL(char *url) {
+  // Check if the URL starts with "%B" and return as it is.
+  if (strncmp(url, "%B", 2) == 0) {
+    String decodedURL = String(url);
+    decodedURL.trim();
+    decodedURL.replace("+", " ");
+    return decodedURL;
+  }
+
   // Create two pointers that point to the start of the data
   char *leader = url;
   char *follower = leader;
@@ -274,6 +282,9 @@ void setupTracks() {
   // String track2 = ";123456781234567=112220100000000000000?";
   String track1 = "%B123456781234567^LASTNAME/FIRST^YYMMSSSDDDDDDDDDDDDDDDDDDDDDDDDD?";
   String track2 = ";123456781234567=112220100000000000000?";
+
+  track1 = decodeURL((char *)track1.c_str());
+  track2 = decodeURL((char *)track2.c_str());
 
   // Copy the tracks into the char arrays using strcpy
   strcpy(tracks[0], track1.c_str());
