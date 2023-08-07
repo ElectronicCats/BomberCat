@@ -463,7 +463,7 @@ void handleURLParameters(String url) {
     }
 
     if (debugStatus.startsWith("true")) {
-      debug.println("Enabling debug...");
+      Serial.println("Enabling debug...");
       preferences.putBool("debug", true);
     } else if (debugStatus.startsWith("false")) {
       debug.println("Disabling debug...");
