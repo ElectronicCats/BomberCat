@@ -1,18 +1,28 @@
 # BomberCat
 
+<p align=center>
+<a href="https://github.com/ElectronicCats/BomberCat/wiki">
+  <img src="https://github.com/ElectronicCats/BomberCat/assets/107638696/354ce958-4d73-4198-bb89-8b5e16c7cd0a" width=70% />
+</a>
+</p>
+
+<p align=center>
 <a href="https://electroniccats.com/store/bombercat/">
   <img src="https://electroniccats.com/wp-content/uploads/badge_store.png" width="200" height="104" />
 </a>
+<a href="https://github.com/ElectronicCats/BomberCat/wiki">
+  <img src="https://github.com/ElectronicCats/flipper-shields/assets/44976441/6aa7f319-3256-442e-a00d-33c8126833ec" width="200" height="104" />
+</a>
+</p>
 
-## How does BomberCat work?
-BomberCat is the latest security tool that combines the most common card technologies: NFC technology (Near Field Communication) and magnetic stripe technology used in access control, identification, and banking cards.
-Specially created to audit banking terminals, and identify NFC readers and sniffing tools, with this tool you can audit, read or emulate magnetic stripes and NFC cards.
+BomberCat 💣 is the latest security tool that combines the most common card technologies: NFC technology (Near Field Communication) and magnetic stripe technology used in access control, identification, and banking cards.
+Specially created to audit banking terminals, and identify NFC readers and sniffing tools, with this tool you can audit, read, or emulate magnetic stripes and NFC cards.
 
 It also has an ESP32 co-processor with WiFiNINA firmware that allows it to make WiFi connections to use with HTTP or MQTT protocols, which will allow relay and spoofing attacks to be tested over long distances or on local web servers.
 
-## Applications
+### Applications
 BomberCat features an RP2040 MCU working along with the PN7150 (a recent generation NFC chip). 
-The USB interface provided by the RP2040 MCU and the NFC functionality is guaranteed by the PN7150.
+The USB interface is provided by the RP2040 MCU and the NFC functionality is guaranteed by the PN7150.
 
 BomberCat is designed to be intuitive for users. Easy to program using frameworks such as Arduino, Ciruitpython, and Micropython.  We have prepared a series of examples with which you can start experimenting, check out the examples folder.
 
@@ -23,19 +33,19 @@ However, card emulation mode is not only beneficial for smartphones but any type
 **Read/Write:** in which BomberCat behaves as an NFC reader/writer. In this mode, BomberCat communicates with a passive tag, an NFC smart card, or an NFC device operating in the card emulation mode. It can read or write to a tag (although reading is a more common use case because tags will often be write-protected). In this mode, BomberCat generates an RF field, while a tag or card only modulates it.
 
 **Magspoof:** for magnetic stripes interaction.
-Magspoof mode can emulate magnetic stripes cards by emulating the electromagnetic pulses of this type of card.
+Magspoof mode can emulate magnetic stripe cards by emulating the electromagnetic pulses of this type of card.
 
 
 ## Characteristics:
 - Cortex M0+ processor
 - USB C 2.0
-- NFC Reader, Card and NFC Forum
+- NFC Reader, Card, and NFC Forum
 - Arduino compatible
 - 100% CircuitPython compatible
 - UF2 Bootloader
 - WIFI (WiFiNINA)
 - BLE (ArduinoBLE)
-- 1 LEDs status
+- 1 LED status
 - Open Hardware
 - Magpoof coil
 - Battery
@@ -50,29 +60,28 @@ Magspoof mode can emulate magnetic stripes cards by emulating the electromagneti
   - ISO/IEC 15693/ICODE VCD mode 
   - Includes NXP ISO/IEC14443-A and Innovatron ISO/IEC14443-B intellectual property licensing rights
 
-## Wiki and Getting Started
-
-[Getting Started in our Wiki](https://github.com/ElectronicCats/BomberCat/wiki)
-  
 ## Disclaimer
-BomberCat is a wireless penetration testing tool intended solely for use in authorized security audits, where such usage is permitted by applicable laws and regulations. Before utilizing this tool, it is crucial to ensure compliance with all relevant legal requirements and obtain appropriate permissions from the relevant authorities.
+>[!IMPORTANT]
+>BomberCat is a wireless penetration testing tool intended **solely for use in authorized security audits, where such usage is permitted by applicable laws and regulations**. Before utilizing this tool, it is crucial to ensure compliance with all relevant legal requirements and obtain appropriate permissions from the relevant authorities.
+>
+>The board **does not provide** any means or authorization to utilize credit cards or engage in any financial transactions that are not legally authorized. **Electronic Cats holds no responsibility for any unauthorized use of the tool or any resulting damages**.
 
-It is essential to note that the board does not provide any means or authorization to utilize credit cards or engage in any financial transactions that are not legally authorized. Electronic Cats holds no responsibility for any unauthorized use of the tool or any resulting damages.
+-------
  
-## Supported by
- 
+### Supported by
  Thanks [Wallee](https://en.wallee.com/) for support this open source project
  
  <a href="https://en.wallee.com/">
-  <img src="https://assets-global.website-files.com/618247f2e428ac0537753ad7/618247f2e428acc566753b08_wallee_logo_RGB_turquoise.svg" width="300" height="104" />
+  <img src="https://assets-global.website-files.com/618247f2e428ac0537753ad7/618247f2e428acc566753b08_wallee_logo_RGB_turquoise.svg" width=30% />
 </a>
 
 
-## License
+### License
+<p>
+<img src= "https://github.com/ElectronicCats/AjoloteBoard/raw/master/OpenSourceLicense.png" width=30%>
+</p>
 
-![OpenSourceLicense](https://github.com/ElectronicCats/AjoloteBoard/raw/master/OpenSourceLicense.png)
-
-Electronic Cats invests time and resources providing this open source design, please support Electronic Cats and open-source hardware by purchasing products from Electronic Cats!
+Electronic Cats invests time and resources in providing this open-source design, please support Electronic Cats and open-source hardware by purchasing products from Electronic Cats!
 
 Designed by Electronic Cats.
 
