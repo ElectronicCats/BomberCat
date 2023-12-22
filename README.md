@@ -8,7 +8,7 @@
 
 <p align=center>
 <a href="https://electroniccats.com/store/bombercat/">
-  <img src="https://electroniccats.com/wp-content/uploads/badge_store.png" width="200" height="104" />
+  <img src="https://github.com/ElectronicCats/BomberCat/assets/107638696/f9bbb579-0f5c-4f9f-a3ca-376aa8895035" width="200" height="104" />
 </a>
 <a href="https://github.com/ElectronicCats/BomberCat/wiki">
   <img src="https://github.com/ElectronicCats/flipper-shields/assets/44976441/6aa7f319-3256-442e-a00d-33c8126833ec" width="200" height="104" />
