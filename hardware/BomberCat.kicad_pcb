@@ -4488,11 +4488,6 @@
       (net 10 "+BATT") (pinfunction "Pin_1") (pintype "passive") (tstamp a69f2f66-6233-4f2c-afaa-ee6f10b4a01f))
     (pad "2" thru_hole oval (at 0 2.54 180) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask")
       (net 2 "GND") (pinfunction "Pin_2") (pintype "passive") (tstamp 37a3e81e-7890-4977-a3cc-d13d921fd10e))
-    (model "${KICAD6_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x02_P2.54mm_Vertical.wrl"
-      (offset (xyz 0 0 0))
-      (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
-    )
   )
 
   (footprint "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder" (layer "F.Cu")
@@ -4953,11 +4948,6 @@
       (net 32 "/OUTA") (pinfunction "Pin_1") (pintype "passive") (tstamp 444fa1ad-8ab0-4a52-8062-a9a03c787568))
     (pad "2" thru_hole oval (at 0 2.54 270) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask")
       (net 33 "/OUTB") (pinfunction "Pin_2") (pintype "passive") (tstamp 9cacda4d-9542-4523-929f-afdfaf08b9da))
-    (model "${KICAD6_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x02_P2.54mm_Vertical.wrl"
-      (offset (xyz 0 0 0))
-      (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
-    )
   )
 
   (footprint "MountingHole:MountingHole_2.2mm_M2" (layer "F.Cu")
@@ -5113,7 +5103,7 @@
       (net 1 "Net-(C1-Pad1)") (pinfunction "1") (pintype "passive") (tstamp 01ad4129-1d01-41b9-bcd3-cd204d3c6daa))
     (pad "2" smd rect (at 1.85 0 270) (size 2 2.4) (layers "F.Cu" "F.Paste" "F.Mask")
       (net 3 "Net-(C2-Pad1)") (pinfunction "2") (pintype "passive") (tstamp 914c16ec-0203-4b9d-b3ae-03472da3d015))
-    (model "${KICAD6_3DMODEL_DIR}/Crystal.3dshapes/Crystal_SMD_5032-2Pin_5.0x3.2mm.wrl"
+    (model ":KICAD7_3DMODEL_DIR:Crystal.3dshapes/Crystal_SMD_0603-4Pin_6.0x3.5mm.step"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -5242,6 +5232,11 @@
       (net 37 "Net-(L3-Pad2)") (pinfunction "2") (pintype "passive") (tstamp 92bd3869-0bde-4d76-96a4-bd993af1117b))
     (pad "2" smd rect (at 1.475 0 90) (size 1.05 2.2) (layers "F.Cu" "F.Paste" "B.SilkS" "F.Mask")
       (net 37 "Net-(L3-Pad2)") (pinfunction "2") (pintype "passive") (tstamp fc1669d7-e2c8-461d-9e77-52ddb9ed11d6))
+    (model "${KIPRJMOD}/3D Files/I-PEX MHF_7 Recepticle.STEP"
+      (offset (xyz 0 0 0))
+      (scale (xyz 1 1 1))
+      (rotate (xyz -90 0 0))
+    )
   )
 
   (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu")
@@ -9004,6 +8999,11 @@
     (pad "B8" smd rect (at 1.25 -0.825 90) (size 0.3 1.65) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp 7becc4ed-b370-4ebf-be20-0a8a9c6dd9e8))
     (model "${KICAD_EC_PCB}/Connectors.pretty/3D/HRO  TYPE-C-31-M-12.step"
       (offset (xyz -4.5 -6.8 0))
+      (scale (xyz 1 1 1))
+      (rotate (xyz -90 0 0))
+    )
+    (model "${KIPRJMOD}/3D Files/USB4105-GF-A.stp"
+      (offset (xyz 0 -6.5 0))
       (scale (xyz 1 1 1))
       (rotate (xyz -90 0 0))
     )
@@ -16469,11 +16469,11 @@
     (tags "kb_params=eyJBbGlnbm1lbnRDaG9pY2UiOiAiQ2VudGVyIiwgIkNhcExlZnRDaG9pY2UiOiAiKCIsICJDYXBSaWdodENob2ljZSI6ICIpIiwgIkZvbnRDb21ib0JveCI6ICJGcmVkb2thT25lIiwgIkhlaWdodEN0cmwiOiAiLjkiLCAiTGF5ZXJDb21ib0JveCI6ICJGLlNpbGtTIiwgIk11bHRpTGluZVRleHQiOiAiVjEuMiIsICJQYWRkaW5nQm90dG9tQ3RybCI6ICI1IiwgIlBhZGRpbmdMZWZ0Q3RybCI6ICI1IiwgIlBhZGRpbmdSaWdodEN0cmwiOiAiNSIsICJQYWRkaW5nVG9wQ3RybCI6ICI1IiwgIldpZHRoQ3RybCI6ICIifQ==")
     (attr board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "kibuzzard-64382690" (at 0 3.87858) (layer "B.SilkS") hide
-        (effects (font (size 0.0254 0.0254)) (justify mirror))
+        (effects (font (size 0.0254 0.0254) (thickness 0.15)) (justify mirror))
       (tstamp 7dd5427d-9d41-40b1-a524-987040765b1b)
     )
     (fp_text value "G***" (at 0 -3.87858) (layer "B.SilkS") hide
-        (effects (font (size 0.0254 0.0254)) (justify mirror))
+        (effects (font (size 0.0254 0.0254) (thickness 0.15)) (justify mirror))
       (tstamp 220e2b58-fafa-4f17-bedb-987fb4553da6)
     )
     (fp_poly
