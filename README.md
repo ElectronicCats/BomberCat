@@ -73,7 +73,7 @@ Magspoof mode can emulate magnetic stripe cards by emulating the electromagnetic
 
 Please read the document  [**Contribution Manual**](https://github.com/ElectronicCats/electroniccats-cla/blob/main/electroniccats-contribution-manual.md)  which will show you how to contribute your changes to the project.
 
-✨ Thanks to all our [contributors](https://github.com/ElectronicCats/[repo-link]/graphs/contributors)! ✨
+✨ Thanks to all our [contributors](https://github.com/ElectronicCats/BomberCat/graphs/contributors)! ✨
 
 See [**_Electronic Cats CLA_**](https://github.com/ElectronicCats/electroniccats-cla/blob/main/electroniccats-cla.md) for more information.
 
