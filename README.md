@@ -15,6 +15,15 @@
 </a>
 </p>
 
+<p align=center>
+Also available at distributors:
+</p>
+<p align=center>
+<a href="https://labs.ksec.co.uk/product-category/electronic-cat/">
+<img src="https://cdn.ksec.co.uk/ksec-solutions/ksec-W-BW-MV-small-clipped.png" width="200" />
+</a>
+</p>
+
 BomberCat 💣 is the latest security tool that combines the most common card technologies: NFC technology (Near Field Communication) and magnetic stripe technology used in access control, identification, and banking cards.
 Specially created to audit banking terminals, and identify NFC readers and sniffing tools, with this tool you can audit, read, or emulate magnetic stripes and NFC cards.
 
