@@ -56,7 +56,7 @@ Magspoof mode can emulate magnetic stripe cards by emulating the electromagnetic
 - BLE (ArduinoBLE)
 - 1 LED status
 - Open Hardware
-- Magpoof coil
+- MagSpoof coil
 - Battery
 - RF protocols supported
   - NFCIP-1, NFCIP-2 protocol 
