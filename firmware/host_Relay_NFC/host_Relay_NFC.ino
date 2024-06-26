@@ -242,13 +242,20 @@ if(debug) {
   // Send command from terminal to card
   nfc.CardModeSend(ppse, commandlarge);
 
+  
+  Serial.println("sale de nfc.CardModeSend...");
+  
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
+  Serial.println("sale de while nfc.CardModeReceive...");
+  
+  Serial.println("nfc.CardModeReceive = ");
+  Serial.println(nfc.CardModeReceive(apdubuffer, &apdulen));
 
-  if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
+  if (nfc.CardModeReceive(apdubuffer, &apdulen) == 1) { //0->1
 if(debug) {
     printData(apdubuffer, apdulen, 4);
 }
-  
+    Serial.println("entró a publicar...");
     client.publish(outTopic, apdubuffer, apdulen);
     tiempo = millis();  // more time before close the connection
     }
@@ -424,6 +431,7 @@ void set_n(){
     result = getSketchStats(statsKey, &previousStats);
     nhost = previousStats.nhostStore;
   }
+  
   if(debug) {
     Serial.print("Host: ");
     Serial.println(nhost);
@@ -440,7 +448,7 @@ void set_n(){
     if (result == MBED_SUCCESS) {
       
       if(debug) {
-        Serial.println("Save MQTTSetup in Stats Flash");
+        Serial.println("Save configuration in flash");
         Serial.print("\tSSID: ");
         Serial.println(previousStats.ssidStore);
         Serial.print("\tWiFiPass: ");
@@ -584,6 +592,8 @@ void setup_wifi() {
         Serial.println(previousStats.passwordStore);
         Serial.print("\tMQTT Server: ");
         Serial.println(previousStats.mqttStore);
+        Serial.print("\tID: ");
+        Serial.println(previousStats.nhostStore);
       }  
       Serial.println("OK");
 
@@ -804,6 +814,7 @@ if(debug) {
   get_config();
 
   if (flagStore == 1) {
+    set_n();
     setup_wifi();
   }
   if ((flagWifi == 1) && (flagStore == 1)) {
@@ -940,6 +951,18 @@ void get_config() {
   } else {
     Serial.println("Error reading from key-value store.");
   }
+
+  dhost[4] = inTopic[11];
+  dhost[5] = inTopic[12];
+  dhost[1] = nhost / 10 + 48;
+  dhost[2] = nhost % 10 + 48;
+  
+  client.publish("queue", dhost);
+
+  dhost[4] = '#';
+  dhost[5] = '#';
+  dhost[1] = '#';
+  dhost[2] = '#';
 
   Serial.print("\tHost: ");
   Serial.println(outTopic);
@@ -1126,7 +1149,7 @@ void card() {
     nfc.StartDiscovery(mode);
   }
   resetMode();
-  delay(500);  
+  //delay(500);  
 }
 
 // This gets set as the default handler, and gets called when no other command matches.

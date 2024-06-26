@@ -1025,6 +1025,79 @@ void reconnect() {
   }
 }
 
+void test_host() {
+
+  //Serial.println("0x00 0xA4 0x04 0x00 0x0E 0x32 0x50 0x41 0x59 0x2E 0x53 0x59 0x53 0x2E 0x44 0x44 0x46 0x30 0x31 0x00");
+
+  Cmd[0] = 0x00;
+  Cmd[1] = 0xA4;
+  Cmd[2] = 0x04;
+  Cmd[3] = 0x00;
+  Cmd[4] = 0x0E;
+  Cmd[5] = 0x32;
+  Cmd[6] = 0x50;
+  Cmd[7] = 0x41;
+  Cmd[8] = 0x59;
+  Cmd[9] = 0x2E;
+  Cmd[10] = 0x53;
+  Cmd[11] = 0x59;
+  Cmd[12] = 0x53;
+  Cmd[13] = 0x2E;
+  Cmd[14] = 0x44;
+  Cmd[15] = 0x44;
+  Cmd[16] = 0x46;
+  Cmd[17] = 0x30;
+  Cmd[18] = 0x31;
+  Cmd[19] = 0x00;
+
+  char *arg;
+  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  int n_host = 01;;
+  if (arg != NULL) {
+    
+    n_host = atoi(arg);
+  
+    if (n_host < 1 || n_host > 99) {
+      if(debug) {
+        Serial.println("Error setting the command, test_host value must be between 1-99");
+        nhost = 01;
+      }
+      Serial.println("ERROR");  
+      return;
+    }
+
+
+    inTopic[9] = n_host/10 + 48; // topic host id
+    inTopic[10] = n_host%10 + 48;
+  
+    shost[1] = nclient/10 + 48; // to publish on queue
+    shost[2] = nclient%10 + 48;
+    
+    shost[4] = inTopic[9];
+    shost[5] = inTopic[10];
+    
+    client.publish("queue", shost);   
+
+    delay(2000);
+
+    outTopic[11] = nclient/10 + 48;
+    outTopic[12] = nclient%10 + 48; 
+    
+    client.publish(outTopic, Cmd, 20);
+
+    delay(2000);
+
+    dhost[1] = n_host/10 + 48;
+    dhost[2] = n_host%10 + 48;
+    
+    client.publish("queue", dhost);
+  
+    dhost[1] = '#';
+    dhost[2] = '#';
+  
+  }
+}
+
 void blink(int pin, int msdelay, int times) {
   for (int i = 0; i < times; i++) {
     digitalWrite(pin, HIGH);
@@ -1094,6 +1167,7 @@ if(debug) {
   get_config();
 
   if (flagStore == 1) {
+    set_n();
     setup_wifi();
   }
   if ((flagWifi == 1) && (flagStore == 1)) {
@@ -1135,6 +1209,7 @@ if(debug) {
   SCmd.addCommand("set_delay", set_delay);
   SCmd.addCommand("setup_wifi", setup_wifi);
   SCmd.addCommand("setup_mqtt", setup_mqtt);
+  SCmd.addCommand("test_host", test_host);
   SCmd.addCommand("get_config", get_config);
 
   SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
@@ -1225,6 +1300,7 @@ void help() {
   Serial.println("Monitor commands:");
   Serial.println("\tget_config");
   Serial.println("\tset_debug");
+  Serial.println("\ttest_host");
   Serial.println("..help");
 }
 
@@ -1432,6 +1508,14 @@ void get_config() {
   Serial.print("\tDelay:");
   Serial.println(ndelay);
   Serial.println("OK");
+
+  shost[1] = nclient/10 + 48; // publish on queue
+  shost[2] = nclient%10 + 48;
+  
+  client.publish("queue", shost);
+  
+  dhost[4] = nclient/10 + 48;
+  dhost[5] = nclient%10 + 48;
 
 }
 
