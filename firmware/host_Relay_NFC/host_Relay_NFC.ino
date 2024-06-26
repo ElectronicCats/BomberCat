@@ -241,21 +241,13 @@ if(debug) {
 
   // Send command from terminal to card
   nfc.CardModeSend(ppse, commandlarge);
-
-  
-  Serial.println("sale de nfc.CardModeSend...");
   
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
-  Serial.println("sale de while nfc.CardModeReceive...");
-  
-  Serial.println("nfc.CardModeReceive = ");
-  Serial.println(nfc.CardModeReceive(apdubuffer, &apdulen));
 
   if (nfc.CardModeReceive(apdubuffer, &apdulen) == 1) { //0->1
 if(debug) {
     printData(apdubuffer, apdulen, 4);
 }
-    Serial.println("entró a publicar...");
     client.publish(outTopic, apdubuffer, apdulen);
     tiempo = millis();  // more time before close the connection
     }

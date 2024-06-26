@@ -1516,7 +1516,6 @@ void get_config() {
   
   dhost[4] = nclient/10 + 48;
   dhost[5] = nclient%10 + 48;
-
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
