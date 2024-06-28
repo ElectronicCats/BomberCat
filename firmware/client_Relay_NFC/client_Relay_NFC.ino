@@ -37,14 +37,14 @@
 
 using namespace mbed;
 
-// Get limits of the In Application Program (IAP) flash, ie. the internal MCU flash.
+//Get limits of the In Application Program (IAP) flash, ie. the internal MCU flash.
 #include "FlashIAPLimits.h"
 auto iapLimits { getFlashIAPLimits() };
 
-// Create a block device on the available space of the FlashIAP
+//Create a block device on the available space of the FlashIAP
 FlashIAPBlockDevice blockDevice(iapLimits.start_address, iapLimits.available_size);
 
-// Create a key-value store on the Flash IAP block device
+//Create a key-value store on the Flash IAP block device
 TDBStore store(&blockDevice);
 
 //#define DEBUG
@@ -58,20 +58,20 @@ SerialCommand SCmd;
 
 float fwVersion = 0.2;
 
-// Update these with values suitable for your network.
+//Update these with values suitable for your network.
 char mqtt_server[] = mqttServ;
-char ssid[255] = SECRET_SSID;        // your network SSID (name)
-char pass[255] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
+char ssid[255] = SECRET_SSID;        //your network SSID (name)
+char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as key for WEP)
 int nclient;
 
 int debug = 0;
 int ndelay = 1000;
 
 auto result = 0;
-// An example key name for the stats on the store
+//An example key name for the stats on the store
 const char statsKey[] { "stats" };
 
-// Dummy sketch stats data for demonstration purposes
+//Dummy sketch stats data for demonstration purposes
 struct SketchStats {
   char ssidStore[255];
   char passwordStore[255];
@@ -80,7 +80,7 @@ struct SketchStats {
   int ndelayStore;
 };
 
-// Previous stats
+//Previous stats
 SketchStats previousStats;
 
 char outTopic[] = "RelayClient##";
@@ -92,7 +92,7 @@ char dhost[] = "h##c##";
 char buf[] = "Hello I'm here Client ##";
 
 int host_selected = 0;
-char hs[2*HMAX];// = "####################################################################################"; // hosts status 42 host max
+char hs[2*HMAX];//= "####################################################################################"; //hosts status 42 host max
 
 int ms_ok = 0;
 int once_time = 0;
@@ -103,7 +103,7 @@ int nhost;
 
 unsigned long tiempo = 0;
 
-// Create a random client ID
+//Create a random client ID
 char clientId[] = "BomberCatClient-##";
 
 #define L1         (LED_BUILTIN)  //LED1 indicates activity
@@ -119,13 +119,13 @@ char clientId[] = "BomberCatClient-##";
 
 #define CLOCK_US   (500)
 
-#define BETWEEN_ZERO (53) // 53 zeros between track1 & 2
+#define BETWEEN_ZERO (53) //53 zeros between track1 & 2
 
 #define TRACKS (2)
 
 int msflag = 0;
 
-// consts get stored in ram as we don't adjust them
+//consts get stored in ram as we don't adjust them
 char tracks[2][128];
 
 char revTrack[41];
@@ -149,10 +149,10 @@ unsigned long lastMsg = 0;
 
 int flagWifi, flagMqtt, flagStore = 0;
 
-Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
+Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;
 
-uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
+uint8_t mode = 2;                                                  //modes: 1 = Reader/ Writer, 2 = Emulation
 
 int flag_send = 0;
 int flag_read = 0;
@@ -173,21 +173,21 @@ uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
 /*****************
    File System
  ********************/
-// Retrieve SketchStats from the key-value store
+//Retrieve SketchStats from the key-value store
 int getSketchStats(const char* key, SketchStats* stats)
 {
-  // Retrieve key-value info
+  //Retrieve key-value info
   TDBStore::info_t info;
   auto result = store.get_info(key, &info);
 
   if (result == MBED_ERROR_ITEM_NOT_FOUND)
     return result;
 
-  // Allocate space for the value
+  //Allocate space for the value
   uint8_t buffer[info.size] {};
   size_t actual_size;
 
-  // Get the value
+  //Get the value
   result = store.get(key, buffer, sizeof(buffer), &actual_size);
   if (result != MBED_SUCCESS)
     return result;
@@ -196,7 +196,7 @@ int getSketchStats(const char* key, SketchStats* stats)
   return result;
 }
 
-// Store a SketchStats to the the k/v store
+//Store a SketchStats to the the k/v store
 int setSketchStats(const char* key, SketchStats stats)
 {
   return store.set(key, reinterpret_cast<uint8_t*>(&stats), sizeof(SketchStats), 0);
@@ -204,7 +204,7 @@ int setSketchStats(const char* key, SketchStats stats)
 /*****************
        MAGSPOOF
  *****************/
-// send a single bit out
+//send a single bit out
 void playBit(int sendBit) {
   dir ^= 1;
   digitalWrite(PIN_A, dir);
@@ -219,10 +219,10 @@ void playBit(int sendBit) {
   delayMicroseconds(CLOCK_US);
 }
 
-// when reversing
+//when reversing
 void reverseTrack(int track) {
   int i = 0;
-  track--; // index 0
+  track--; //index 0
   dir = 0;
 
   while (revTrack[i++] != '?');
@@ -232,13 +232,13 @@ void reverseTrack(int track) {
       playBit((revTrack[i] >> j) & 1);
 }
 
-// plays out a full track, calculating CRCs and LRC
+//plays out a full track, calculating CRCs and LRC
 void playTrack(int track) {
   int tmp = 0, crc = 0, lrc = 0;
   dir = 0;
-  track--; // index 0
+  track--; //index 0
 
-  // First put out a bunch of leading zeros.
+  //First put out a bunch of leading zeros.
   for (int i = 0; i < 25; i++)
     playBit(0);
 
@@ -257,7 +257,7 @@ void playTrack(int track) {
     playBit(crc);
   }
 
-  // finish calculating and send last "byte" (LRC)
+  //finish calculating and send last "byte" (LRC)
   tmp = lrc;
   crc = 1;
   for (int j = 0; j < bitlen[track] - 1; j++)
@@ -268,19 +268,19 @@ void playTrack(int track) {
   }
   playBit(crc);
 
-  // if track 1, play 2nd track in reverse (like swiping back?)
+  //if track 1, play 2nd track in reverse (like swiping back?)
   if (track == 0)
   {
-    // if track 1, also play track 2 in reverse
-    // zeros in between
+    //if track 1, also play track 2 in reverse
+    //zeros in between
     for (int i = 0; i < BETWEEN_ZERO; i++)
       playBit(0);
 
-    // send second track in reverse
+    //send second track in reverse
     reverseTrack(2);
   }
 
-  // finish with 0's
+  //finish with 0's
   for (int i = 0; i < 5 * 5; i++)
     playBit(0);
 
@@ -289,10 +289,10 @@ void playTrack(int track) {
 
 }
 
-// stores track for reverse usage later
+//stores track for reverse usage later
 void storeRevTrack(int track) {
   int i, tmp, crc, lrc = 0;
-  track--; // index 0
+  track--; //index 0
   dir = 0;
 
 
@@ -315,7 +315,7 @@ void storeRevTrack(int track) {
     (revTrack[i] &= ~(1 << 4));
   }
 
-  // finish calculating and send last "byte" (LRC)
+  //finish calculating and send last "byte" (LRC)
   tmp = lrc;
   crc = 1;
   for (int j = 0; j < bitlen[track] - 1; j++)
@@ -381,7 +381,7 @@ void printBuf(const byte * data, const uint32_t numBytes) {
   uint32_t szPos;
   for (szPos = 0; szPos < numBytes; szPos++) {
     Serial.print(F("0x"));
-    // Append leading 0 for small values
+    //Append leading 0 for small values
     if (data[szPos] <= 0xF)
       Serial.print(F("0"));
 
@@ -443,7 +443,7 @@ if(debug) {
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
-    // *****************************************************
+    //*****************************************************
     
     if(debug) {
       Serial.print("CmdSize: ");
@@ -454,7 +454,7 @@ if(debug) {
       delay(ndelay);
     }
     
-    // Publish messages for host (the host should be subscribed to the topic)
+    //Publish messages for host (the host should be subscribed to the topic)
     client.publish(outTopic, Cmd, CmdSize);
 
 if(debug) {
@@ -471,7 +471,7 @@ if(debug) {
 
 void set_delay(){
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
 
   if (arg != NULL) {
     
@@ -547,7 +547,7 @@ void set_delay(){
 void set_debug() {
   
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {
     if(strcmp(arg, "debug") == 0) {
       debug = 1;
@@ -574,8 +574,8 @@ void set_n(){
   //nclient = CLIENT;
   
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-  if (arg != NULL) { // && !rf) {    // As long as it existed, take it
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
+  if (arg != NULL) { //&& !rf) {    //As long as it existed, take it
   
     nclient = atoi(arg);
 
@@ -651,7 +651,7 @@ void set_n(){
    outTopic[11] = nclient/10 + 48;
    outTopic[12] = nclient%10 + 48;  
 
-   shost[1] = nclient/10 + 48; // publish on queue
+   shost[1] = nclient/10 + 48; //publish on queue
    shost[2] = nclient%10 + 48;
    client.publish("queue", shost);  
 }
@@ -661,7 +661,7 @@ void set_n(){
  *****************/
 void setup_wifi() {
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
   if (arg != NULL) {
     strcpy(ssid, arg);
     
@@ -701,21 +701,21 @@ void setup_wifi() {
     strcpy(pass, previousStats.passwordStore);
   }
 
-  // We start by connecting to a WiFi network
+  //We start by connecting to a WiFi network
     if(debug) {    
       Serial.println();
       Serial.print("Connecting to ");
       Serial.println(ssid);
     } 
     
-  // check for the WiFi module:
+  //check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     if(debug) {     
       Serial.println("Communication with WiFi module failed!");
     }
     Serial.println("ERROR");
       
-    // don't continue
+    //don't continue
     while (1);
   }
 
@@ -727,7 +727,7 @@ void setup_wifi() {
   }
 
   int cont = 0;
-  // attempt to connect to WiFi network:
+  //attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     
     if(debug) {
@@ -735,7 +735,7 @@ void setup_wifi() {
       Serial.println(ssid);
     }
       
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    //Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
     if(status == WL_CONNECTED){
       flagWifi = 1;
@@ -795,8 +795,8 @@ void setup_wifi() {
 void setup_mqtt() {
   
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
-  if (arg != NULL && !rf) {    // As long as it existed, take it
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
+  if (arg != NULL && !rf) {    //As long as it existed, take it
     strcpy(mqtt_server, arg);
     
     if(debug) {   
@@ -862,12 +862,12 @@ void setup_mqtt() {
 
 void printh(uint8_t n, uint8_t base)
 {
-  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char buf[8 * sizeof(long) + 1]; //Assumes 8-bit chars plus zero byte.
   char *str = &buf[sizeof(buf) - 1];
 
   *str = '\0';
 
-  // prevent crash if called with base == 1
+  //prevent crash if called with base == 1
   if (base < 2) base = 10;
 
   do {
@@ -903,7 +903,7 @@ if(debug) {
     return;
   }
 
-  if (strcmp(topic, inTopic) == 0) { // mensaje del host
+  if (strcmp(topic, inTopic) == 0) { //mensaje del host
 
     if (payload[0] == 'N' && length == 1) {
       Serial.println("ERROR");
@@ -918,7 +918,7 @@ if(debug) {
       return;
     }
 
-    // Read card data
+    //Read card data
     if (msflag == 1) {
       int i, j;
       j = 0;
@@ -984,23 +984,23 @@ if(debug) {
 void reconnect() {
   
   int cont = 0;
-  rf = 1; // flag - setup_mqtt origin reconnect
+  rf = 1; //flag - setup_mqtt origin reconnect
   setup_mqtt();
-  // Loop until we're reconnected
+  //Loop until we're reconnected
   while (!client.connected()) {
     
     if(debug) {
       Serial.print("Attempting MQTT connection... ");
     }
       
-    // Attempt to connect
+    //Attempt to connect
     clientId[16] = nclient/10 + 48;
     clientId[17] = nclient%10 + 48;
     if (client.connect(clientId)) {
       if(debug) {
         Serial.println("connected");
       }  
-      // Once connected, publish an announcement...
+      //Once connected, publish an announcement...
       buf[22] = nclient/10 + 48;
       buf[23] = nclient%10 + 48;
       client.publish("status", buf);
@@ -1015,7 +1015,7 @@ void reconnect() {
         Serial.println(" try again in 1 seconds");
       }
         
-      // Wait 1 seconds before retrying
+      //Wait 1 seconds before retrying
       delay(500);
     }
     if (cont > 1) {
@@ -1051,7 +1051,7 @@ void test_host() {
   Cmd[19] = 0x00;
 
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
   int n_host = 01;;
   if (arg != NULL) {
     
@@ -1067,10 +1067,10 @@ void test_host() {
     }
 
 
-    inTopic[9] = n_host/10 + 48; // topic host id
+    inTopic[9] = n_host/10 + 48; //topic host id
     inTopic[10] = n_host%10 + 48;
   
-    shost[1] = nclient/10 + 48; // to publish on queue
+    shost[1] = nclient/10 + 48; //to publish on queue
     shost[2] = nclient%10 + 48;
     
     shost[4] = inTopic[9];
@@ -1132,7 +1132,7 @@ if(debug) {
 
   resetMode();
 
-  // Get limits of the the internal flash of the microcontroller
+  //Get limits of the the internal flash of the microcontroller
   auto [flashSize, startAddress, iapSize] = getFlashIAPLimits();
   if(debug) {
     Serial.print("Flash Size: ");
@@ -1145,13 +1145,13 @@ if(debug) {
     Serial.println(" MB");
   }  
 
-  // Create a block device on the available space of the flash
+  //Create a block device on the available space of the flash
   FlashIAPBlockDevice blockDevice(startAddress, iapSize);
 
-  // Initialize the Flash IAP block device and print the memory layout
+  //Initialize the Flash IAP block device and print the memory layout
   blockDevice.init();
 
-  // Initialize the key-value store
+  //Initialize the key-value store
   if(debug) {
     Serial.print("Initializing TDBStore: ");
   }
@@ -1162,7 +1162,7 @@ if(debug) {
   }
     
   if (result != MBED_SUCCESS)
-    while (1); // Stop the sketch if an error occurs
+    while (1); //Stop the sketch if an error occurs
 
   get_config();
 
@@ -1176,7 +1176,7 @@ if(debug) {
     setup_mqtt();
   }
 
-  // blink to show we started up
+  //blink to show we started up
   blink(L1, 300, 5);
 
   outTopic[11] = nclient/10 + 48;
@@ -1198,7 +1198,7 @@ if(debug) {
     Serial.println("Electronic Cats ® 2022");
   }
   
-  // Setup callbacks for SerialCommand commands
+  //Setup callbacks for SerialCommand commands
   SCmd.addCommand("help", help);
   SCmd.addCommand("set_h", set_h);
   SCmd.addCommand("free_h", free_h);
@@ -1212,9 +1212,9 @@ if(debug) {
   SCmd.addCommand("test_host", test_host);
   SCmd.addCommand("get_config", get_config);
 
-  SCmd.setDefaultHandler(unrecognized);  // Handler for command that isn't matched  (says "What?")
+  SCmd.setDefaultHandler(unrecognized);  //Handler for command that isn't matched  (says "What?")
 
-  shost[1] = nclient/10 + 48; // publish on queue
+  shost[1] = nclient/10 + 48; //publish on queue
   shost[2] = nclient%10 + 48;
   client.publish("queue", shost);
   
@@ -1222,13 +1222,13 @@ if(debug) {
   dhost[5] = nclient%10 + 48;
 }
 
-// Main loop
+//Main loop
 void loop() {
 
-  SCmd.readSerial(); // Process Serial Commands 
+  SCmd.readSerial(); //Process Serial Commands 
 
   if ((millis() - tiempo) > PERIOD && host_selected == 1) {
-    // RESET host connection
+    //RESET host connection
     client.subscribe("hosts");
     host_selected = 0;
     hostupdate = 0;
@@ -1262,7 +1262,7 @@ void loop() {
     }
       
     delay(1500);
-    // Publish magstripe get data MS from host
+    //Publish magstripe get data MS from host
     client.publish(outTopic, "M");
     once_time = 0;
     hostupdate = 0;
@@ -1276,7 +1276,7 @@ void loop() {
   }
 
   if (flagMqtt == 1) {
-    // Loop MQTT
+    //Loop MQTT
     checkhostsupdate();
     client.loop();
   }
@@ -1326,9 +1326,6 @@ void select_h(int host) {
     return;
   }
   
-//  inTopic[9] = host/10 + 48; // topic host id
-//  inTopic[10] = host%10 + 48;
-  
   client.subscribe(inTopic);
   host_selected = 1;
   hostupdate = 0;
@@ -1336,14 +1333,6 @@ void select_h(int host) {
   
   hs[2*host] = nclient/10 + 48;
   hs[2*host+1] = nclient%10 + 48;
-//
-//  shost[1] = nclient/10 + 48; // to publish on queue
-//  shost[2] = nclient%10 + 48;
-//  
-//  shost[4] = inTopic[9];
-//  shost[5] = inTopic[10];
-//  
-//  client.publish("queue", shost);
   
   if(debug) {
     Serial.println(inTopic);
@@ -1362,7 +1351,7 @@ void set_h() {
   }
   
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
 
   if (arg != NULL) {
 
@@ -1388,11 +1377,11 @@ void set_h() {
       return;
     }
 
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++         // request to cordinator
-    inTopic[9] = host/10 + 48; // topic host id
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++         //request to cordinator
+    inTopic[9] = host/10 + 48; //topic host id
     inTopic[10] = host%10 + 48;
   
-    shost[1] = nclient/10 + 48; // to publish on queue
+    shost[1] = nclient/10 + 48; //to publish on queue
     shost[2] = nclient%10 + 48;
     
     shost[4] = inTopic[9];
@@ -1416,7 +1405,7 @@ void set_h() {
 
 void free_h() { 
   char *arg;
-  arg = SCmd.next();    // Get the next argument from the SerialCommand object buffer
+  arg = SCmd.next();    //Get the next argument from the SerialCommand object buffer
 
   if (arg != NULL) {
 
@@ -1478,7 +1467,7 @@ void get_config() {
     return;
   Serial.println("\nBomberCat configurations: ");
 
-  // Get previous run stats from the key-value store
+  //Get previous run stats from the key-value store
   Serial.println("Retrieving Sketch Stats");
   result = getSketchStats(statsKey, &previousStats);
 
@@ -1509,7 +1498,7 @@ void get_config() {
   Serial.println(ndelay);
   Serial.println("OK");
 
-  shost[1] = nclient/10 + 48; // publish on queue
+  shost[1] = nclient/10 + 48; //publish on queue
   shost[2] = nclient%10 + 48;
   
   client.publish("queue", shost);
@@ -1518,7 +1507,7 @@ void get_config() {
   dhost[5] = nclient%10 + 48;
 }
 
-// This gets set as the default handler, and gets called when no other command matches.
+//This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {
   if(debug) {
     Serial.println("Command not found, type help to get the valid commands");
