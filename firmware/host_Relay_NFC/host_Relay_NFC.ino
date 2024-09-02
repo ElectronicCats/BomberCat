@@ -244,7 +244,7 @@ if(debug) {
   
   while (nfc.CardModeReceive(apdubuffer, &apdulen) != 0) { }
 
-  if (nfc.CardModeReceive(apdubuffer, &apdulen) == 1) { //0->1
+  if (nfc.CardModeReceive(apdubuffer, &apdulen) == 0) {
 if(debug) {
     printData(apdubuffer, apdulen, 4);
 }
