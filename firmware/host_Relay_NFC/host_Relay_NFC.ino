@@ -66,7 +66,7 @@ char mqtt_server[] = mqttServ;
 char ssid[255] = SECRET_SSID;    //your network SSID (name)
 char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as key for WEP)
 
-int debug = 0;
+int debug = 1;
 int nhost;
 
 //tracks
@@ -181,6 +181,8 @@ if(debug) {
     while (1);
   }
 
+  // HERE! nfc.ConfigMode(mode)
+  
   if (nfc.configMode()) { //Set up the configuration mode
     if(debug) {
       Serial.println("The Configure Mode failed!!");
@@ -189,6 +191,8 @@ if(debug) {
     while (1);
   }
 
+  // HERE! nfc.StartDiscovery(mode)
+  
   nfc.startDiscovery(); //NCI Discovery mode
 }
 
@@ -269,7 +273,7 @@ void detectcard() {
 if(debug) {
     Serial.println("wait detect Card...");
 }
-    if (!nfc.isTagDetected(500)) { //Waiting to detect cards
+    if (nfc.isTagDetected(5000)) { //Waiting to detect cards
 
       if (nfc.remoteDevice.getModeTech() == nfc.modeTech.POLL || nfc.remoteDevice.getModeTech() == nfc.tech.PASSIVE_NFCA) {
         char tmp[16];
@@ -1030,10 +1034,11 @@ void setup_track() {
 
 void test_card() {
   mode = 1; //temporarily switch to mode 1 to test the card
+  nfc.setReaderWriterMode();
   resetMode();
-  Serial.println("Waiting for an Card ...");
   card(); //Waiting for card, if the card is correctly positioned returns OK
   mode = 2; //return to mode 2
+  nfc.setEmulationMode();
   resetMode();
 }
 
@@ -1123,38 +1128,16 @@ void displayCardInfo() {  // Funtion in charge to show the card/s in te field
 }
   
 void card() { 
-  if(!nfc.isTagDetected()){ //Waiting to detect cards
+  if(nfc.isTagDetected()){ //Waiting to detect cards
     if(debug) {
       displayCardInfo();
     }
     Serial.println("OK");
     
-    switch(nfc.remoteDevice.getProtocol()) {
-      case nfc.protocol.T1T:
-      case nfc.protocol.T2T:
-      case nfc.protocol.T3T:
-      case nfc.protocol.ISODEP:
-          nfc.readNdefMessage();
-          break;
-      
-      case nfc.protocol.ISO15693:
-          break;
-      
-      case nfc.protocol.MIFARE:
-          nfc.readNdefMessage();
-          break;
-      
-      default:
-          break;
-    }
-    
     //* It can detect multiple cards at the same time if they use the same protocol 
     if(nfc.remoteDevice.hasMoreTags()) {
         nfc.activateNextTagDiscovery();
     }
-    //* Wait for card removal 
-    // nfc.waitForTagRemoval();
-    // Serial.println("CARD REMOVED!");
     
     nfc.stopDiscovery();
     nfc.startDiscovery();
