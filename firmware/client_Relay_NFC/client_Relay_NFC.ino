@@ -150,7 +150,7 @@ unsigned long lastMsg = 0;
 int flagWifi, flagMqtt, flagStore = 0;
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-RfIntf_t RfInterface;
+//RfIntf_t RfInterface;
 
 uint8_t mode = 2;                                                  //modes: 1 = Reader/ Writer, 2 = Emulation
 
@@ -166,9 +166,6 @@ uint8_t apdubuffer[255] = {}, apdulen;
 uint8_t ppsea[255] = {};
 
 int detectCardFlag = 0;
-
-uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00};
-
 
 /*****************
    File System
@@ -295,7 +292,6 @@ void storeRevTrack(int track) {
   track--; //index 0
   dir = 0;
 
-
   for (i = 0; tracks[track][i] != '\0'; i++)
   {
     crc = 1;
@@ -357,7 +353,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  if (nfc.ConfigureSettings()) {
+  if (nfc.configureSettings()) {
     if(debug) {
       Serial.println("The Configure Settings failed!");
     }
@@ -365,7 +361,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  if (nfc.ConfigMode(mode)) { //Set up the configuration mode
+  if (nfc.configMode()) { //Set up the configuration mode
     if(debug) {
       Serial.println("The Configure Mode failed!!");
     }
@@ -373,7 +369,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  nfc.StartDiscovery(mode); //NCI Discovery mode
+  nfc.startDiscovery(); //NCI Discovery mode
 }
 
 //Print hex data buffer in format
@@ -429,7 +425,7 @@ if(debug) {
 }
 
     delay(100);
-    nfc.CardModeSend(ppsea, commandlarge);
+    nfc.cardModeSend(ppsea, commandlarge);
 
 if(debug) {
     printData(ppsea, commandlarge, 3);
@@ -439,7 +435,7 @@ if(debug) {
     flag_read = 0;
   }
 
-  if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
+  if (nfc.cardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
@@ -477,7 +473,7 @@ void set_delay(){
     
     ndelay = atoi(arg);
 
-    if (ndelay < 1 || ndelay >= 1500) {
+    if (ndelay < 0 || ndelay >= 1500) {
       if(debug) {
         Serial.println("Error setting the command delay value must be between 1-1500");
         ndelay = 1000;
