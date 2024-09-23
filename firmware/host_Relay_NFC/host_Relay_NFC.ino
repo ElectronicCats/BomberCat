@@ -273,7 +273,7 @@ void detectcard() {
 if(debug) {
     Serial.println("wait detect Card...");
 }
-    if (nfc.isTagDetected(5000)) { //Waiting to detect cards
+    if (nfc.isTagDetected(500)) { //Waiting to detect cards
 
       if (nfc.remoteDevice.getModeTech() == nfc.modeTech.POLL || nfc.remoteDevice.getModeTech() == nfc.tech.PASSIVE_NFCA) {
         char tmp[16];
@@ -352,6 +352,7 @@ void mifarevisa() {
 
   if (detectCardFlag == 0) {
     mode = 1;
+    nfc.setReaderWriterMode();
     resetMode();
     detectcard();
   }
@@ -897,6 +898,7 @@ void loop() { //Main loop
     host_selected = 0;
     detectCardFlag = 0;
     mode = 2;
+    nfc.setEmulationMode();
     resetMode();
     client.unsubscribe(inTopic);
 
