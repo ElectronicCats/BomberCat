@@ -65,7 +65,7 @@ char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as
 int nclient;
 
 int debug = 0;
-int ndelay = 1000;
+int ndelay = 0;
 
 auto result = 0;
 //An example key name for the stats on the store
@@ -150,7 +150,7 @@ unsigned long lastMsg = 0;
 int flagWifi, flagMqtt, flagStore = 0;
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-RfIntf_t RfInterface;
+//RfIntf_t RfInterface;
 
 uint8_t mode = 2;                                                  //modes: 1 = Reader/ Writer, 2 = Emulation
 
@@ -357,7 +357,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  if (nfc.ConfigureSettings()) {
+  if (nfc.configureSettings()) {
     if(debug) {
       Serial.println("The Configure Settings failed!");
     }
@@ -365,7 +365,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  if (nfc.ConfigMode(mode)) { //Set up the configuration mode
+  if (nfc.configMode()) { //Set up the configuration mode
     if(debug) {
       Serial.println("The Configure Mode failed!!");
     }
@@ -373,7 +373,7 @@ void resetMode() { //Reset the configuration mode after each reading
     while (1);
   }
 
-  nfc.StartDiscovery(mode); //NCI Discovery mode
+  nfc.startDiscovery(); //NCI Discovery mode
 }
 
 //Print hex data buffer in format
@@ -428,8 +428,8 @@ if(debug) {
     Serial.println();
 }
 
-    delay(100);
-    nfc.CardModeSend(ppsea, commandlarge);
+    //delay(100);
+    nfc.cardModeSend(ppsea, commandlarge);
 
 if(debug) {
     printData(ppsea, commandlarge, 3);
@@ -439,7 +439,7 @@ if(debug) {
     flag_read = 0;
   }
 
-  if (nfc.CardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
+  if (nfc.cardModeReceive(Cmd, &CmdSize) == 0) { //Data in buffer?
 
     while ((CmdSize < 2) && (Cmd[0] != 0x00)) {}
 
@@ -1247,6 +1247,10 @@ void loop() {
     once_time = 0;
     flag_read = 0;
 
+    mode = 1; //temporarily switch to mode 1 to test the card
+    nfc.setReaderWriterMode();
+    resetMode();
+
     if(debug) {
       Serial.println("The host connection is terminated.");
     }  
@@ -1394,6 +1398,11 @@ void set_h() {
     nhost =  host;
     hostready = 1;
     //select_h(host);
+    
+    mode = 2;
+    nfc.setEmulationMode();
+    resetMode();
+    
   }
   else {
     if(debug) {
