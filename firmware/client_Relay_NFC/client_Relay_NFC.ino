@@ -431,6 +431,8 @@ if(debug) {
     //delay(100);
     nfc.cardModeSend(ppsea, commandlarge);
 
+    while (nfc.cardModeReceive(Cmd, &CmdSize) != 0) { }
+
 if(debug) {
     printData(ppsea, commandlarge, 3);
 }
