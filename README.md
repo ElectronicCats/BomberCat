@@ -95,6 +95,15 @@ See the  [**community code of conduct**](https://github.com/ElectronicCats/elect
   <img src="https://assets-global.website-files.com/618247f2e428ac0537753ad7/618247f2e428acc566753b08_wallee_logo_RGB_turquoise.svg" width=30% />
 </a>
 
+## Maintainer
+
+<p align=center>
+<a href="https://github.com/sponsors/ElectronicCats">
+  <img src="https://electroniccats.com/wp-content/uploads/2020/07/Badge_GHS.png" width="200" height="104" />
+</a>
+</p>
+
+Electronic Cats invests time and resources providing this open-source design, please support Electronic Cats and open-source hardware by purchasing products from Electronic Cats!
 
 ### License
 <p>
