@@ -64,7 +64,7 @@ char ssid[255] = SECRET_SSID;        //your network SSID (name)
 char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as key for WEP)
 int nclient;
 
-int debug = 0;
+int debug = 1;
 int ndelay = 0;
 
 auto result = 0;
@@ -150,9 +150,6 @@ unsigned long lastMsg = 0;
 int flagWifi, flagMqtt, flagStore = 0;
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-//RfIntf_t RfInterface;
-
-uint8_t mode = 2;                                                  //modes: 1 = Reader/ Writer, 2 = Emulation
 
 int flag_send = 0;
 int flag_read = 0;
@@ -1029,7 +1026,7 @@ void reconnect() {
 
 void test_host() {
 
-  //Serial.println("0x00 0xA4 0x04 0x00 0x0E 0x32 0x50 0x41 0x59 0x2E 0x53 0x59 0x53 0x2E 0x44 0x44 0x46 0x30 0x31 0x00");
+  // test command: 0x00 0xA4 0x04 0x00 0x0E 0x32 0x50 0x41 0x59 0x2E 0x53 0x59 0x53 0x2E 0x44 0x44 0x46 0x30 0x31 0x00
 
   Cmd[0] = 0x00;
   Cmd[1] = 0xA4;
@@ -1122,7 +1119,6 @@ void clean() {
 void setup() {
 
   Serial.begin(9600);
-  
 if(debug) {
   while (!Serial);
 }
@@ -1249,7 +1245,6 @@ void loop() {
     once_time = 0;
     flag_read = 0;
 
-    mode = 1; //temporarily switch to mode 1 to test the card
     nfc.setReaderWriterMode();
     resetMode();
 
@@ -1399,9 +1394,7 @@ void set_h() {
     once_time = 1;
     nhost =  host;
     hostready = 1;
-    //select_h(host);
     
-    mode = 2;
     nfc.setEmulationMode();
     resetMode();
     

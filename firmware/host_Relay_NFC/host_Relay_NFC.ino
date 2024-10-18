@@ -66,7 +66,7 @@ char mqtt_server[] = mqttServ;
 char ssid[255] = SECRET_SSID;    //your network SSID (name)
 char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as key for WEP)
 
-int debug = 1;
+int debug = 0;
 int nhost;
 
 //tracks
@@ -115,9 +115,6 @@ unsigned long lastMsg = 0;
 #define PN7150_ADDR  (0x28)
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-//RfIntf_t RfInterface;
-
-uint8_t mode = 2;                                                  //modes: 1 = Reader/ Writer, 2 = Emulation
 
 uint8_t commandlarge = 0;
 
@@ -180,8 +177,6 @@ if(debug) {
     Serial.println("ERROR");  
     while (1);
   }
-
-  // HERE! nfc.ConfigMode(mode)
   
   if (nfc.configMode()) { //Set up the configuration mode
     if(debug) {
@@ -190,8 +185,6 @@ if(debug) {
     Serial.println("ERROR");  
     while (1);
   }
-
-  // HERE! nfc.StartDiscovery(mode)
   
   nfc.startDiscovery(); //NCI Discovery mode
 }
@@ -351,7 +344,6 @@ if(debug) {
 void mifarevisa() {
 
   if (detectCardFlag == 0) {
-    mode = 1;
     nfc.setReaderWriterMode();
     resetMode();
     detectcard();
@@ -897,7 +889,7 @@ void loop() { //Main loop
     //Reset host connection
     host_selected = 0;
     detectCardFlag = 0;
-    mode = 2;
+
     nfc.setEmulationMode();
     resetMode();
     client.unsubscribe(inTopic);
@@ -1035,11 +1027,9 @@ void setup_track() {
 }
 
 void test_card() {
-  mode = 1; //temporarily switch to mode 1 to test the card
   nfc.setReaderWriterMode();
   resetMode();
   card(); //Waiting for card, if the card is correctly positioned returns OK
-  mode = 2; //return to mode 2
   nfc.setEmulationMode();
   resetMode();
 }
