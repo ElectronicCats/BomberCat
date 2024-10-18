@@ -64,7 +64,7 @@ char ssid[255] = SECRET_SSID;        //your network SSID (name)
 char pass[255] = SECRET_PASS;    //your network password (use for WPA, or use as key for WEP)
 int nclient;
 
-int debug = 1;
+int debug = 0;
 int ndelay = 0;
 
 auto result = 0;
