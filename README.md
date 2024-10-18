@@ -50,6 +50,26 @@ Magspoof mode can emulate magnetic stripes cards by emulating the electromagneti
   - ISO/IEC 15693/ICODE VCD mode 
   - Includes NXP ISO/IEC14443-A and Innovatron ISO/IEC14443-B intellectual property licensing rights
 
+## Requirements
+
+- **Arduino IDE:** version 2.3.3
+- **Board Package:** Electronic Cats Mbed OS RP2040 Boards version 2.0.0
+
+ Libraries:
+ 
+  - **PubSubClient:** version 2.8.0
+  - **WiFiNINA:** version 1.8.14
+  - **Electronic Cats PN7150:** version 2.1.0
+  - **SerialCommand:** [Arduino-SerialCommand](https://github.com/kroimon/Arduino-SerialCommand) 
+
+### **Linux Setup Instructions**
+If you are using Linux, ensure the BomberCat is properly recognized by running the post-install script located at:
+
+`~/.arduino15/packages/electroniccats/hardware/mbed_rp2040/2.0.0/post_install.sh`
+
+This step is essential to ensure the board can be detected and the firmware uploaded successfully.
+
+
 ## Wiki and Getting Started
 
 [Getting Started in our Wiki](https://github.com/ElectronicCats/BomberCat/wiki)
