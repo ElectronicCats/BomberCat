@@ -33,7 +33,7 @@ It also has an ESP32 co-processor with WiFiNINA firmware that allows it to make 
 BomberCat features an RP2040 MCU working along with the PN7150 (a recent generation NFC chip). 
 The USB interface is provided by the RP2040 MCU and the NFC functionality is guaranteed by the PN7150.
 
-BomberCat is designed to be intuitive for users. Easy to program using frameworks such as Arduino, Ciruitpython, and Micropython.  We have prepared a series of examples with which you can start experimenting, check out the examples folder.
+BomberCat is designed to be intuitive for users. Easy to program using frameworks such as Arduino, Circuitpython, and Micropython.  We have prepared a series of examples with which you can start experimenting, check out the examples folder.
 
 **Card emulation mode:** in which BomberCat behaves as a smart card or a tag. In this mode, BomberCat emulates an NFC tag. It does not initiate communication, it only responds to the NFC reader. 
 A typical application of the card emulation mode is how people use NFC on their smartphones to replace several cards, badges, or tags at once (using the same smartphone for RFID access controls, contactless payments, etc). 
