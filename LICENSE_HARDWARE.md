@@ -42,8 +42,8 @@ of this Licence.
 
 A Licensee may at the same time be a Licensor, and vice versa. 
 
-Use of the masculine gender includes the feminine and neuter genders
-and is employed solely to facilitate reading.
+Use of the masculine gender includes the feminine and gender-neutral
+it is employed solely to facilitate reading.
 
 2. Applicability
 
