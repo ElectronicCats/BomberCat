@@ -20,12 +20,11 @@ Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);
 char token[19]; // Buffer to hold token data
 String tokenString = ""; // Token data as string
 
-uint8_t pdol[50], plen = 8; // Processing Data Object List and its length
-uint8_t ppdol[255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00}; // Processing options data object list
+uint8_t ppdol [255] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00}; // Processing options data object list
 char revTrack[41]; // Buffer to hold reversed track data
 const int sublen[] = {32, 48, 48}; // Subtraction lengths for track data
 const int bitlen[] = {7, 5, 5}; // Bit lengths for track data
-int dir = 0; // Direction flag
+int dir; // Direction flag
 
 // Function to blink an LED
 void blink(int pin, int msdelay, int times) {
@@ -40,6 +39,8 @@ void blink(int pin, int msdelay, int times) {
 // Process the PDOL (Processing options data object list)
 uint8_t treatPDOL(uint8_t* apdu) { 
   uint8_t plen = 7;
+  Serial.println("");
+  //PDOL Format: 80 A8 00 00 + (Tamaño del PDOL+2) + 83 + Tamaño del PDOL + PDOL + 00
   for (uint8_t i = 1; i <= apdu[0]; i++) {
     if (apdu[i] == 0x9F && apdu[i + 1] == 0x66) {
       ppdol[plen] = 0xF6;
@@ -105,10 +106,10 @@ void seekTrack2() { // Find Track 2 in the NFC reading transaction
   bool chktoken = false, existpdol = false;
   uint8_t apdubuffer[255] = {}, apdulen;
   
-  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; // 20 bytes
-  uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; // 13 bytes
-  uint8_t processing[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; // 8 bytes
-  uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; // 5 bytes
+  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //20
+  uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
+  uint8_t processing[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
+  uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
   
   uint8_t *apdus[] = {ppse, visa, processing, sfi}; 
   uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
@@ -126,7 +127,6 @@ void seekTrack2() { // Find Track 2 in the NFC reading transaction
       
       for (uint8_t u = 0; u < apdulen; u++) {
         if (i == 1) {
-
           if (apdubuffer[u] == 0x9F && apdubuffer[u + 1] == 0x38) {
             for (uint8_t e = 0; e <= apdubuffer[u + 2]; e++)
               pdol[e] = apdubuffer[u + e + 2];
@@ -313,10 +313,10 @@ void printData(uint8_t* buff, uint8_t lenbuffer, uint8_t cmd) {
   char tmp[5];
   if (cmd == 1) 
     Serial.print("\nBomberCat Command: ");
-  else if (cmd == 2) 
+ /* else if (cmd == 2) 
     Serial.print("\nReader command: ");
   else if (cmd == 3) 
-    Serial.print("\nBomberCat answer: ");
+    Serial.print("\nBomberCat answer: "); */
   else  
     Serial.print("\nCard answer: ");
         
@@ -349,53 +349,44 @@ void setup() {
   blink(L1, 200, 6); 
 }
 
-// Variables to track double press
-unsigned long firstPressTime = 0;
-bool firstPressDetected = false;
-const unsigned long doublePressInterval = 500; // 500 ms
+unsigned long pressStartTime = 0;
+bool buttonPressed = false;
+const unsigned long holdDuration = 2000; // 500 ms
 
 // Main loop function to continuously check for NFC cards and handle button presses
 void loop() {
-  // Check for double press to activate NFC reading
   if (digitalRead(NPIN) == LOW) {
-    if (!firstPressDetected) {
-      firstPressDetected = true;
-      firstPressTime = millis();
+    if (!buttonPressed) {
+      buttonPressed = true;
+      pressStartTime = millis();
     } else {
-      if (millis() - firstPressTime <= doublePressInterval) {
-        Serial.println("\nDouble press detected, starting NFC reading...");
-        if (nfcread()) {
+      if (millis() - pressStartTime > holdDuration) {
+        if (token[0] != 0x0) { 
+          blink(L1, 150, 7); 
+          Serial.println("\nActivating MagSpoof...");
+          playTrack(2); 
+          blink(L1, 100, 3); 
+        } else {
+          blink(L1, 500, 1);
+          blink(L1, 500, 1);
+          Serial.println("\nError: No data available for MagSpoof!");
+
+          nfc.stopDiscovery();
+          nfc.startDiscovery();
+          Serial.println("\nReinitializing...");
+          Serial.println("Waiting for a card...");
         }
-        firstPressDetected = false; // Reset after successful detection
-      } else {
-        firstPressDetected = true; // Reset the first press detection
-        firstPressTime = millis();
+        delay(400);
+        buttonPressed = false;
       }
     }
-    delay(300); // Debounce delay
-  }
-
-  // Activate MagSpoof when button is pressed
-  if (digitalRead(NPIN) == LOW && !firstPressDetected) {
-    delay(20); // Debounce delay
-    if (digitalRead(NPIN) == LOW) {
-      if (token[0] != 0x0) { // Check if there is data in the token
-        blink(L1, 150, 7); // Indicate MagSpoof activation
-        Serial.println("\nActivating MagSpoof...");
-        playTrack(2); // Emulate magnetic track
-        blink(L1, 100, 3); // Indicate end of process
-      } else {
-        blink(L1, 500, 1);
-        blink(L1, 500, 1);
-        Serial.println("\nError: No data available for MagSpoof!");
-
-        nfc.stopDiscovery();
-        Serial.println("\nReinitializing...");
-        nfc.startDiscovery();
-        Serial.println("Waiting for a card...");
+  } else {
+    if (buttonPressed && (millis() - pressStartTime <= holdDuration)) {
+      Serial.println("\nShort press detected, starting NFC reading...");
+      if (nfcread()) {
       }
-      delay(400);
     }
+    buttonPressed = false;
   }
 }
 
