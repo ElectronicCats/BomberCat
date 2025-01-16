@@ -115,25 +115,41 @@ void setup_wifi() {
 
 void callback(char* topic, byte* payload, unsigned int length) {
 
-  int i, j;
-  j = 0;
-  for (i = 0; i < 255; i++) {
-        if (payload[i] == '?' && j == 0) {
-          tracks[0][i] = payload[i];
-          j = i;
-          tracks[0][i + 1] = NULL;
-        }
-        if (j == 0) {
-          tracks[0][i] = payload[i];
-        }
-        else {
-          tracks[1][i - j] = payload[i + 1];
-          if (payload[i + 1] == '?') {
-            tracks[1][i - j + 1] = NULL;
-            break;
-          }
-        }
-      }
+  //Converts the payload into a character array and adds the termination character
+  char message[length + 1];
+  strncpy(message, (char*)payload, length);
+  message[length] = '\0';
+
+  //Searching for these specific characters in the payload
+  char* questionMark =  strchr(message, '?'); //End Sentinel of Track 1
+  char* semicolon = strchr(message, ';'); //Start Sentinel of Track 2
+
+  /*Verify that the payload contains:
+    '%': Start Sentinel of Track 1
+    '?': End sentinel of Track 1
+    And confirms the position of the End Sentinel of Track 1 and Start Sentinel of Track 2*/
+  if (message[0] != '%' || message[length - 1] != '?' || questionMark == NULL || semicolon == NULL || questionMark >= semicolon){
+    Serial.println("Invalid message received in the Mag topic. Ignoring...");
+    return;
+  }
+
+  //Track 1: from '%' to the first '?' (Start and End Sentinels, respectively)
+  int track1Length = questionMark - message + 1;
+  strncpy(tracks[0], message, track1Length);
+  tracks[0][track1Length] = '\0';
+
+  //Track 2: from ';' to the second '?' (Start and End Sentinels, respectively)
+  int track2Start = semicolon - message;
+  int track2End = length - track2Start;
+  strncpy(tracks[1], message + track2Start, track2End);
+  tracks[1][track2End] = '\0';
+
+  //Show the tracks in the Serial Monitor
+  Serial.println();
+  Serial.println("Track 1:");
+  Serial.println(tracks[0]);
+  Serial.println("Track 2:");
+  Serial.println(tracks[1]);
 
   magspoof();
 
@@ -210,7 +226,7 @@ void reverseTrack(int track) {
   track--; // index 0
   dir = 0;
 
-  while (revTrack[i++] != '?');
+  while (revTrack[i++] != '\0');
   i--;
   while (i--)
     for (int j = bitlen[track] - 1; j >= 0; j--)
@@ -227,7 +243,7 @@ void playTrack(int track) {
   for (int i = 0; i < 25; i++)
     playBit(0);
 
-  for (int i = 0; tracks[track][i] != '?'; i++)
+  for (int i = 0; tracks[track][i] != '\0'; i++)
   {
     crc = 1;
     tmp = tracks[track][i] - sublen[track];
@@ -281,7 +297,7 @@ void storeRevTrack(int track) {
   dir = 0;
 
 
-  for (i = 0; tracks[track][i] != '?'; i++)
+for (i = 0; tracks[track][i] != '\0'; i++)
   {
     crc = 1;
     tmp = tracks[track][i] - sublen[track];
@@ -316,7 +332,7 @@ void storeRevTrack(int track) {
   (revTrack[i] &= ~(1 << 4));
 
   i++;
-  revTrack[i] = '?';
+  revTrack[i] = '\0';
 }
 
 void magspoof() {
