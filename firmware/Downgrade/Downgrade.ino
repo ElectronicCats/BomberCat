@@ -36,6 +36,110 @@ void blink(int pin, int msdelay, int times) {
   }
 }
 
+void displayCardInfo() {  // Funtion in charge to show the card/s in te field
+  char tmp[16];
+
+  while (true) {
+    switch (nfc.remoteDevice.getProtocol()) {  // Indetify card protocol
+      case nfc.protocol.T1T:
+      case nfc.protocol.T2T:
+      case nfc.protocol.T3T:
+      case nfc.protocol.ISODEP:
+        Serial.print(" - POLL MODE: Remote activated tag type: ");
+        Serial.println(nfc.remoteDevice.getProtocol());
+        break;
+      case nfc.protocol.ISO15693:
+        Serial.println(" - POLL MODE: Remote ISO15693 card activated");
+        break;
+      case nfc.protocol.MIFARE:
+        Serial.println(" - POLL MODE: Remote MIFARE card activated");
+        break;
+      default:
+        Serial.println(" - POLL MODE: Undetermined target");
+        return;
+    }
+
+    switch (nfc.remoteDevice.getModeTech()) {  // Indetify card technology
+      case (nfc.tech.PASSIVE_NFCA):
+        Serial.println("\tTechnology: NFC-A");
+        Serial.print("\tSENS RES = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
+
+        Serial.print("\tNFC ID = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getNFCID(), nfc.remoteDevice.getNFCIDLen()));
+
+        Serial.print("\tSEL RES = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getSelRes(), nfc.remoteDevice.getSelResLen()));
+
+        break;
+
+      case (nfc.tech.PASSIVE_NFCB):
+        Serial.println("\tTechnology: NFC-B");
+        Serial.print("\tSENS RES = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
+
+        Serial.println("\tAttrib RES = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getAttribRes(), nfc.remoteDevice.getAttribResLen()));
+
+        break;
+
+      case (nfc.tech.PASSIVE_NFCF):
+        Serial.println("\tTechnology: NFC-F");
+        Serial.print("\tSENS RES = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
+
+        Serial.print("\tBitrate = ");
+        Serial.println((nfc.remoteDevice.getBitRate() == 1) ? "212" : "424");
+
+        break;
+
+      case (nfc.tech.PASSIVE_NFCV):
+        Serial.println("\tTechnology: NFC-V");
+        Serial.print("\tID = ");
+        Serial.println(getHexRepresentation(nfc.remoteDevice.getID(), sizeof(nfc.remoteDevice.getID())));
+
+        Serial.print("\tAFI = ");
+        Serial.println(nfc.remoteDevice.getAFI());
+
+        Serial.print("\tDSF ID = ");
+        Serial.println(nfc.remoteDevice.getDSFID(), HEX);
+        break;
+
+      default:
+        break;
+    }
+
+    // It can detect multiple cards at the same time if they are the same technology
+    if (nfc.remoteDevice.hasMoreTags()) {
+      Serial.println("Multiple cards are detected!");
+      if (!nfc.activateNextTagDiscovery()) {
+        break;  // Can't activate next tag
+      }
+    } else {
+      break;
+    }
+  }
+}
+
+String getHexRepresentation(const byte* data, const uint32_t numBytes) {
+  String hexString;
+
+  if (numBytes == 0) {
+    hexString = "null";
+  }
+
+  for (uint32_t szPos = 0; szPos < numBytes; szPos++) {
+    hexString += "0x";
+    if (data[szPos] <= 0xF)
+      hexString += "0";
+    hexString += String(data[szPos] & 0xFF, HEX);
+    if ((numBytes > 1) && (szPos != numBytes - 1)) {
+      hexString += " ";
+    }
+  }
+  return hexString;
+}
+
 // Process the PDOL (Processing options data object list)
 uint8_t treatPDOL(uint8_t* apdu) { 
   uint8_t plen = 7;
@@ -102,67 +206,109 @@ uint8_t treatPDOL(uint8_t* apdu) {
 }
 
 // Seek the track 2 data on the card
-void seekTrack2() { // Find Track 2 in the NFC reading transaction
-  bool chktoken = false, existpdol = false;
+void seekTrack2() {
+  bool chktoken = false;
   uint8_t apdubuffer[255] = {}, apdulen;
-  
-  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0e, 0x32, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //20
-  uint8_t visa[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xa0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //13
-  uint8_t processing[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //8
-  uint8_t sfi[] = {0x00, 0xb2, 0x01, 0x0c, 0x00}; //5
-  
-  uint8_t *apdus[] = {ppse, visa, processing, sfi}; 
-  uint8_t apdusLen [] = { sizeof(ppse), sizeof(visa), sizeof(processing), sizeof(sfi)};
 
-  uint8_t pdol[50], plen = 8;
+  // PPSE command
+  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00};
 
-  for (uint8_t i = 0; i < 4; i++) {
-    blink(L1, 150, 1);
-    Serial.print("\nSending command: ");
-    printData(apdus[i], apdusLen[i], 1);
+  // Generic AID for payment applications
+  uint8_t genericAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x04, 0x10, 0x10, 0x00};
 
-    if (nfc.readerTagCmd(apdus[i], apdusLen[i], &apdubuffer[0], &apdulen)) {
-      Serial.print("\nReceived response: ");
-      printData(apdubuffer, apdulen, 4);
-      
-      for (uint8_t u = 0; u < apdulen; u++) {
-        if (i == 1) {
-          if (apdubuffer[u] == 0x9F && apdubuffer[u + 1] == 0x38) {
-            for (uint8_t e = 0; e <= apdubuffer[u + 2]; e++)
-              pdol[e] = apdubuffer[u + e + 2];
-            
-            plen = treatPDOL(pdol);
-            apdus[2] = ppdol;
-            apdusLen[2] = plen;       
-            existpdol = true;
+  // GPO command
+  uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00};
+
+  // Read Record command
+  uint8_t readRecord[] = {0x00, 0xB2, 0x01, 0x0C, 0x00}; //Esto podría estar mal
+
+  // Send PPSE command
+  blink(L1, 150, 1);
+  Serial.print("\nSending PPSE command: ");
+  printData(ppse, sizeof(ppse), 1);
+
+  if (nfc.readerTagCmd(ppse, sizeof(ppse), &apdubuffer[0], &apdulen)) {
+    Serial.print("\nReceived response: ");
+    printData(apdubuffer, apdulen, 4);
+
+    if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) { //if command = 9000  the response was successfull
+      Serial.println("PPSE command successful!");
+
+      // Send Select Application command
+      blink(L1, 150, 1);
+      Serial.print("\nSending Select Application command: ");
+      printData(genericAid, sizeof(genericAid), 1);
+
+      if (nfc.readerTagCmd(genericAid, sizeof(genericAid), &apdubuffer[0], &apdulen)) {
+        Serial.print("\nReceived response: ");
+        printData(apdubuffer, apdulen, 4);
+
+        if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+          Serial.println("Select Application command successful!");
+
+          // Send GPO command
+          blink(L1, 150, 1);
+          Serial.print("\nSending GPO command: ");
+          printData(gpo, sizeof(gpo), 1);
+
+          if (nfc.readerTagCmd(gpo, sizeof(gpo), &apdubuffer[0], &apdulen)) {
+            Serial.print("\nReceived response: ");
+            printData(apdubuffer, apdulen, 4);
+
+            if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+              Serial.println("GPO command successful!");
+
+              // Send Read Record command
+              blink(L1, 150, 1);
+              Serial.print("\nSending Read Record command: ");
+              printData(readRecord, sizeof(readRecord), 1);
+
+              if (nfc.readerTagCmd(readRecord, sizeof(readRecord), &apdubuffer[0], &apdulen)) {
+                Serial.print("\nReceived response: ");
+                printData(apdubuffer, apdulen, 4);
+
+                if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+                  Serial.println("Read Record command successful!");
+                  chktoken = true;
+                  memcpy(token, &apdubuffer[5], 19); // Extract Track 2 data
+                } else {
+                  Serial.print("Read Record command failed with status: ");
+                  Serial.print(apdubuffer[apdulen - 2], HEX);
+                  Serial.println(apdubuffer[apdulen - 1], HEX);
+                }
+              } else {
+                Serial.println("Error sending Read Record command!");
+              }
+            } else {
+              Serial.print("GPO command failed with status: ");
+              Serial.print(apdubuffer[apdulen - 2], HEX);
+              Serial.println(apdubuffer[apdulen - 1], HEX);
+            }
+          } else {
+            Serial.println("Error sending GPO command!");
           }
-        } else if (i == 3) {
-          if (apdubuffer[u] == 0x57 && apdubuffer[u + 1] == 0x13 && !chktoken) {
-            chktoken = true;
-            memcpy(token, &apdubuffer[u + 2], 19);
-            break;
-          }
+        } else {
+          Serial.print("Select Application command failed with status: ");
+          Serial.print(apdubuffer[apdulen - 2], HEX);
+          Serial.println(apdubuffer[apdulen - 1], HEX);
         }
+      } else {
+        Serial.println("Error sending Select Application command!");
       }
-      if (i == 1) {
-        char tmp[1];
-        Serial.print("\nFull challenge: ");
-        for (uint8_t b = 0; b < plen; b++) {
-          sprintf(tmp, "0x%.2X", existpdol ? ppdol[b] : processing[b]);
-          Serial.print(tmp); Serial.print(" ");
-        }
-        Serial.println();
-      }
-      Serial.println();
     } else {
-      Serial.println("Error reading the card!");
+      Serial.print("PPSE command failed with status: ");
+      Serial.print(apdubuffer[apdulen - 2], HEX);
+      Serial.println(apdubuffer[apdulen - 1], HEX);
     }
+  } else {
+    Serial.println("Error sending PPSE command!");
   }
-  
-  if (chktoken)
+
+  if (chktoken) {
     formatToken();
-  else
-    Serial.print("Could not find the track 2!");
+  } else {
+    Serial.println("Could not find the track 2!");
+  }
 }
 // Format the token data
 void formatToken() { 
@@ -343,6 +489,19 @@ void setup() {
     while (1);
   }
 
+  if (nfc.configureSettings()) {
+    Serial.println("The Configure Settings is failed!");
+    while (1)
+      ;
+  }
+
+  // Read/Write mode as default
+  if (nfc.configMode()) {  // Set up the configuration mode
+    Serial.println("The Configure Mode is failed!!");
+    while (1)
+      ;
+  }
+
   Serial.println("BomberCat initialized successfully!");
   Serial.println("Waiting for a card...");
 
@@ -398,6 +557,13 @@ bool nfcread() {
   if (success) {
     Serial.println("\nReading card...");
     digitalWrite(L1, HIGH); // Turn on LED during NFC reading
+    displayCardInfo();
+    Serial.println("Remove the Card");
+    nfc.waitForTagRemoval();
+    Serial.println("Card removed!");
+    Serial.println("Restarting...");
+    nfc.reset();
+    delay(500);
     seekTrack2();
   } else {
     Serial.println("\nNo tag detected.");
