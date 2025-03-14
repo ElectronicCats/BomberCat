@@ -350,23 +350,20 @@ void resetMode() { //Reset the configuration mode after each reading
     if(debug) {
       Serial.println("Error while setting up the mode, check connections!");
     }
-    Serial.println("ERROR");
     while (1);
   }
 
   if (nfc.configureSettings()) {
     if(debug) {
-      Serial.println("The Configure Settings failed!");
+      Serial.println("The Configure Settings has failed!");
     }
-    Serial.println("ERROR");
     while (1);
   }
 
   if (nfc.configMode()) { //Set up the configuration mode
     if(debug) {
-      Serial.println("The Configure Mode failed!!");
+      Serial.println("The Configure Mode has failed!!");
     }
-    Serial.println("ERROR");
     while (1);
   }
 
@@ -375,16 +372,22 @@ void resetMode() { //Reset the configuration mode after each reading
 
 //Print hex data buffer in format
 void printBuf(const byte * data, const uint32_t numBytes) {
-  uint32_t szPos;
-  for (szPos = 0; szPos < numBytes; szPos++) {
-    Serial.print(F("0x"));
-    //Append leading 0 for small values
-    if (data[szPos] <= 0xF)
-      Serial.print(F("0"));
+  String hexString;
 
-    Serial.print(data[szPos] & 0xff, HEX);
+  if (numBytes == 0) {
+    hexString = "null";
+  }
+
+  for (uint32_t szPos = 0; szPos < numBytes; szPos++) {
+    hexString += "0x";
+    Serial.print(hexString);
+    if (data[szPos] <= 0xF)
+      hexString += "0";
+      Serial.print(hexString);
+    hexString += String(data[szPos] & 0xFF, HEX);
     if ((numBytes > 1) && (szPos != numBytes - 1)) {
-      Serial.print(F(" "));
+      hexString += " ";
+      Serial.print(hexString);
     }
   }
   Serial.println();
