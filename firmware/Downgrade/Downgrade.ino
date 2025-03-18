@@ -208,11 +208,11 @@ uint8_t treatPDOL(uint8_t* apdu) {
 // Seek the track 2 data on the card
 void seekTrack2() {
   bool chktoken = false;
-  uint8_t apdubuffer[255] = {}, apdulen;
+  uint8_t apduBuffer[255] = {}, apduLen;
 
   // PPSE command
   uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00};
-
+  uint8_t ppseLen= sizeof(ppse) / sizeof(ppse[0]);
   // Generic AID for payment applications
   uint8_t genericAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x04, 0x10, 0x10, 0x00};
 
@@ -224,26 +224,28 @@ void seekTrack2() {
 
   // Send PPSE command
   blink(L1, 150, 1);
-  Serial.print("\nSending PPSE command: ");
-  printData(ppse, sizeof(ppse), 1);
+  Serial.print("Sending PPSE command: ");
+  printData(ppse,ppseLen,4);
+  nfc.readerTagCmd(ppse, ppseLen, &apduBuffer[0], &apduLen);
+  Serial.print("PPSE response: ");
+  printData(apduBuffer,apduLen,4);
+  Serial.print("APDU response code: ");
+  Serial.print(apduBuffer[apduLen - 2], HEX);
+  Serial.println(apduBuffer[apduLen - 1], HEX);
 
-  if (nfc.readerTagCmd(ppse, sizeof(ppse), &apdubuffer[0], &apdulen)) {
-    Serial.print("\nReceived response: ");
-    printData(apdubuffer, apdulen, 4);
-
-    if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) { //if command = 9000  the response was successfull
-      Serial.println("PPSE command successful!");
+    //if (apduBuffer[apduLen - 2] == 0x90 && apduBuffer[apduLen - 1] == 0x00) { //if command = 9000  the response was successfull
+      //Serial.println("PPSE command successful!");
 
       // Send Select Application command
       blink(L1, 150, 1);
       Serial.print("\nSending Select Application command: ");
       printData(genericAid, sizeof(genericAid), 1);
 
-      if (nfc.readerTagCmd(genericAid, sizeof(genericAid), &apdubuffer[0], &apdulen)) {
+      if (nfc.readerTagCmd(genericAid, sizeof(genericAid), &apduBuffer[0], &apduLen)) {
         Serial.print("\nReceived response: ");
-        printData(apdubuffer, apdulen, 4);
+        printData(apduBuffer, apduLen, 4);
 
-        if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+        if (apduBuffer[apduLen - 2] == 0x90 && apduBuffer[apduLen - 1] == 0x00) {
           Serial.println("Select Application command successful!");
 
           // Send GPO command
@@ -251,11 +253,11 @@ void seekTrack2() {
           Serial.print("\nSending GPO command: ");
           printData(gpo, sizeof(gpo), 1);
 
-          if (nfc.readerTagCmd(gpo, sizeof(gpo), &apdubuffer[0], &apdulen)) {
+          if (nfc.readerTagCmd(gpo, sizeof(gpo), &apduBuffer[0], &apduLen)) {
             Serial.print("\nReceived response: ");
-            printData(apdubuffer, apdulen, 4);
+            printData(apduBuffer, apduLen, 4);
 
-            if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+            if (apduBuffer[apduLen - 2] == 0x90 && apduBuffer[apduLen - 1] == 0x00) {
               Serial.println("GPO command successful!");
 
               // Send Read Record command
@@ -263,46 +265,38 @@ void seekTrack2() {
               Serial.print("\nSending Read Record command: ");
               printData(readRecord, sizeof(readRecord), 1);
 
-              if (nfc.readerTagCmd(readRecord, sizeof(readRecord), &apdubuffer[0], &apdulen)) {
+              if (nfc.readerTagCmd(readRecord, sizeof(readRecord), &apduBuffer[0], &apduLen)) {
                 Serial.print("\nReceived response: ");
-                printData(apdubuffer, apdulen, 4);
+                printData(apduBuffer, apduLen, 4);
 
-                if (apdubuffer[apdulen - 2] == 0x90 && apdubuffer[apdulen - 1] == 0x00) {
+                if (apduBuffer[apduLen - 2] == 0x90 && apduBuffer[apduLen - 1] == 0x00) {
                   Serial.println("Read Record command successful!");
                   chktoken = true;
-                  memcpy(token, &apdubuffer[5], 19); // Extract Track 2 data
+                  memcpy(token, &apduBuffer[5], 19); // Extract Track 2 data
                 } else {
                   Serial.print("Read Record command failed with status: ");
-                  Serial.print(apdubuffer[apdulen - 2], HEX);
-                  Serial.println(apdubuffer[apdulen - 1], HEX);
+                  Serial.print(apduBuffer[apduLen - 2], HEX);
+                  Serial.println(apduBuffer[apduLen - 1], HEX);
                 }
               } else {
                 Serial.println("Error sending Read Record command!");
               }
             } else {
               Serial.print("GPO command failed with status: ");
-              Serial.print(apdubuffer[apdulen - 2], HEX);
-              Serial.println(apdubuffer[apdulen - 1], HEX);
+              Serial.print(apduBuffer[apduLen - 2], HEX);
+              Serial.println(apduBuffer[apduLen - 1], HEX);
             }
           } else {
             Serial.println("Error sending GPO command!");
           }
         } else {
           Serial.print("Select Application command failed with status: ");
-          Serial.print(apdubuffer[apdulen - 2], HEX);
-          Serial.println(apdubuffer[apdulen - 1], HEX);
+          Serial.print(apduBuffer[apduLen - 2], HEX);
+          Serial.println(apduBuffer[apduLen - 1], HEX);
         }
       } else {
         Serial.println("Error sending Select Application command!");
       }
-    } else {
-      Serial.print("PPSE command failed with status: ");
-      Serial.print(apdubuffer[apdulen - 2], HEX);
-      Serial.println(apdubuffer[apdulen - 1], HEX);
-    }
-  } else {
-    Serial.println("Error sending PPSE command!");
-  }
 
   if (chktoken) {
     formatToken();
