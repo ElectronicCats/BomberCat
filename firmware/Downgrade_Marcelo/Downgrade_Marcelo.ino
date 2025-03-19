@@ -84,17 +84,26 @@ void loop() {
 void seekTrack2() {
   
   //Define all the commands usef to get the card information and their lengths
-  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00};
+  uint8_t ppse[] = {0x00, 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00}; //CLA + INS + P1 + P2 + SIZE:0E=14 + 2PAY.SYS.DDF01 + EXPECTED RESPONSE LENGTH COMPLETE LENGTH:00 
   uint8_t ppseLen= sizeof(ppse) / sizeof(ppse[0]);
 
-  uint8_t genericAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x04, 0x10, 0x10, 0x00};
-  uint8_t genericAidLen= sizeof(genericAid) / sizeof(genericAid[0]);
+  uint8_t mastercardAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x04, 0x10, 0x10, 0x00}; //CLA:00=EMV INS:A4=SELECT COMMAND P1:04 P2:00 + PAYLOAD SIZE XX + MASTERCARD  AID A0 00 00 00 04 10 10 + EXPECTED RESPONSE LENGTH COMPLETE LENGTH:00  
+  uint8_t mastercardAidLen= sizeof(mastercardAid) / sizeof(mastercardAid[0]);
 
-  uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00};
+  uint8_t visaAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //CLA:00=EMV INS:A4=SELECT COMMAND P1:04 P2:00 + PAYLOAD SIZE XX + VISA  AID A0 00 00 00 03 10 10 + EXPECTED RESPONSE LENGTH COMPLETE LENGTH:00  
+  uint8_t visaAidLen= sizeof(visaAid) / sizeof(visaAid[0]);
+
+  uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //CLA:80=EMV PROPRIETARY INS:A8=GPO P1:00 P2:00 + (PDOLLEN+2) + PDOLTAG:83 + PDOLLEN + (PDOL + UNKNOWNNUM + CURRENCYCODE) + EXPECTEDLEN:00
   uint8_t gpoLen= sizeof(gpo) / sizeof(gpo[0]);
 
-  uint8_t readRecord[] = {0x00, 0xB2, 0x01, 0x14, 0x00};
-  uint8_t readRecordLen= sizeof(readRecord) / sizeof(readRecord[0]);
+  uint8_t readRecord1[] = {0x00, 0xB2, 0x01, 0x14, 0x00}; //
+  uint8_t readRecord1Len= sizeof(readRecord1) / sizeof(readRecord1[0]); //CLA:00=EMV INS:B2=READ RECORD + 
+
+  uint8_t readRecord2[] = {0x00, 0xB2, 0x01, 0x24, 0x00}; //
+  uint8_t readRecord2Len= sizeof(readRecord2) / sizeof(readRecord2[0]);
+
+  uint8_t readRecord3[] = {0x00, 0xB2, 0x03, 0x2C, 0x00}; //
+  uint8_t readRecord3Len= sizeof(readRecord3) / sizeof(readRecord3[0]);
 
   //Define the buffer for the APDU response from the card
   uint8_t apduBuffer[255] = {}, apduLen;
@@ -115,9 +124,19 @@ void seekTrack2() {
     Serial.println(apduBuffer[apduLen - 1], HEX);
     Serial.println();
 
-    Serial.print("Sending genericAid command: ");
-    printData(genericAid,genericAidLen);
-    nfc.readerTagCmd(genericAid, genericAidLen, &apduBuffer[0], &apduLen);
+    Serial.print("Sending mastercardAid command: ");
+    printData(mastercardAid,mastercardAidLen);
+    nfc.readerTagCmd(mastercardAid, mastercardAidLen, &apduBuffer[0], &apduLen);
+    Serial.print("genericAid response: ");
+    printData(apduBuffer,apduLen);
+    Serial.print("APDU response code: ");
+    Serial.print(apduBuffer[apduLen - 2], HEX);
+    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.println();
+
+    Serial.print("Sending visaAID command: ");
+    printData(visaAid,visaAidLen);
+    nfc.readerTagCmd(visaAid, visaAidLen, &apduBuffer[0], &apduLen);
     Serial.print("genericAid response: ");
     printData(apduBuffer,apduLen);
     Serial.print("APDU response code: ");
@@ -135,9 +154,29 @@ void seekTrack2() {
     Serial.println(apduBuffer[apduLen - 1], HEX);
     Serial.println();
 
-    Serial.print("Sending readRecord command: ");
-    printData(readRecord,readRecordLen);
-    nfc.readerTagCmd(readRecord, readRecordLen, &apduBuffer[0], &apduLen);
+    Serial.print("Sending readRecord1 command: ");
+    printData(readRecord1,readRecord1Len);
+    nfc.readerTagCmd(readRecord1, readRecord1Len, &apduBuffer[0], &apduLen);
+    Serial.print("readRecord response: ");
+    printData(apduBuffer,apduLen);
+    Serial.print("APDU response code: ");
+    Serial.print(apduBuffer[apduLen - 2], HEX);
+    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.println();
+
+    Serial.print("Sending readRecord2 command: ");
+    printData(readRecord2,readRecord2Len);
+    nfc.readerTagCmd(readRecord2, readRecord2Len, &apduBuffer[0], &apduLen);
+    Serial.print("readRecord response: ");
+    printData(apduBuffer,apduLen);
+    Serial.print("APDU response code: ");
+    Serial.print(apduBuffer[apduLen - 2], HEX);
+    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.println();
+
+    Serial.print("Sending readRecord3 command: ");
+    printData(readRecord3,readRecord3Len);
+    nfc.readerTagCmd(readRecord3, readRecord3Len, &apduBuffer[0], &apduLen);
     Serial.print("readRecord response: ");
     printData(apduBuffer,apduLen);
     Serial.print("APDU response code: ");
