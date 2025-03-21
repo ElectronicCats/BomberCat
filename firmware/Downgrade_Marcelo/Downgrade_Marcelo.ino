@@ -18,6 +18,7 @@ String getHexRepresentation(const byte* data, const uint32_t numBytes);
 void displayCardInfo();
 void printData(uint8_t* buff, uint8_t bufLen);
 void blink(int pin, int msdelay, int times);
+void extractData(uint8_t* array, uint8_t arrayLen, uint8_t tag);
 
 unsigned long pressStartTime = 0;
 bool buttonPressed = false;
@@ -93,95 +94,100 @@ void seekTrack2() {
   uint8_t visaAid[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x03, 0x10, 0x10, 0x00}; //CLA:00=EMV INS:A4=SELECT COMMAND P1:04 P2:00 + PAYLOAD SIZE XX + VISA  AID A0 00 00 00 03 10 10 + EXPECTED RESPONSE LENGTH COMPLETE LENGTH:00  
   uint8_t visaAidLen= sizeof(visaAid) / sizeof(visaAid[0]);
 
-  uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //CLA:80=EMV PROPRIETARY INS:A8=GPO P1:00 P2:00 + (PDOLLEN+2) + PDOLTAG:83 + PDOLLEN + (PDOL + UNKNOWNNUM + CURRENCYCODE) + EXPECTEDLEN:00
+  //uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x02, 0x83, 0x00, 0x00}; //CLA:80=EMV PROPRIETARY INS:A8=GPO P1:00 P2:00 + (PDOLLEN+2) + PDOLTAG:83 + PDOLLEN + (PDOL + UNKNOWNNUM + CURRENCYCODE) + EXPECTEDLEN:00
+  uint8_t gpo[] = {0x80, 0xA8, 0x00, 0x00, 0x01, 0x83, 0x00, 0x00}; //Visa 80 A8 00 00 26 83 2409F 66 04 9F 02 06 9F 03 06 9F 1A 02 95 05 5F 2A 02 9A 03 9C 01 9F 37 04 
   uint8_t gpoLen= sizeof(gpo) / sizeof(gpo[0]);
 
   uint8_t readRecord1[] = {0x00, 0xB2, 0x01, 0x14, 0x00}; //
   uint8_t readRecord1Len= sizeof(readRecord1) / sizeof(readRecord1[0]); //CLA:00=EMV INS:B2=READ RECORD + 
 
-  uint8_t readRecord2[] = {0x00, 0xB2, 0x01, 0x24, 0x00}; //
+  //uint8_t readRecord2[] = {0x00, 0xB2, 0x01, 0x24, 0x00}; //
+  uint8_t readRecord2[] = {0x00, 0xB2, 0x01, 0x2C, 0x00}; //
   uint8_t readRecord2Len= sizeof(readRecord2) / sizeof(readRecord2[0]);
 
-  uint8_t readRecord3[] = {0x00, 0xB2, 0x03, 0x2C, 0x00}; //
+  //uint8_t readRecord3[] = {0x00, 0xB2, 0x03, 0x2C, 0x00}; //
+  uint8_t readRecord3[] = {0x00, 0xB2, 0x02, 0x2C, 0x00}; //
   uint8_t readRecord3Len= sizeof(readRecord3) / sizeof(readRecord3[0]);
 
   //Define the buffer for the APDU response from the card
-  uint8_t apduBuffer[255] = {}, apduLen;
+  uint8_t apduBuffer[255] = {}, apduBufferLen;
 
   //Check that an actual card is present
   if (nfc.isTagDetected()) {
-    displayCardInfo();
+    //displayCardInfo();
     Serial.println();
 
     //PPSE Command
     Serial.print("Sending PPSE command: ");
     printData(ppse,ppseLen);
-    nfc.readerTagCmd(ppse, ppseLen, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(ppse, ppseLen, &apduBuffer[0], &apduBufferLen);
     Serial.print("PPSE response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
 
-    Serial.print("Sending mastercardAid command: ");
-    printData(mastercardAid,mastercardAidLen);
-    nfc.readerTagCmd(mastercardAid, mastercardAidLen, &apduBuffer[0], &apduLen);
-    Serial.print("genericAid response: ");
-    printData(apduBuffer,apduLen);
-    Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
-    Serial.println();
+    extractData(apduBuffer, apduBufferLen, 0x84);
+
+    // Serial.print("Sending mastercardAid command: ");
+    // printData(mastercardAid,mastercardAidLen);
+    // nfc.readerTagCmd(mastercardAid, mastercardAidLen, &apduBuffer[0], &apduBufferLen);
+    // Serial.print("genericAid response: ");
+    // printData(apduBuffer,apduBufferLen);
+    // Serial.print("APDU response code: ");
+    // Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    // Serial.println(apduBuffer[apduBufferLen - 1], HEX);
+    // Serial.println();
 
     Serial.print("Sending visaAID command: ");
     printData(visaAid,visaAidLen);
-    nfc.readerTagCmd(visaAid, visaAidLen, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(visaAid, visaAidLen, &apduBuffer[0], &apduBufferLen);
     Serial.print("genericAid response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
 
     Serial.print("Sending gpo command: ");
     printData(gpo,gpoLen);
-    nfc.readerTagCmd(gpo, gpoLen, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(gpo, gpoLen, &apduBuffer[0], &apduBufferLen);
     Serial.print("gpo response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
 
     Serial.print("Sending readRecord1 command: ");
     printData(readRecord1,readRecord1Len);
-    nfc.readerTagCmd(readRecord1, readRecord1Len, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(readRecord1, readRecord1Len, &apduBuffer[0], &apduBufferLen);
     Serial.print("readRecord response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
 
     Serial.print("Sending readRecord2 command: ");
     printData(readRecord2,readRecord2Len);
-    nfc.readerTagCmd(readRecord2, readRecord2Len, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(readRecord2, readRecord2Len, &apduBuffer[0], &apduBufferLen);
     Serial.print("readRecord response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
 
     Serial.print("Sending readRecord3 command: ");
     printData(readRecord3,readRecord3Len);
-    nfc.readerTagCmd(readRecord3, readRecord3Len, &apduBuffer[0], &apduLen);
+    nfc.readerTagCmd(readRecord3, readRecord3Len, &apduBuffer[0], &apduBufferLen);
     Serial.print("readRecord response: ");
-    printData(apduBuffer,apduLen);
+    printData(apduBuffer,apduBufferLen);
     Serial.print("APDU response code: ");
-    Serial.print(apduBuffer[apduLen - 2], HEX);
-    Serial.println(apduBuffer[apduLen - 1], HEX);
+    Serial.print(apduBuffer[apduBufferLen - 2], HEX);
+    Serial.println(apduBuffer[apduBufferLen - 1], HEX);
     Serial.println();
     
     Serial.println("Remove the Card");
@@ -304,17 +310,27 @@ void printData(uint8_t* buff, uint8_t bufLen) {
   char tmp[5];
   for (int i = 0; i < bufLen; i++) {
     sprintf(tmp, "%.2X",buff[i]);
-    //sprintf(tmp, "0x%.2X",buff[i]);
     Serial.print(tmp); Serial.print(" ");
   }
   Serial.println();
 }
 
-void blink(int pin, int msdelay, int times) {
+void blink(int pin, int msdelay, uint8_t times) {
   for (int i = 0; i < times; i++) {
     digitalWrite(pin, HIGH);
     delay(msdelay);
     digitalWrite(pin, LOW);
     delay(msdelay);
+  }
+}
+
+void extractData(uint8_t* array, uint8_t arrayLen, uint8_t tag) {
+
+  for (uint8_t i = 0; i < arrayLen; i++) {
+    if (array[i] == tag) { // AID tag
+        Serial.print("Tag 0x");
+        Serial.print(array[i], HEX);
+        Serial.println(" found");
+    }
   }
 }
