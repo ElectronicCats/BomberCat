@@ -1965,6 +1965,7 @@
 			(effects
 				(font
 					(size 0.001 0.001)
+					(thickness 0.15)
 				)
 			)
 		)
@@ -1976,6 +1977,7 @@
 			(effects
 				(font
 					(size 0.001 0.001)
+					(thickness 0.15)
 				)
 			)
 		)
@@ -4293,6 +4295,7 @@
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "a1a7aa29-797d-4232-96da-227ac20dfbc0")
 			(effects
 				(font
@@ -29689,6 +29692,18 @@
 		)
 		(layer "Edge.Cuts")
 		(uuid "f5102bf9-3d1c-4824-a199-0ba7624b48bf")
+	)
+	(gr_text "Thickness: 0.8 mm"
+		(at 162.45 157.15 0)
+		(layer "Cmts.User")
+		(uuid "a768660f-f78b-4580-b368-1d7223d4b757")
+		(effects
+			(font
+				(size 2 2)
+				(thickness 0.3)
+			)
+			(justify left bottom)
+		)
 	)
 	(dimension
 		(type orthogonal)
