@@ -14251,7 +14251,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.mouser.mx/datasheet/2/302/PN7150-1386066.pdf"
-			(at 0 0 225)
+			(at 0 0 45)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "054fb4e5-d5f6-43ce-9b64-f368a2666186")
@@ -14263,7 +14263,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 225)
+			(at 0 0 45)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "f4de2c83-29a2-4093-b289-d0ced205dd00")
