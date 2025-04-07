@@ -7449,6 +7449,16 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "GREEN"
+		(exclude_from_sim no)
+		(at 172.466 64.516 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "4c669644-fb2f-461c-96fd-7c373ba75b1e")
+	)
 	(text "COIL"
 		(exclude_from_sim no)
 		(at 358.14 91.948 0)
@@ -7492,6 +7502,16 @@
 		)
 		(uuid "990e9f8c-6062-478b-9750-9b9f27702f9c")
 	)
+	(text "GREEN"
+		(exclude_from_sim no)
+		(at 139.192 268.732 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "c2f0e78c-f66b-4d2f-8a04-635ba650609f")
+	)
 	(text "LEDS & BUTTONS"
 		(exclude_from_sim no)
 		(at 157.099 16.891 0)
@@ -7502,6 +7522,16 @@
 			(justify left bottom)
 		)
 		(uuid "cdb6daf9-acab-4a56-8781-659b8756dc10")
+	)
+	(text "GREEN"
+		(exclude_from_sim no)
+		(at 172.466 82.042 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "cfb558b0-1609-4ed5-ab4a-e330af965267")
 	)
 	(text "WIFI & BLE NINA"
 		(exclude_from_sim no)
@@ -13099,7 +13129,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "ESP32-WROOM-32D"
+		(property "manf#" "ESP32M4"
 			(at 238.506 153.416 0)
 			(effects
 				(font
@@ -13861,7 +13891,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "1e4bd640-5ebe-4c8a-92f8-b0ee934b378b")
 		(property "Reference" "J1"
 			(at 164.084 250.3932 0)
@@ -16733,7 +16763,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C169849"
+		(property "LCSC#" "C2930027"
 			(at 340.614 41.656 0)
 			(effects
 				(font
@@ -16742,7 +16772,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "ERJ3GEYJ103V"
+		(property "manf#" "FRC0603J103 TS"
 			(at 340.614 41.656 0)
 			(effects
 				(font
@@ -17794,7 +17824,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C466781"
+		(property "LCSC#" "C96446"
 			(at 381.127 152.654 0)
 			(effects
 				(font
@@ -17803,7 +17833,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "C0603X5R106M160NT"
+		(property "manf#" "CL10A106MA8NRNC"
 			(at 381.127 152.654 0)
 			(effects
 				(font
@@ -18971,7 +19001,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "C0603C121J5GAC"
+		(property "manf#" "CC0603JRNPO9BN121"
 			(at 231.902 54.737 0)
 			(effects
 				(font
@@ -18989,7 +19019,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C561174"
+		(property "LCSC#" "C107035"
 			(at 231.902 54.737 0)
 			(effects
 				(font
@@ -20356,7 +20386,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C169849"
+		(property "LCSC#" "C2930027"
 			(at 222.25 115.189 0)
 			(effects
 				(font
@@ -20365,7 +20395,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "ERJ3GEYJ103V"
+		(property "manf#" "FRC0603J103 TS"
 			(at 222.25 115.189 0)
 			(effects
 				(font
@@ -20459,7 +20489,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C2886897"
+		(property "LCSC#" "C318889"
 			(at 171.069 43.434 0)
 			(effects
 				(font
@@ -20779,7 +20809,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "CONUFL001-SMD"
+		(property "manf#" "CONUFL001-SMD-T "
 			(at 256.032 50.673 0)
 			(effects
 				(font
@@ -21117,7 +21147,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" ""
+		(property "manf#" "CC0603KRX7R7BB102"
 			(at 213.487 30.353 0)
 			(effects
 				(font
@@ -21126,7 +21156,7 @@
 				(hide yes)
 			)
 		)
-		(property "provedor" "MOUSER"
+		(property "provedor" "LCSC"
 			(at 213.487 30.353 0)
 			(effects
 				(font
@@ -21671,9 +21701,9 @@
 		(at 150.749 117.348 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "ae267929-5045-405c-9bb8-319a56701526")
 		(property "Reference" "JP1"
@@ -22412,7 +22442,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" ""
+		(property "manf#" "CL10A106MA8NRNC"
 			(at 230.632 254 0)
 			(effects
 				(font
@@ -22430,7 +22460,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C85713"
+		(property "LCSC#" "C96446"
 			(at 230.632 254 0)
 			(effects
 				(font
@@ -25032,7 +25062,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "C0603C121J5GAC"
+		(property "manf#" "CC0603JRNPO9BN121"
 			(at 231.902 46.99 0)
 			(effects
 				(font
@@ -25050,7 +25080,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C561174"
+		(property "LCSC#" "C107035"
 			(at 231.902 46.99 0)
 			(effects
 				(font
@@ -25681,7 +25711,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C2886897"
+		(property "LCSC#" "C318889"
 			(at 171.069 29.718 0)
 			(effects
 				(font
