@@ -14446,6 +14446,7 @@
 	(symbol
 		(lib_id "Switch:SW_SPST")
 		(at 197.485 251.46 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15204,7 +15205,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "FRC0603J103 TS"
+		(property "manf#" ""
 			(at 28.067 37.211 0)
 			(effects
 				(font
@@ -15479,7 +15480,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "3e52c366-4ba8-4bd3-a04e-524d188005fb")
 		(property "Reference" "H1"
 			(at 272.796 262.4836 0)
@@ -16147,7 +16148,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "4b6045cf-6eaf-4897-8bf4-41aadb4b87ab")
 		(property "Reference" "H4"
 			(at 272.923 277.5966 0)
@@ -16772,7 +16773,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "FRC0603J103 TS"
+		(property "manf#" ""
 			(at 340.614 41.656 0)
 			(effects
 				(font
@@ -18133,7 +18134,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "WR06X104JTL"
+		(property "manf#" ""
 			(at 350.647 235.712 0)
 			(effects
 				(font
@@ -18229,7 +18230,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "FRC0603J103 TS"
+		(property "manf#" ""
 			(at 22.225 37.338 0)
 			(effects
 				(font
@@ -18486,7 +18487,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "0603WAJ0104T5E"
+		(property "manf#" ""
 			(at 88.138 245.1354 0)
 			(effects
 				(font
@@ -20395,7 +20396,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "FRC0603J103 TS"
+		(property "manf#" ""
 			(at 222.25 115.189 0)
 			(effects
 				(font
@@ -21402,7 +21403,7 @@
 				)
 			)
 		)
-		(property "Value" "5.1K"
+		(property "Value" "5k1"
 			(at 108.839 250.825 90)
 			(effects
 				(font
@@ -21446,7 +21447,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C73801"
+		(property "LCSC#" "C23186"
 			(at 108.839 253.492 0)
 			(effects
 				(font
@@ -22147,7 +22148,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "0603WAJ0104T5E"
+		(property "manf#" ""
 			(at 88.138 251.968 0)
 			(effects
 				(font
@@ -23312,7 +23313,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "TYPE-C-31-M-31"
+		(property "manf#" ""
 			(at 30.226 248.666 0)
 			(effects
 				(font
@@ -24406,7 +24407,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "WR06X104JTL"
+		(property "manf#" ""
 			(at 177.292 258.191 0)
 			(effects
 				(font
@@ -24605,7 +24606,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "dfd2715f-33ba-4daa-a079-fa1ae41ee8fc")
 		(property "Reference" "H2"
 			(at 272.796 267.5636 0)
@@ -25221,7 +25222,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "WR06X104JTL"
+		(property "manf#" ""
 			(at 370.713 235.585 0)
 			(effects
 				(font
@@ -25910,7 +25911,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "f4eb5258-3660-4a0c-86b6-08f4e830ba7b")
 		(property "Reference" "H3"
 			(at 272.923 272.5166 0)
