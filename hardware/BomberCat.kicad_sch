@@ -17245,7 +17245,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "RT0603BRD075K1L"
+		(property "manf#" ""
 			(at 49.784 241.046 0)
 			(effects
 				(font
@@ -21148,7 +21148,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "CC0603KRX7R7BB102"
+		(property "manf#" ""
 			(at 213.487 30.353 0)
 			(effects
 				(font
@@ -21438,7 +21438,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "RS-03K512KT"
+		(property "manf#" ""
 			(at 108.839 253.492 0)
 			(effects
 				(font
@@ -23020,7 +23020,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "RT0603BRD075K1L"
+		(property "manf#" ""
 			(at 49.784 238.506 0)
 			(effects
 				(font
@@ -25414,7 +25414,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "CL10A105KA8NNNC"
+		(property "manf#" ""
 			(at 96.393 25.527 0)
 			(effects
 				(font
