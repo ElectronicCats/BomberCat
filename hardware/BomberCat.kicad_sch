@@ -14311,7 +14311,16 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "-"
+		(property "LCSC#" "C424093"
+			(at 123.19 250.952 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Proveedor2" "JLCPCB"
 			(at 123.19 250.952 0)
 			(effects
 				(font
