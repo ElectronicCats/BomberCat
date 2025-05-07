@@ -21856,7 +21856,7 @@
 				)
 			)
 		)
-		(property "Value" "PN7150B0HN_C11002E-PN7150B0HN_C11002E"
+		(property "Value" "PN7150B0HN_C11006Y-PN7150B0HN_C11006Y"
 			(at 68.58 19.6596 0)
 			(effects
 				(font
@@ -21893,7 +21893,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "PN7150B0HN/C11002E "
+		(property "manf#" "PN7150B0HN/C11006Y "
 			(at 68.58 50.8 0)
 			(effects
 				(font
@@ -21911,7 +21911,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C702907"
+		(property "LCSC#" ""
 			(at 68.58 50.8 0)
 			(effects
 				(font
