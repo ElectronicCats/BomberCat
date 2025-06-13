@@ -21897,7 +21897,7 @@
 				(hide yes)
 			)
 		)
-		(property "manf#" "PN7150B0HN/C11006Y "
+		(property "manf#" "PN7150B0HN/C11002Y"
 			(at 68.58 50.8 0)
 			(effects
 				(font
@@ -21915,7 +21915,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" ""
+		(property "LCSC#" "C702907"
 			(at 68.58 50.8 0)
 			(effects
 				(font
