@@ -19752,7 +19752,7 @@
 				)
 			)
 		)
-		(property "Footprint" "BomberCat:W25Q16JVUUIQ"
+		(property "Footprint" "BomberCat:SON50P200X300X40-9N"
 			(at 355.6 49.53 0)
 			(effects
 				(font
@@ -19788,7 +19788,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" ""
+		(property "LCSC#" "C2843335"
 			(at 355.6 49.53 0)
 			(effects
 				(font
@@ -20494,7 +20494,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C318889"
+		(property "LCSC#" "C318884"
 			(at 171.069 43.434 0)
 			(effects
 				(font
@@ -22669,7 +22669,6 @@
 	(symbol
 		(lib_id "PicoWAN-rescue:RP2040-MCU_RaspberryPi_and_Boards-PicoWAN-rescue-PicoWAN-rescue")
 		(at 80.01 152.4 0)
-		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -22677,7 +22676,7 @@
 		(dnp no)
 		(uuid "bbef2498-a801-40be-853c-c11e3b193c4d")
 		(property "Reference" "U2"
-			(at 106.934 102.362 0)
+			(at 53.086 102.362 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22685,7 +22684,7 @@
 			)
 		)
 		(property "Value" "RP2040"
-			(at 54.864 202.692 0)
+			(at 105.156 202.692 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22693,7 +22692,7 @@
 			)
 		)
 		(property "Footprint" "BomberCat:RP2040-QFN-56"
-			(at 99.06 152.4 0)
+			(at 60.96 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22702,7 +22701,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/lcsc/2201101600_Raspberry-Pi-RP2040_C2040.pdf"
-			(at 99.06 152.4 0)
+			(at 60.96 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25856,7 +25855,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC#" "C318889"
+		(property "LCSC#" "C318884"
 			(at 171.069 29.718 0)
 			(effects
 				(font
