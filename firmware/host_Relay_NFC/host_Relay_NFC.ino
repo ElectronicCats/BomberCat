@@ -114,7 +114,7 @@ unsigned long lastMsg = 0;
 #define PN7150_VEN   (13)
 #define PN7150_ADDR  (0x28)
 
-Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); //creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
+Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR, PN7150); // creates a global NFC device interface object, attached to pins 11 (IRQ) and 13 (VEN) and using the default I2C address 0x28,specify PN7150 or PN7160 in constructor
 
 uint8_t commandlarge = 0;
 
