@@ -33,10 +33,18 @@ void resetMode() {  // Reset the configuration mode after each reading
       ;
   }
 
-  if (nfc.configureSettings()) {
-    debug.println("The Configure Settings is failed!");
-    while (1)
-      ;
+  if (nfc.getMode() == 1) {
+    if (nfc.configureSettings()) {
+      debug.println("The Configure Settings is failed!");
+      while (1)
+        ;
+    }
+  } else if (nfc.getMode() == 2) {
+    if (nfc.configureSettings(uidcf, uidlen)) {
+      debug.println("The Configure Settings is failed!");
+      while (1)
+        ;
+    }
   }
 
   // Read/Write mode as default
@@ -103,48 +111,105 @@ void displayCardInfo() {  // Funtion in charge to show the card/s in te field
 
     switch (nfc.remoteDevice.getModeTech()) {  // Indetify card technology
       case (nfc.tech.PASSIVE_NFCA):
-        Serial.println("\tTechnology: NFC-A");
-        Serial.print("\tSENS RES = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
+              
+        debug.print("\tSENS_RES = ");
+        sensRes = getHexRepresentation(
+            nfc.remoteDevice.getSensRes(),
+            nfc.remoteDevice.getSensResLen()
+        );
+        debug.println(sensRes);
+        debug.println(" ");
+      
+        debug.print("\tNFCID = ");
+        nfcID = getHexRepresentation(
+            nfc.remoteDevice.getNFCID(),
+            nfc.remoteDevice.getNFCIDLen()
+        );
+        debug.println(nfcID);
+        debug.println(" ");
 
-        Serial.print("\tNFC ID = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getNFCID(), nfc.remoteDevice.getNFCIDLen()));
+        // UIDCF
+        uidcf[2] = 7 + nfc.remoteDevice.getNFCIDLen();
+        uidcf[3] = 0x02;
+        uidcf[8] = 0x33;
+        uidcf[9] = nfc.remoteDevice.getNFCIDLen();
 
-        Serial.print("\tSEL RES = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getSelRes(), nfc.remoteDevice.getSelResLen()));
+        uidlen = nfc.remoteDevice.getNFCIDLen();
+
+        memcpy(&uidcf[10],
+              nfc.remoteDevice.getNFCID(),
+              nfc.remoteDevice.getNFCIDLen());
+
+        debug.print("\tUIDCF: ");
+        debug.println(getHexRepresentation(uidcf, uidlen + 10));
+
+        // uidcf ready to fill CORE_CONF
+        if (nfc.remoteDevice.getNFCIDLen() != 4) {
+            debug.println("Ooops... this doesn't seem to be a Mifare Classic card!");
+        }
+
+        // SEL_RES
+        if (nfc.remoteDevice.getSelResLen() != 0) {
+            debug.print("\tSEL_RES = ");
+            selRes = getHexRepresentation(
+                nfc.remoteDevice.getSelRes(),
+                nfc.remoteDevice.getSelResLen()
+            );
+            debug.println(selRes);
+            debug.println(" ");
+        }
 
         break;
 
       case (nfc.tech.PASSIVE_NFCB):
-        Serial.println("\tTechnology: NFC-B");
-        Serial.print("\tSENS RES = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
-
-        Serial.println("\tAttrib RES = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getAttribRes(), nfc.remoteDevice.getAttribResLen()));
-
+        if (nfc.remoteDevice.getSensResLen() != 0) {
+            debug.print("\tSENS_RES = ");
+            sensRes = getHexRepresentation(
+                nfc.remoteDevice.getSensRes(),
+                nfc.remoteDevice.getSensResLen()
+            );
+            debug.println(sensRes);
+        }
         break;
 
       case (nfc.tech.PASSIVE_NFCF):
-        Serial.println("\tTechnology: NFC-F");
-        Serial.print("\tSENS RES = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getSensRes(), nfc.remoteDevice.getSensResLen()));
+        // Bitrate
+        debug.print("\tBitrate = ");
+        bitRate = (nfc.remoteDevice.getBitRate() == 1) ? "212" : "424";
+        debug.println(bitRate);
+        debug.println(" ");
 
-        Serial.print("\tBitrate = ");
-        Serial.println((nfc.remoteDevice.getBitRate() == 1) ? "212" : "424");
-
+        // SENS_RES
+        if (nfc.remoteDevice.getSensResLen() != 0) {
+            debug.print("\tSENS_RES = ");
+            sensRes = getHexRepresentation(
+                nfc.remoteDevice.getSensRes(),
+                nfc.remoteDevice.getSensResLen()
+            );
+            debug.println(sensRes);
+            debug.println(" ");
+        }
         break;
 
       case (nfc.tech.PASSIVE_NFCV):
-        Serial.println("\tTechnology: NFC-V");
-        Serial.print("\tID = ");
-        Serial.println(getHexRepresentation(nfc.remoteDevice.getID(), sizeof(nfc.remoteDevice.getID())));
+        // ID
+        nfcID = getHexRepresentation(
+            nfc.remoteDevice.getID(),
+            sizeof(nfc.remoteDevice.getID())
+        );
+        debug.print("\tID = ");
+        debug.println(nfcID);
 
-        Serial.print("\tAFI = ");
-        Serial.println(nfc.remoteDevice.getAFI());
+        // AFI
+        afi = String(nfc.remoteDevice.getAFI());
+        debug.print("\nAFI = ");
+        debug.println(afi);
 
-        Serial.print("\tDSF ID = ");
-        Serial.println(nfc.remoteDevice.getDSFID(), HEX);
+        // DSFID
+        dsfid = String(nfc.remoteDevice.getDSFID(), HEX);
+        debug.print("\tDSFID = ");
+        debug.println(dsfid);
+
         break;
 
       default:
