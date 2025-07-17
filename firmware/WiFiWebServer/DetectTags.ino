@@ -95,17 +95,20 @@ void displayCardInfo() {  // Funtion in charge to show the card/s in te field
       case nfc.protocol.T2T:
       case nfc.protocol.T3T:
       case nfc.protocol.ISODEP:
-        Serial.print(" - POLL MODE: Remote activated tag type: ");
-        Serial.println(nfc.remoteDevice.getProtocol());
+        pollMode = "POLL MODE: Remote activated tag type: " + String(nfc.remoteDevice.getProtocol());
+        debug.println(" - ", pollMode);
         break;
-      case nfc.protocol.ISO15693:
-        Serial.println(" - POLL MODE: Remote ISO15693 card activated");
+      case PROT_ISO15693:
+        pollMode = "POLL MODE: Remote ISO15693 card activated";
+        debug.println(" - ", pollMode);
         break;
-      case nfc.protocol.MIFARE:
-        Serial.println(" - POLL MODE: Remote MIFARE card activated");
+      case PROT_MIFARE:
+        pollMode = "POLL MODE: Remote MIFARE card activated";
+        debug.println(" - ", pollMode);
         break;
       default:
-        Serial.println(" - POLL MODE: Undetermined target");
+        pollMode = "POLL MODE: Undetermined target";
+        debug.println(" - ", pollMode);
         return;
     }
 
@@ -253,6 +256,23 @@ void detectTags() {
   if (nfc.isTagDetected()) { // Waiting to detect cards
     displayCardInfo();
 
+    switch (nfc.remoteDevice.getProtocol()) {
+
+      case nfc.protocol.T1T:
+      case nfc.protocol.T2T:
+      case nfc.protocol.T3T:
+      case nfc.protocol.ISODEP:
+        nfc.readNdefMessage();
+        break;
+      case PROT_ISO15693:
+        break;
+      case PROT_MIFARE:
+        nfc.readNdefMessage();
+        break;
+      default:
+        break;
+    }
+
     // It can detect multiple cards at the same time if they use the same protocol
     if (nfc.remoteDevice.hasMoreTags()) {
       nfc.activateNextTagDiscovery();
@@ -262,10 +282,11 @@ void detectTags() {
     Serial.println("Remove the Card");
     nfc.waitForTagRemoval();
     debug.println("Card removed!");
+    nfcDiscoverySuccess = true;
+
+    nfc.stopDiscovery();
+    nfc.startDiscovery();
   }
 
-  debug.println("Restarting...");
-  nfc.reset();
-  debug.println("Waiting for a Card...");
-  delay(500);
+  resetMode();
 }
