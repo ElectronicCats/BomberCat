@@ -5,10 +5,7 @@
 #define DETECT_TAGS_DELAY_MS (200)
 #define READ_ATTEMPTS (2)
 
-Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);  // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
-RfIntf_t RfInterface;                                            // Intarface to save data for multiple tags
-
-uint8_t mode = 1;  // modes: 1 = Reader/ Writer, 2 = Emulation
+Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR, PN7150); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28,specify PN7150 or PN7160 in constructor
 
 String pollMode, nfcID, sensRes, selRes, bitRate, afi, dsfid;
 bool runDetectTags = false;

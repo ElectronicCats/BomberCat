@@ -483,7 +483,7 @@ void handleURLParameters(String url) {
     }
 
     if (btnRunDetectTags.startsWith("true")) {
-      mode = 1;
+      nfc.setReaderWriterMode();
       resetMode();
       runDetectTags = true;
       nfcExecutionCounter = 0;
@@ -492,7 +492,7 @@ void handleURLParameters(String url) {
     }
 
     if (btnEmulateNFC.startsWith("true")) {
-      mode = 2;
+      nfc.setEmulationMode();
       resetMode();
       emulateNFCFlag = true;
       debug.println("\nWaiting for reader command...");
