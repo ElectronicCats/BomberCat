@@ -33,6 +33,10 @@ __pycache__/
 *.pyc
 tools/.venv-proto/
 
+# Dev-only nfcgate-server test fixture, cloned on demand by
+# tools/testserver/fetch_server.sh (pinned nfcgate/server@4d32cc1).
+/server/
+
 hardware/#auto_saved_files#
 
 .vscode/
