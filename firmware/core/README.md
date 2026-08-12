@@ -8,7 +8,7 @@ module header directly.
 Target: **Arduino Mbed OS RP2040** core (`mbed_rp2040`). The persistence layer
 uses mbed `TDBStore` / `FlashIAPBlockDevice`, which are only available there.
 
-## Modules (Fase 2 — this phase)
+## Modules (Fases 2-3)
 
 | Header | Class / API | Responsibility |
 |---|---|---|
@@ -16,12 +16,13 @@ uses mbed `TDBStore` / `FlashIAPBlockDevice`, which are only available there.
 | `HexUtils.h` | `HexUtils::toString`, `HexUtils::print` | Hex dump formatting (factored from `getHexRepresentation` / `printData`). |
 | `NfcController.h` | `NfcController` | Wrapper over `Electroniccats_PN7150`: `beginReaderMode()`, `beginEmulationMode()`, `reset()`, `waitForTag()`, `readerTransceive()`, `cardReceive()` / `cardSend()`. Setup failures **return false** instead of hanging. |
 | `ConfigStore.h` | `ConfigStore`, `RelayConfig`, `RelayRole` | Persistent WiFi + NFCGate relay config (SSID/pass, server host/port, session byte, role) on `TDBStore`. |
+| `NfcGateCodec.h` | `NfcGateCodec::makeNfcData/encodeFrame/decodeServerData`; aliases `NfcData`, `ServerData`, `NfcSource`, `NfcType`, `NfcOpcode` | **Arduino-free** codec for the NFCGate wire format: builds/parses the length-prefixed `ServerData{NFCData}` frames. No sockets — pure bytes, so it is host-testable (see below). Short aliases tame the very long generated nanopb names. |
+| `NfcGateLink.h` | `NfcGateLink` | TCP transport to `nfcgate-server` over an Arduino `Client&` (WiFiNINA `WiFiClient` on device). `connect()`, `send()`, non-blocking `poll()` / `receive()`. Owns the asymmetric framing (`[4B len BE][1B session][payload]` c→s); delegates protobuf to `NfcGateCodec`. WiFi *association* stays in the sketch. |
 | `FlashIAPLimits.h` | `mbed::getFlashIAPLimits()` | Computes the usable flash region past the sketch (vendored from the relay sketches). |
 | `proto/…` | `NFCData`, `ServerData` | NFCGate wire messages, generated with nanopb in Fase 1. See [`../proto/UPSTREAM.md`](../proto/UPSTREAM.md). |
 | `pb*.{h,c}` | nanopb runtime | Vendored nanopb 0.4.9.1 runtime (`pb.h`, `pb_common`, `pb_encode`, `pb_decode`), zlib-licensed — see `NANOPB_LICENSE.txt`. Kept flat in `src/` so the generated `proto/*.pb.h` resolve `#include <pb.h>` via the library's include path. |
 
-Coming in later phases: `NfcGateLink` (WiFi/TCP + protobuf framing),
-`RelayEngine`, `SerialControl`.
+Coming in later phases: `RelayEngine`, `SerialControl`.
 
 ## Dependencies
 
@@ -48,9 +49,27 @@ arduino-cli compile -b electroniccats:mbed_rp2040:bombercat \
   firmware/core/examples/CoreSelfTest
 ```
 
-Verified building clean against `electroniccats:mbed_rp2040` 2.0.0 +
-`Electronic Cats PN7150` 3.1.1 (~112 KB flash / 45 KB RAM). `CoreSelfTest`
-exercises every public symbol; it is a compile check, not a functional relay.
+`CoreSelfTest` exercises every public symbol (including a `NfcGateCodec`
+round-trip and `NfcGateLink` over a `WiFiClient`); it is a compile check, not a
+functional relay. Fase 2 was verified building clean against
+`electroniccats:mbed_rp2040` 2.0.0 + `Electronic Cats PN7150` 3.1.1 (~112 KB
+flash / 45 KB RAM); re-run the command above after the Fase 3 additions.
+
+### Host test for the wire format (no board, no RF)
+
+`NfcGateLink`'s wire format is validated off-device by compiling the **actual**
+`NfcGateCodec.cpp` + vendored nanopb with a host compiler and running a
+reader↔card loopback against a local `nfcgate-server`:
+
+```sh
+tools/testserver/run.sh                       # terminal 1: server on :5566
+tools/testserver/codec_hosttest/build_and_run.sh   # terminal 2: g++ + loopback
+```
+
+A green `CODEC HOST TEST PASSED` proves the bytes the RP2040 will emit are
+accepted and relayed by the real server (and that server frames decode back to
+the original APDUs). RF/PN7150 are not involved — this is the Fase 3 / §6 "mock"
+verification. See [`../../tools/testserver/codec_hosttest/`](../../tools/testserver/codec_hosttest/).
 
 ## Notes on fidelity to the legacy sketches
 
