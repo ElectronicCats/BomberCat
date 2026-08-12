@@ -47,9 +47,28 @@ from pathlib import Path
 
 # APP Information
 VERSION_NUMBER = __version__
-COMPANY = "Electronic Cats - PWNLAB"
+COMPANY = "Electronic Cats"
 _FUNNY_PHRASES = [
     "Catching packets, not mice.",
+    "Nine lives, infinite payloads.",
+    "Sniffing NFC, purring softly.",
+    "Curiosity cloned the card.",
+    "Too cool for a leash, too smart for a firewall.",
+    "Emulating cards, ignoring humans.",
+    "Relaying taps at the speed of paws.",
+    "Magspoof: because swiping is for amateurs.",
+    "13.56 MHz of pure feline mischief.",
+    "Landed on all four antennas.",
+    "Herding bits since 2026.",
+    "Replaying the tag, chasing the laser.",
+    "Every scratch is a side-channel.",
+    "Keep calm and clone on.",
+    "Whiskers on the wire.",
+    "Not a bug, a feline feature.",
+    "Cloning cards, breaking hearts.",
+    "The cat's out of the sandbox.",
+    "Silent paws, loud packets.",
+    "Hack the planet, nap after.",
 ]
 
 import random as _random
