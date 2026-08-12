@@ -28,6 +28,11 @@ hardware/BomberCat-backups/
 
 .DS_Store
 
+# Python tooling (tools/)
+__pycache__/
+*.pyc
+tools/.venv-proto/
+
 hardware/#auto_saved_files#
 
 .vscode/
