@@ -29,3 +29,6 @@ htmlcov/
 
 # OS junk
 .DS_Store
+
+# host codec test binary
+testserver/codec_hosttest/hosttest
