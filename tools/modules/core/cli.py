@@ -121,6 +121,13 @@ def cli(verbose):
         logger.level = logging.INFO
     pass
 
+# Register subcommand groups (dev tooling under tools/)
+from ..proto.cli import proto as _proto
+from ..testserver.cli import testserver as _testserver
+
+cli.add_command(_proto)
+cli.add_command(_testserver)
+
 def main_cli() -> None:
     if not os.environ.get("_bombercat_COMPLETE"):
         module = next((a for a in sys.argv[1:] if not a.startswith("-")), None)
