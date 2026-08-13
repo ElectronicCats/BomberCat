@@ -47,7 +47,14 @@ def run(port):
     try:
         rc = subprocess.run(["bash", str(RUN_SH)], env=env).returncode
     except KeyboardInterrupt:
-        rc = 130
+        # run.sh installs its own SIGINT trap to stop the container cleanly; the
+        # signal reaches us too, so just swallow it and report a normal stop.
+        print_info("server stopped.")
+        rc = 0
+    except FileNotFoundError as e:
+        # Almost always: `bash` (or Docker, further down) not on PATH.
+        print_error(f"could not launch the server: {e}")
+        rc = 1
     sys.exit(rc)
 
 

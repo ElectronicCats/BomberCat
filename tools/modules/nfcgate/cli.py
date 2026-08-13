@@ -5,7 +5,8 @@
 # relay over the control protocol (NFCGATE_PLAN.md Fase 6).
 # Distributed as-is; no warranty is given.
 
-from typing import List, Optional, Tuple
+from contextlib import contextmanager
+from typing import Iterator, List, Optional, Tuple
 
 import click
 import serial
@@ -24,22 +25,36 @@ _PORT_OPTION = click.option("-p", "--port", default=None,
                             help="Serial port (auto-detected if omitted).")
 
 
-def _connect(port: Optional[str]) -> Tuple[str, DeviceLink]:
-    """Resolve the port and open a verified link, or exit with a clear error."""
+@contextmanager
+def _device_session(port: Optional[str]) -> Iterator[Tuple[str, DeviceLink]]:
+    """Open a verified link, yield ``(target, link)``, and always close it.
+
+    Any ``DeviceError`` or serial/OS error — whether raised while connecting
+    OR while running commands inside the ``with`` block — is reported as a
+    clean one-line message and exits with status 1, instead of letting a
+    traceback reach the user. ``SystemExit`` raised by the body (e.g. a failed
+    ``set``) passes through untouched, and the port is closed either way.
+    """
+    link: Optional[DeviceLink] = None
     try:
         target = resolve_port(port)
         link = DeviceLink(target).open()
+        if not link.ping():
+            print_error(
+                f"{target} did not answer the handshake. "
+                "Is it plugged in and running the relay firmware?"
+            )
+            raise SystemExit(1)
+        yield target, link
     except DeviceError as e:
         print_error(str(e))
         raise SystemExit(1)
     except (serial.SerialException, OSError) as e:
         print_error(f"{type(e).__name__}: {e}")
         raise SystemExit(1)
-    if not link.ping():
-        link.close()
-        print_error(f"{target} did not answer the handshake.")
-        raise SystemExit(1)
-    return target, link
+    finally:
+        if link is not None:
+            link.close()
 
 
 def _apply(link: DeviceLink, pairs: List[Tuple[str, str]], save: bool) -> None:
@@ -77,11 +92,8 @@ def config():
 @_PORT_OPTION
 def config_wifi(ssid, password, save, port):
     """Set the WiFi credentials."""
-    _, link = _connect(port)
-    try:
+    with _device_session(port) as (_, link):
         _apply(link, [("ssid", ssid), ("pass", password)], save)
-    finally:
-        link.close()
 
 
 @config.command("nfcgate")
@@ -104,22 +116,16 @@ def config_nfcgate(server, session, role, save, port):
         pairs.append(("port", port_str))
     pairs += [("session", str(session)), ("role", role)]
 
-    _, link = _connect(port)
-    try:
+    with _device_session(port) as (_, link):
         _apply(link, pairs, save)
-    finally:
-        link.close()
 
 
 @config.command("show")
 @_PORT_OPTION
 def config_show(port):
     """Show the device's current configuration."""
-    target, link = _connect(port)
-    try:
+    with _device_session(port) as (target, link):
         r = link.info()
-    finally:
-        link.close()
     if not r.ok:
         print_error(f"info failed: {r.message}")
         raise SystemExit(1)
@@ -137,30 +143,36 @@ def config_show(port):
 @_PORT_OPTION
 def run_cmd(port):
     """Start the relay (associate WiFi, connect the server, begin the session)."""
-    target, link = _connect(port)
-    try:
-        r = link.run()
-    finally:
-        link.close()
-    if r.ok:
-        print_success(f"relay started on {target}")
-        print_info("watch it with:  bombercat monitor   /   bombercat status")
-    else:
-        print_error(f"relay failed to start: {r.message}")
-        print_info("check WiFi credentials and the nfcgate-server host/port "
-                   "(bombercat config show)")
-        raise SystemExit(1)
+    with _device_session(port) as (target, link):
+        try:
+            r = link.run()
+        except DeviceError:
+            # The device took 'run' but never sent +OK/-ERR within the window.
+            # Almost always WiFi association or the server connect is hanging.
+            print_error("timed out waiting for the relay to start.")
+            print_info(
+                "the device accepted 'run' but did not confirm in time.\n"
+                "  • check WiFi credentials and the nfcgate-server host/port"
+                " (bombercat config show)\n"
+                "  • watch the boot log live with:  bombercat monitor"
+            )
+            raise SystemExit(1)
+        if r.ok:
+            print_success(f"relay started on {target}")
+            print_info("watch it with:  bombercat monitor   /   bombercat status")
+        else:
+            print_error(f"relay failed to start: {r.message}")
+            print_info("check WiFi credentials and the nfcgate-server host/port "
+                       "(bombercat config show)")
+            raise SystemExit(1)
 
 
 @click.command("stop", context_settings={"help_option_names": ["-h", "--help"]})
 @_PORT_OPTION
 def stop_cmd(port):
     """Stop the relay."""
-    target, link = _connect(port)
-    try:
+    with _device_session(port) as (target, link):
         r = link.stop()
-    finally:
-        link.close()
     print_success(f"relay stopped on {target}") if r.ok else \
         print_error(f"stop failed: {r.message}")
 
@@ -169,11 +181,8 @@ def stop_cmd(port):
 @_PORT_OPTION
 def status_cmd(port):
     """Show live relay status (state, link, peer, relayed count)."""
-    target, link = _connect(port)
-    try:
+    with _device_session(port) as (target, link):
         r = link.status()
-    finally:
-        link.close()
     if not r.ok:
         print_error(f"status failed: {r.message}")
         raise SystemExit(1)
@@ -195,25 +204,20 @@ def status_cmd(port):
 @_PORT_OPTION
 def monitor_cmd(port):
     """Stream the device's serial output live (relay logs + APDU hex). Ctrl-C to quit."""
-    target, link = _connect(port)
-    print_info(f"Monitoring {target} — press Ctrl-C to stop")
-    try:
-        for line in link.stream():
-            if not line:
-                continue
-            low = line.lower()
-            if "cmd:" in low or "resp:" in low:  # RelayEngine APDU hex dumps
-                console.print(f"[cyan]{line}[/cyan]")
-            elif line.startswith("-ERR") or "error" in low or "fail" in low:
-                console.print(f"[red]{line}[/red]")
-            elif line.startswith((":", "+OK")):
-                console.print(f"[dim]{line}[/dim]")
-            else:
-                console.print(line)
-    except KeyboardInterrupt:
-        console.print("\n[dim]stopped[/dim]")
-    except (serial.SerialException, DeviceError, OSError) as e:
-        print_error(f"{type(e).__name__}: {e}")
-        raise SystemExit(1)
-    finally:
-        link.close()
+    with _device_session(port) as (target, link):
+        print_info(f"Monitoring {target} — press Ctrl-C to stop")
+        try:
+            for line in link.stream():
+                if not line:
+                    continue
+                low = line.lower()
+                if "cmd:" in low or "resp:" in low:  # RelayEngine APDU hex dumps
+                    console.print(f"[cyan]{line}[/cyan]")
+                elif line.startswith("-ERR") or "error" in low or "fail" in low:
+                    console.print(f"[red]{line}[/red]")
+                elif line.startswith((":", "+OK")):
+                    console.print(f"[dim]{line}[/dim]")
+                else:
+                    console.print(line)
+        except KeyboardInterrupt:
+            console.print("\n[dim]stopped[/dim]")
