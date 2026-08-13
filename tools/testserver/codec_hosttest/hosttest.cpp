@@ -113,6 +113,42 @@ bool recvApdu(int fd, NfcSource* source, uint8_t* out, size_t outCap,
   return true;
 }
 
+// Send a data-less control frame (SYN/ACK/FIN) using the firmware codec.
+bool sendControl(int fd, NfcOpcode op) {
+  uint8_t frame[NFCGATE_MAX_FRAME];
+  size_t n = NfcGateCodec::encodeControlFrame(kSession, op, frame, sizeof(frame));
+  if (n == 0) {
+    fprintf(stderr, "encodeControlFrame failed\n");
+    return false;
+  }
+  return writeAll(fd, frame, n);
+}
+
+// Receive one server->client frame and return its decoded ServerData opcode and
+// the embedded NFCData size (0 for a control frame).
+bool recvServerData(int fd, NfcOpcode* op, size_t* nfcLen) {
+  uint8_t hdr[4];
+  if (!readAll(fd, hdr, 4)) return false;
+  uint32_t plen = ((uint32_t)hdr[0] << 24) | ((uint32_t)hdr[1] << 16) |
+                  ((uint32_t)hdr[2] << 8) | (uint32_t)hdr[3];
+  if (plen > NFCGATE_MAX_PAYLOAD) {
+    fprintf(stderr, "payload too big: %u\n", plen);
+    return false;
+  }
+  uint8_t payload[NFCGATE_MAX_PAYLOAD];
+  if (!readAll(fd, payload, plen)) return false;
+
+  ServerData sd;
+  NfcData nfc;
+  if (!NfcGateCodec::decodeServerData(payload, plen, sd, nfc)) {
+    fprintf(stderr, "decodeServerData failed\n");
+    return false;
+  }
+  *op = (NfcOpcode)sd.opcode;
+  *nfcLen = nfc.data.size;
+  return true;
+}
+
 std::string hex(const uint8_t* p, size_t n) {
   static const char* d = "0123456789abcdef";
   std::string s;
@@ -142,12 +178,33 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // Card associates with the session first (empty NFCData placeholder), so the
-  // server has a peer to forward the reader's frame to.
-  if (!sendApdu(card, NfcSource::CARD, nullptr, 0)) return 1;
-  usleep(200 * 1000);
-
   int rc = 0;
+
+  // --- Session handshake (SYN/ACK), as the NFCGate app / RelayEngine do. ---
+  // Sending any frame registers a client with the session, so the SYN doubles
+  // as registration. Reader registers first; then the card's SYN is forwarded
+  // to the reader, and the reader's ACK back to the card.
+  NfcOpcode op;
+  size_t nlen = 0;
+  if (!sendControl(reader, NfcOpcode::SYN)) return 1;  // registers reader
+  usleep(200 * 1000);
+  if (!sendControl(card, NfcOpcode::SYN)) return 1;    // registers card + fwd
+  if (!recvServerData(reader, &op, &nlen)) return 1;
+  if (op == NfcOpcode::SYN && nlen == 0) {
+    printf("[OK] handshake   reader received peer SYN (no data)\n");
+  } else {
+    printf("[FAIL] handshake opcode=%d nfcLen=%zu\n", (int)op, nlen);
+    rc = 1;
+  }
+  if (!sendControl(reader, NfcOpcode::ACK)) return 1;  // reader ACKs the card
+  if (!recvServerData(card, &op, &nlen)) return 1;
+  if (op == NfcOpcode::ACK && nlen == 0) {
+    printf("[OK] handshake   card received peer ACK (no data)\n");
+  } else {
+    printf("[FAIL] handshake opcode=%d nfcLen=%zu\n", (int)op, nlen);
+    rc = 1;
+  }
+
   uint8_t buf[NFCGATE_MAX_PAYLOAD];
   size_t len = 0;
   NfcSource src;
