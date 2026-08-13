@@ -12,11 +12,17 @@ RelayEngine::RelayEngine(NfcController &nfc, NfcGateLink &link,
     : _nfc(nfc), _link(link), _cfg(cfg) {}
 
 bool RelayEngine::begin() {
+  // Convenience wrapper: run the three steps back to back (blocking). The
+  // sketch's non-blocking `run` calls the steps individually instead.
+  return beginNfc() && connectLink() && announce();
+}
+
+bool RelayEngine::beginNfc() {
   _peerReady = false;
   _tagReady = false;
   _awaitingResponse = false;
 
-  // 1. Bring up the PN7150 in the role's RF mode.
+  // Bring up the PN7150 in the role's RF mode.
   const bool isReader = _cfg.roleEnum() == RelayRole::READER;
   const bool nfcOk = isReader ? _nfc.beginReaderMode() : _nfc.beginEmulationMode();
   if (!nfcOk) {
@@ -26,17 +32,23 @@ bool RelayEngine::begin() {
   }
   LOG_INFO(isReader ? "RelayEngine: NFC reader mode ready"
                     : "RelayEngine: NFC emulation mode ready");
+  return true;
+}
 
-  // 2. Open the TCP link and adopt the session byte.
+bool RelayEngine::connectLink() {
+  // Open the TCP link and adopt the session byte.
   if (!_link.connect(_cfg.server, _cfg.port, _cfg.session)) {
     LOG_ERROR("RelayEngine: link connect failed");
     _state = State::Error;
     return false;
   }
+  return true;
+}
 
-  // 3. Announce + register with the session (OP_SYN, as the NFCGate app does).
-  //    The server only associates a client with a session once it sends a
-  //    frame, so this is what makes us able to receive the peer's commands.
+bool RelayEngine::announce() {
+  // Announce + register with the session (OP_SYN, as the NFCGate app does). The
+  // server only associates a client with a session once it sends a frame, so
+  // this is what makes us able to receive the peer's commands.
   if (!_link.sendControl(NfcOpcode::SYN)) {
     LOG_ERROR("RelayEngine: SYN failed");
     _state = State::Error;

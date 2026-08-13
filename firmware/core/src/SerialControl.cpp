@@ -81,6 +81,11 @@ const char *SerialControl::roleName() const {
 }
 
 const char *SerialControl::stateName() const {
+  // The sketch owns the full state (incl. the "connecting" bring-up phases), so
+  // prefer its callback; fall back to the engine's own state if none is set.
+  if (_cb.state != nullptr) {
+    return _cb.state();
+  }
   switch (_engine.state()) {
     case RelayEngine::State::Relaying:
       return "relaying";
@@ -157,13 +162,19 @@ void SerialControl::dispatch(char *line) {
     if (_cb.run == nullptr) {
       err("run unavailable");
     } else {
-      _cb.run() ? ok() : err("relay start failed");
+      // Non-blocking: run() only kicks off the bring-up. nullptr = accepted;
+      // a non-null string is the reason it couldn't even start.
+      const char *reason = _cb.run();
+      reason == nullptr ? ok("accepted") : err(reason);
     }
   } else if (strcmp(verb, "stop") == 0) {
     if (_cb.stop != nullptr) _cb.stop();
     ok();
   } else if (strcmp(verb, "status") == 0) {
     kv("state", stateName());
+    if (_cb.detail != nullptr) {
+      kv("detail", _cb.detail());
+    }
     kv("connected", (long)(_engine.connected() ? 1 : 0));
     kv("peer", (long)(_engine.peerReady() ? 1 : 0));
     kv("relayed", (long)_engine.relayedCount());

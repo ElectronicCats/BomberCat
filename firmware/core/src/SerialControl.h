@@ -30,9 +30,16 @@
  *   save                      -> +OK / -ERR   persist current config to flash
  *   load                      -> +OK          reload config from flash
  *   clear                     -> +OK / -ERR   erase persisted config
- *   run                       -> +OK / -ERR   start the relay (WiFi + engine)
+ *   run                       -> +OK accepted / -ERR <reason>
+ *                                Non-blocking: only KICKS OFF the bring-up and
+ *                                replies immediately. The relay then advances
+ *                                through WiFi -> NFC -> TCP -> SYN in the
+ *                                sketch's loop(); poll `status` for progress
+ *                                (state goes idle -> connecting -> relaying|error).
  *   stop                      -> +OK          stop the relay
- *   status                    -> :state :connected :peer :relayed +OK
+ *   status                    -> :state :detail :connected :peer :relayed +OK
+ *                                state: idle|connecting|relaying|error;
+ *                                detail: current phase or last error (human text)
  *   reboot                    -> +OK, then resets the MCU
  *
  * The relay actions (run/stop/reboot) are provided by the sketch as callbacks so
@@ -51,12 +58,24 @@
 
 class SerialControl {
  public:
-  // Actions that need hardware the sketch owns (WiFi association, MCU reset).
-  // All optional; a null callback makes the matching command return -ERR.
+  // Actions/queries that need hardware or state the sketch owns (WiFi
+  // association, the bring-up phase machine, MCU reset). All optional; a null
+  // callback makes the matching command return -ERR (or fall back for state).
   struct Callbacks {
-    bool (*run)() = nullptr;    // start relay (WiFi + engine.begin); true = ok
+    // Kick off the (non-blocking) relay bring-up. Returns nullptr when accepted,
+    // or a short human error string (reported as -ERR) when it can't start
+    // (e.g. empty SSID, already running). Must return promptly — it only starts
+    // the bring-up; the sketch's loop() advances it and `status` reports it.
+    const char *(*run)() = nullptr;
     void (*stop)() = nullptr;   // stop relay (engine.stop + drop WiFi if wanted)
     void (*reboot)() = nullptr;  // reset the MCU
+    // Control-plane state name: "idle"|"connecting"|"relaying"|"error". Owned by
+    // the sketch because the "connecting" sub-phases (WiFi/NFC/TCP/SYN) live
+    // there. If null, `status`/`info` fall back to the engine's own state.
+    const char *(*state)() = nullptr;
+    // Optional human-readable detail (current phase or last error). If null, the
+    // `status` reply omits the :detail line.
+    const char *(*detail)() = nullptr;
   };
 
   // `io`, `store`, `cfg` and `engine` must outlive the control object (all are

@@ -49,7 +49,28 @@ class RelayEngine {
   // and send OP_SYN (which both announces presence and registers this client
   // with the session). Assumes WiFi is already associated. Returns true on
   // success; on failure sets state() to Error and returns false.
+  //
+  // This is the convenience wrapper that runs the three bring-up steps below in
+  // one (blocking) call. The NFCGate sketch drives them individually from its
+  // non-blocking `run` state machine so the serial REPL stays responsive; see
+  // beginNfc()/connectLink()/announce().
   bool begin();
+
+  // --- Individual bring-up steps (for a non-blocking, phased `run`) ---------
+  // Each returns true on success; on failure logs, sets state() to Error and
+  // returns false. Call in order: beginNfc -> connectLink -> announce.
+
+  // Step 1: bring up the PN7150 in the configured role's RF mode. Also resets
+  // the per-session flags, so this is the start of a fresh bring-up.
+  bool beginNfc();
+
+  // Step 2: open the TCP link to nfcgate-server (bounded by the WiFiClient's
+  // connection timeout set in the sketch). Assumes WiFi is associated.
+  bool connectLink();
+
+  // Step 3: send OP_SYN to announce presence + register with the session. On
+  // success moves state() to Relaying.
+  bool announce();
 
   // One cooperative, non-blocking step of the relay. Call once per loop().
   // Drains any pending server frames (READER: services one card command per
