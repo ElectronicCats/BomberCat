@@ -5,6 +5,7 @@
 # relay over the control protocol (NFCGATE_PLAN.md Fase 6).
 # Distributed as-is; no warranty is given.
 
+import time
 from contextlib import contextmanager
 from typing import Iterator, List, Optional, Tuple
 
@@ -139,39 +140,77 @@ def config_show(port):
 
 # ── run / stop / status / monitor ─────────────────────────────────────────────
 
+# Overall wall-clock budget for the relay to reach 'relaying' after `run` is
+# accepted. Covers the firmware worst case (keep in sync with NFCGate.ino):
+#   WiFi associate (20 s) + NFC bring-up + TCP connect (8 s) + SYN + margin.
+_RUN_BRINGUP_TIMEOUT = 45.0
+_RUN_POLL_INTERVAL = 0.5  # seconds between `status` polls
+
+
 @click.command("run", context_settings={"help_option_names": ["-h", "--help"]})
 @_PORT_OPTION
 def run_cmd(port):
     """Start the relay (associate WiFi, connect the server, begin the session)."""
     with _device_session(port) as (target, link):
+        # Phase 1: `run` is non-blocking on the device — it only ACCEPTS the
+        # request and starts the bring-up in the background. A -ERR here means it
+        # couldn't even start (e.g. empty SSID, already running).
         try:
             r = link.run()
-        except DeviceError:
-            # The device took 'run' but never sent +OK/-ERR within the window.
-            # A pure timeout (vs. a '-ERR relay start failed') means the bring-up
-            # is *hanging*, not that WiFi cleanly failed — WiFi failure returns
-            # -ERR at ~20 s. So the block is most likely AFTER WiFi (the server
-            # connect or the PN7150), and the relay may even have come up. Don't
-            # blame WiFi first; point at status, then the server, then the NFC.
-            print_error("timed out waiting for the relay to confirm.")
-            print_info(
-                "the device accepted 'run' but did not answer in time — the"
-                " bring-up is hanging, not necessarily failing.\n"
-                "  • the relay may have started: check with  bombercat status\n"
-                "  • if it's still 'idle', the hang is AFTER WiFi:\n"
-                "      – is the nfcgate-server listening?  (nc -vz <host> <port>)\n"
-                "      – is the PN7150 responding?  watch:  bombercat monitor\n"
-                "  • confirm host/port with:  bombercat config show"
-            )
+        except DeviceError as e:
+            print_error(f"device did not accept 'run': {e}")
+            print_info("is it still plugged in and running the relay firmware?")
             raise SystemExit(1)
-        if r.ok:
-            print_success(f"relay started on {target}")
-            print_info("watch it with:  bombercat monitor   /   bombercat status")
-        else:
-            print_error(f"relay failed to start: {r.message}")
-            print_info("check WiFi credentials and the nfcgate-server host/port "
-                       "(bombercat config show)")
+        if not r.ok:
+            print_error(f"relay rejected 'run': {r.message}")
+            print_info("check the configuration with:  bombercat config show")
             raise SystemExit(1)
+
+        # Phase 2: poll `status` and report progress until the relay reaches
+        # 'relaying' (success), 'error' (clean failure), or our budget runs out.
+        print_info("relay accepted 'run'; bringing up…")
+        deadline = time.monotonic() + _RUN_BRINGUP_TIMEOUT
+        last_detail = None
+        while time.monotonic() < deadline:
+            try:
+                s = link.status()
+            except DeviceError:
+                # A single bring-up phase (NFC init, TCP connect) can briefly
+                # occupy the firmware and let a status poll time out. That's
+                # expected — keep polling until our own deadline.
+                time.sleep(_RUN_POLL_INTERVAL)
+                continue
+
+            state = s.data.get("state", "")
+            detail = s.data.get("detail", "")
+            if detail and detail != last_detail:
+                print_info(f"  … {detail}")
+                last_detail = detail
+
+            if state == "relaying":
+                print_success(f"relay started on {target}")
+                print_info("watch it with:  bombercat monitor   /   bombercat status")
+                return
+            if state == "error":
+                print_error(f"relay failed to start: {detail or 'bring-up error'}")
+                print_info("check WiFi credentials and the nfcgate-server host/port "
+                           "(bombercat config show)")
+                raise SystemExit(1)
+            time.sleep(_RUN_POLL_INTERVAL)
+
+        # Budget exhausted without reaching relaying/error: still connecting or
+        # stuck in a phase. Unlike before, the device is NOT wedged — the REPL
+        # stayed live — so status keeps working and points at the real culprit.
+        print_error("relay did not reach 'relaying' in time.")
+        print_info(
+            f"still '{last_detail or 'connecting'}' after {int(_RUN_BRINGUP_TIMEOUT)}s"
+            " — the bring-up is slow or stuck (the device is still responsive).\n"
+            "  • keep watching:  bombercat status   /   bombercat monitor\n"
+            "  • is the nfcgate-server listening?  (nc -vz <host> <port>)\n"
+            "  • is the PN7150 responding?  watch:  bombercat monitor\n"
+            "  • confirm host/port with:  bombercat config show"
+        )
+        raise SystemExit(1)
 
 
 @click.command("stop", context_settings={"help_option_names": ["-h", "--help"]})

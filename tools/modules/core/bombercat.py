@@ -137,14 +137,12 @@ class DeviceLink:
         return self.command("save")
 
     def run(self) -> Response:
-        # 'run' is blocking on the device: it emits +OK/-ERR only once the whole
-        # bring-up finishes (WiFi -> NFC -> TCP -> SYN). This window must cover
-        # the firmware's worst case, or a relay that starts fine still reads as a
-        # timeout. Invariant (keep in sync with NFCGate.ino):
-        #   read_timeout >= connectWiFi timeout (20 s)
-        #                 + NFC bring-up + RELAY_TCP_CONNECT_TIMEOUT_MS (8 s) + SYN + margin.
-        # 20 + ~5 + 8 + margin -> 45 s. If you change either timeout, revisit the other.
-        return self.command("run", read_timeout=45.0)
+        # 'run' is now non-blocking on the device: it only KICKS OFF the bring-up
+        # and replies `+OK accepted` (or `-ERR <reason>`) right away. Progress is
+        # observed by polling `status` (see nfcgate/cli.py:run_cmd), so this no
+        # longer needs a long window — a normal command timeout is plenty.
+        # Keep in sync with NFCGate.ino's async `run` state machine.
+        return self.command("run", read_timeout=self.timeout)
 
     def stop(self) -> Response:
         return self.command("stop")
