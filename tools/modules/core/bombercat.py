@@ -124,8 +124,14 @@ class DeviceLink:
         return self.command("save")
 
     def run(self) -> Response:
-        # Starting the relay associates WiFi + connects the server; allow longer.
-        return self.command("run", read_timeout=30.0)
+        # 'run' is blocking on the device: it emits +OK/-ERR only once the whole
+        # bring-up finishes (WiFi -> NFC -> TCP -> SYN). This window must cover
+        # the firmware's worst case, or a relay that starts fine still reads as a
+        # timeout. Invariant (keep in sync with NFCGate.ino):
+        #   read_timeout >= connectWiFi timeout (20 s)
+        #                 + NFC bring-up + RELAY_TCP_CONNECT_TIMEOUT_MS (8 s) + SYN + margin.
+        # 20 + ~5 + 8 + margin -> 45 s. If you change either timeout, revisit the other.
+        return self.command("run", read_timeout=45.0)
 
     def stop(self) -> Response:
         return self.command("stop")

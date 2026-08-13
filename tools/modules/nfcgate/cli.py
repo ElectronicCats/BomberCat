@@ -148,13 +148,20 @@ def run_cmd(port):
             r = link.run()
         except DeviceError:
             # The device took 'run' but never sent +OK/-ERR within the window.
-            # Almost always WiFi association or the server connect is hanging.
-            print_error("timed out waiting for the relay to start.")
+            # A pure timeout (vs. a '-ERR relay start failed') means the bring-up
+            # is *hanging*, not that WiFi cleanly failed — WiFi failure returns
+            # -ERR at ~20 s. So the block is most likely AFTER WiFi (the server
+            # connect or the PN7150), and the relay may even have come up. Don't
+            # blame WiFi first; point at status, then the server, then the NFC.
+            print_error("timed out waiting for the relay to confirm.")
             print_info(
-                "the device accepted 'run' but did not confirm in time.\n"
-                "  • check WiFi credentials and the nfcgate-server host/port"
-                " (bombercat config show)\n"
-                "  • watch the boot log live with:  bombercat monitor"
+                "the device accepted 'run' but did not answer in time — the"
+                " bring-up is hanging, not necessarily failing.\n"
+                "  • the relay may have started: check with  bombercat status\n"
+                "  • if it's still 'idle', the hang is AFTER WiFi:\n"
+                "      – is the nfcgate-server listening?  (nc -vz <host> <port>)\n"
+                "      – is the PN7150 responding?  watch:  bombercat monitor\n"
+                "  • confirm host/port with:  bombercat config show"
             )
             raise SystemExit(1)
         if r.ok:
