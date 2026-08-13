@@ -57,6 +57,23 @@ bool NfcGateLink::sendRaw(NfcOpcode op, const NfcData &nfc) {
   return true;
 }
 
+bool NfcGateLink::sendControl(NfcOpcode op) {
+  if (!_c.connected()) {
+    return false;
+  }
+  size_t n = NfcGateCodec::encodeControlFrame(_session, op, _tx, sizeof(_tx));
+  if (n == 0) {
+    LOG_ERROR("NfcGateLink: control encode failed");
+    return false;
+  }
+  size_t written = _c.write(_tx, n);
+  if (written != n) {
+    LOG_ERROR("NfcGateLink: short write (control)");
+    return false;
+  }
+  return true;
+}
+
 int NfcGateLink::poll(ServerData &sd, NfcData &nfc) {
   if (!_c.connected()) {
     return -1;

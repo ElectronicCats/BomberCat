@@ -49,6 +49,12 @@ class NfcGateLink {
   // Send a pre-built NFCData with an explicit opcode (SYN/ACK/FIN or PSH).
   bool sendRaw(NfcOpcode op, const NfcData &nfc);
 
+  // Send a data-less control frame (SYN/ACK/FIN) for the session handshake, as
+  // the NFCGate app does. Also serves to register this client with the session
+  // on the server (association is implicit in sending any frame). Returns false
+  // if not connected, `op` is PSH, or the write is short.
+  bool sendControl(NfcOpcode op);
+
   // Non-blocking receive of one server->client frame. Returns:
   //    1  a full frame decoded into `sd` / `nfc`
   //    0  nothing complete yet (call again later)
