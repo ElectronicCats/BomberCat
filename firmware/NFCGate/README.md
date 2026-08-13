@@ -1,0 +1,123 @@
+# NFCGate relay sketch
+
+A role-selectable [NFCGate](https://github.com/nfcgate/nfcgate)-compatible relay
+endpoint for the BomberCat, built on
+[`BomberCatCore`](../core/README.md). It pairs the BomberCat with a second
+NFCGate peer — another BomberCat, or the NFCGate Android app — through an
+`nfcgate-server`, relaying APDUs over WiFi/TCP.
+
+```
+[ physical card ] --RF--> [ BomberCat READER ] --WiFi/TCP--> nfcgate-server
+                                                                   |
+[ terminal/PoS ] <--RF--- [   peer  CARD/HCE ] <--WiFi/TCP--------+
+```
+
+**Both roles are implemented end to end** (NFCGATE_PLAN.md Fase 4 + Fase 5) and
+the device is driven over USB-serial by the control CLI (Fase 6).
+
+## What each role does
+
+**READER** (reads a physical card):
+
+1. Brings up the PN7150 in reader/writer mode.
+2. Connects to `nfcgate-server` and sends `OP_SYN` — which both announces its
+   presence and *registers it with the session* (the server only associates a
+   client with a session once it sends a frame). It replies `OP_ACK` to the
+   peer's `OP_SYN`, exactly as the NFCGate app's `NetworkManager` does.
+3. For each command frame that arrives over TCP (an `NFCData` tagged `READER`),
+   it activates the physical card if needed, replays the APDU to it, and sends
+   the card's response back tagged `CARD`.
+
+**CARD/HCE** (emulates a card to a terminal): reads the terminal's command over
+RF, forwards it over TCP tagged `READER`, then injects the peer's `CARD`-tagged
+response back to the terminal — the mirror of READER.
+
+The data-source semantics (`READER` = command, `CARD` = response) and the
+asymmetric framing are documented in
+[`../core/proto/UPSTREAM.md`](../core/proto/UPSTREAM.md).
+
+## Configuration
+
+The device boots into a **SerialControl** REPL; configure it with the control CLI
+(`tools/`, see [`../../tools/README.md`](../../tools/README.md)) over USB-serial —
+values persist in flash (`ConfigStore`):
+
+```sh
+bombercat config wifi    --ssid MyNet --pass 's3cret'
+bombercat config nfcgate --server 192.168.1.5:5566 --session 42 --role reader
+```
+
+When no config is persisted, the sketch falls back to compile-time values in
+[`arduino_secrets.h`](arduino_secrets.h):
+
+| Macro | Meaning |
+|---|---|
+| `SECRET_SSID` / `SECRET_PASS` | WiFi credentials |
+| `RELAY_SERVER` / `RELAY_PORT` | `nfcgate-server` host and TCP port (default 5566) |
+| `RELAY_SESSION` | session byte (1..255) — **must match** the peer |
+| `RELAY_ROLE` | `0` = READER, `1` = CARD/HCE |
+| `RELAY_AUTOSTART` | `1` = start the relay on boot from config; `0` = wait for the CLI's `run`. With an empty SSID it no-ops and waits for the CLI regardless. |
+
+Persisted config (from the CLI) always takes precedence over these fallbacks.
+
+## Wiring
+
+The PN7150 pins are the BomberCat defaults baked into `NfcController`
+(IRQ 11, VEN 13, I²C addr `0x28`); no wiring beyond a stock BomberCat is needed.
+WiFi uses the on-board ESP32/NINA module via WiFiNINA, same as the legacy
+`host_Relay_NFC` / `client_Relay_NFC` sketches.
+
+## Build & flash
+
+Board: `electroniccats:mbed_rp2040:bombercat`. Libraries: **WiFiNINA**,
+**Electronic Cats PN7150**, plus the local **BomberCatCore**.
+
+```sh
+arduino-cli compile -b electroniccats:mbed_rp2040:bombercat \
+  --library ../core .
+arduino-cli upload  -b electroniccats:mbed_rp2040:bombercat -p /dev/ttyACM0 .
+# (or use the Arduino IDE: board "Electronic Cats BomberCat", and symlink
+#  ../core into ~/Arduino/libraries so #include <BomberCatCore.h> resolves.)
+```
+
+The WiFiNINA "architecture may be incompatible" warnings are expected — the
+legacy relay sketches use it the same way on the BomberCat's NINA module.
+
+The control link runs at **115200 baud**. After flashing, verify the device
+answers over serial:
+
+```sh
+bombercat device info      # -> fw 0.6.0, state idle
+```
+
+Then configure it (above), point it at a running `nfcgate-server` with a card in
+the field and a second peer (a `card`-role BomberCat or the NFCGate app) on the
+same session byte, and start it:
+
+```sh
+bombercat run              # associate WiFi, connect server, begin session
+bombercat status           # state / link / peer / relayed count
+bombercat monitor          # live serial stream (relay logs + APDU hex)
+```
+
+## Testing without hardware
+
+The wire protocol (framing + SYN/ACK handshake + PSH loopback) is verified on a
+host against a real `nfcgate-server`, no RF involved, by the codec host test:
+
+```sh
+tools/testserver/run.sh                              # terminal 1: local server
+tools/testserver/codec_hosttest/build_and_run.sh     # terminal 2: PASS
+```
+
+On device, point the sketch at a running server with a card in the field and a
+second peer (a `card`-role peer or the NFCGate app) on the same session byte.
+
+## Status / not yet done
+
+- **On-device E2E** — Fase 7: two BomberCats (or one + the NFCGate Android app)
+  through a live server; the serial control path is verified against a simulated
+  device but not yet on real hardware.
+- **TLS** — later phase; the link is plain TCP for now.
+- **Keepalive / WTX** — the loop reconnects on link error but does not yet send
+  periodic keepalives or handle EMV WTX (a risk noted in the plan §8).

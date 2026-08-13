@@ -8,7 +8,7 @@ module header directly.
 Target: **Arduino Mbed OS RP2040** core (`mbed_rp2040`). The persistence layer
 uses mbed `TDBStore` / `FlashIAPBlockDevice`, which are only available there.
 
-## Modules (Fases 2-3)
+## Modules (Fases 2-4)
 
 | Header | Class / API | Responsibility |
 |---|---|---|
@@ -17,12 +17,13 @@ uses mbed `TDBStore` / `FlashIAPBlockDevice`, which are only available there.
 | `NfcController.h` | `NfcController` | Wrapper over `Electroniccats_PN7150`: `beginReaderMode()`, `beginEmulationMode()`, `reset()`, `waitForTag()`, `readerTransceive()`, `cardReceive()` / `cardSend()`. Setup failures **return false** instead of hanging. |
 | `ConfigStore.h` | `ConfigStore`, `RelayConfig`, `RelayRole` | Persistent WiFi + NFCGate relay config (SSID/pass, server host/port, session byte, role) on `TDBStore`. |
 | `NfcGateCodec.h` | `NfcGateCodec::makeNfcData/encodeFrame/decodeServerData`; aliases `NfcData`, `ServerData`, `NfcSource`, `NfcType`, `NfcOpcode` | **Arduino-free** codec for the NFCGate wire format: builds/parses the length-prefixed `ServerData{NFCData}` frames. No sockets — pure bytes, so it is host-testable (see below). Short aliases tame the very long generated nanopb names. |
-| `NfcGateLink.h` | `NfcGateLink` | TCP transport to `nfcgate-server` over an Arduino `Client&` (WiFiNINA `WiFiClient` on device). `connect()`, `send()`, non-blocking `poll()` / `receive()`. Owns the asymmetric framing (`[4B len BE][1B session][payload]` c→s); delegates protobuf to `NfcGateCodec`. WiFi *association* stays in the sketch. |
+| `NfcGateLink.h` | `NfcGateLink` | TCP transport to `nfcgate-server` over an Arduino `Client&` (WiFiNINA `WiFiClient` on device). `connect()`, `send()`, `sendControl()` (SYN/ACK/FIN), non-blocking `poll()` / `receive()`. Owns the asymmetric framing (`[4B len BE][1B session][payload]` c→s); delegates protobuf to `NfcGateCodec`. WiFi *association* stays in the sketch. |
+| `RelayEngine.h` | `RelayEngine` | Glue over `NfcController` + `NfcGateLink`: `begin()` (NFC bring-up + connect + `OP_SYN` session join), non-blocking `loop()`, `stop()` (`OP_FIN`). Owns the SYN/ACK handshake and the **READER**-role relay loop (command in → card transceive → response out). CARD role is a stub (Fase 5). No WiFiNINA dependency — WiFi stays in the sketch. |
 | `FlashIAPLimits.h` | `mbed::getFlashIAPLimits()` | Computes the usable flash region past the sketch (vendored from the relay sketches). |
 | `proto/…` | `NFCData`, `ServerData` | NFCGate wire messages, generated with nanopb in Fase 1. See [`../proto/UPSTREAM.md`](../proto/UPSTREAM.md). |
 | `pb*.{h,c}` | nanopb runtime | Vendored nanopb 0.4.9.1 runtime (`pb.h`, `pb_common`, `pb_encode`, `pb_decode`), zlib-licensed — see `NANOPB_LICENSE.txt`. Kept flat in `src/` so the generated `proto/*.pb.h` resolve `#include <pb.h>` via the library's include path. |
 
-Coming in later phases: `RelayEngine`, `SerialControl`.
+Coming in later phases: CARD-role relay (Fase 5), `SerialControl`.
 
 ## Dependencies
 
