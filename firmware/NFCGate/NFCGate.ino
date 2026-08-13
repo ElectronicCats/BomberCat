@@ -51,8 +51,30 @@ RelayConfig cfg;
 RelayEngine engine(nfc, link, cfg);
 SerialControl control(Serial, store, cfg, engine, BOMBERCAT_FW_VERSION);
 
-static bool g_running = false;    // relay started (via run / autostart)?
-static uint32_t g_retryAt = 0;    // non-blocking Error-retry deadline (millis)
+// --- Non-blocking `run` bring-up state machine ---------------------------------
+// `run` is intentionally NOT blocking: it only kicks the bring-up off (returns
+// `+OK accepted` at once) and loop() advances it one phase per iteration, so the
+// serial REPL is serviced throughout and a slow/stuck phase can never wedge the
+// device. Progress is published over `status` (idle -> connecting -> relaying |
+// error). This replaces the old synchronous runRelay() that blocked loop() for
+// the whole WiFi+NFC+TCP+SYN sequence — see firmware/DEBUG_run_timeout_mismatch.md.
+enum class Phase : uint8_t {
+  Idle,       // nothing running; waiting for `run`
+  Wifi,       // associating WiFi (non-blocking poll, hard deadline)
+  Nfc,        // bringing up the PN7150 in the configured role
+  Tcp,        // opening the TCP link to nfcgate-server (bounded connect)
+  Syn,        // registering with the session (OP_SYN)
+  Relaying,   // fully up; engine.loop() shuttles APDUs
+  Error,      // a bring-up step failed, or the link dropped while relaying
+};
+
+static Phase g_phase = Phase::Idle;
+static uint32_t g_wifiDeadline = 0;   // WiFi associate hard timeout (millis)
+static bool g_wifiBegun = false;      // WiFi.begin() issued for this attempt?
+static uint32_t g_retryAt = 0;        // >0 only after a runtime link loss: when
+                                      // to auto-retry. A bring-up failure leaves
+                                      // it 0 (stay in Error until the user acts).
+static const char *g_detail = "";     // human-readable phase / last-error text
 
 // Build a RelayConfig from arduino_secrets.h (compile-time fallback).
 static RelayConfig configFromSecrets() {
@@ -66,43 +88,131 @@ static RelayConfig configFromSecrets() {
   return c;
 }
 
-// Associate with WiFi. Returns true once connected (or false after timeout).
-static bool connectWiFi(const RelayConfig &c, uint32_t timeoutMs = 20000) {
-  if (strlen(c.ssid) == 0) {
-    LOG_ERROR("WiFi: empty SSID (set it via the CLI or arduino_secrets.h)");
-    return false;
+// Kick off the WiFi association for a fresh attempt: reset the phase flags and
+// enter Phase::Wifi. driveBringup() (in loop()) does the actual non-blocking
+// polling from here on. Static WiFi.begin() itself is issued lazily on the first
+// Wifi tick so this returns immediately.
+static void startWifi() {
+  g_wifiBegun = false;
+  g_wifiDeadline = 0;
+  g_detail = "associating WiFi";
+  g_phase = Phase::Wifi;
+}
+
+// Advance the bring-up by at most one phase. Called every loop() iteration; a
+// no-op unless a bring-up is in progress. Each phase either progresses, or fails
+// into Phase::Error with g_detail set. Only the WiFi phase is spread across
+// iterations (its 20 s deadline is the long one); NFC and TCP are single bounded
+// calls, so they occupy one iteration each but never hang the REPL for long.
+static void driveBringup() {
+  switch (g_phase) {
+    case Phase::Wifi:
+      if (!g_wifiBegun) {
+        LOG_INFO("WiFi: connecting");
+        WiFi.begin(cfg.ssid, cfg.pass);
+        g_wifiBegun = true;
+        g_wifiDeadline = millis() + 20000;
+      }
+      if (WiFi.status() == WL_CONNECTED) {
+        Log::out().print("WiFi: connected, IP ");
+        Log::out().println(WiFi.localIP());
+        g_detail = "bringing up NFC";
+        g_phase = Phase::Nfc;
+      } else if ((int32_t)(millis() - g_wifiDeadline) >= 0) {
+        LOG_ERROR("WiFi: connect timeout");
+        g_detail = "WiFi connect timeout";
+        g_phase = Phase::Error;
+      }
+      break;
+
+    case Phase::Nfc:
+      if (engine.beginNfc()) {
+        g_detail = "connecting server";
+        g_phase = Phase::Tcp;
+      } else {
+        g_detail = "NFC bring-up failed (PN7150)";
+        g_phase = Phase::Error;
+      }
+      break;
+
+    case Phase::Tcp:
+      if (engine.connectLink()) {
+        g_detail = "registering session";
+        g_phase = Phase::Syn;
+      } else {
+        g_detail = "server connect failed";
+        g_phase = Phase::Error;
+      }
+      break;
+
+    case Phase::Syn:
+      if (engine.announce()) {
+        g_detail = "relaying";
+        g_phase = Phase::Relaying;
+      } else {
+        g_detail = "session register failed";
+        g_phase = Phase::Error;
+      }
+      break;
+
+    default:
+      break;  // Idle / Relaying / Error: nothing to advance here
   }
-  LOG_INFO("WiFi: connecting");
-  WiFi.begin(c.ssid, c.pass);
-  uint32_t start = millis();
-  while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - start > timeoutMs) {
-      LOG_ERROR("WiFi: connect timeout");
-      return false;
-    }
-    delay(250);
-  }
-  Log::out().print("WiFi: connected, IP ");
-  Log::out().println(WiFi.localIP());
-  return true;
 }
 
 // --- SerialControl callbacks (own the WiFi / MCU actions core/ stays free of) --
-static bool runRelay() {
-  if (!connectWiFi(cfg)) return false;
-  if (!engine.begin()) return false;
-  g_running = true;
+
+// `run`: kick off the bring-up. Returns nullptr = accepted (bring-up started),
+// or a short reason it can't start (reported as -ERR). Never blocks on WiFi/NFC.
+static const char *runRelay() {
+  switch (g_phase) {
+    case Phase::Relaying:
+      return "already running";
+    case Phase::Wifi:
+    case Phase::Nfc:
+    case Phase::Tcp:
+    case Phase::Syn:
+      return "already starting";
+    default:
+      break;  // Idle / Error: OK to (re)start
+  }
+  if (strlen(cfg.ssid) == 0) {
+    return "empty SSID (set it via the CLI or arduino_secrets.h)";
+  }
   g_retryAt = 0;
-  return true;
+  startWifi();
+  return nullptr;  // accepted; loop() takes it from here
 }
 
 static void stopRelay() {
   engine.stop();
-  g_running = false;
+  g_phase = Phase::Idle;
+  g_wifiBegun = false;
   g_retryAt = 0;
+  g_detail = "";
 }
 
 static void rebootMcu() { NVIC_SystemReset(); }
+
+// Control-plane state name for `status`/`info` (see SerialControl::Callbacks).
+static const char *relayStateName() {
+  switch (g_phase) {
+    case Phase::Wifi:
+    case Phase::Nfc:
+    case Phase::Tcp:
+    case Phase::Syn:
+      return "connecting";
+    case Phase::Relaying:
+      return "relaying";
+    case Phase::Error:
+      return "error";
+    case Phase::Idle:
+    default:
+      return "idle";
+  }
+}
+
+static const char *relayDetail() { return g_detail; }
 
 void setup() {
   Serial.begin(115200);
@@ -111,9 +221,9 @@ void setup() {
   Log::begin(Serial, LogLevel::Debug);
   LOG_INFO("BomberCat NFCGate relay");
 
-  // Cap the server connect so engine.begin() can't stall on an unresponsive
-  // host (the NfcGateLink only sees a Client&, so the bound is set here on the
-  // concrete WiFiClient it wraps).
+  // Cap the server connect so the Tcp phase (engine.connectLink()) can't stall
+  // on an unresponsive host (the NfcGateLink only sees a Client&, so the bound
+  // is set here on the concrete WiFiClient it wraps).
   wifiClient.setConnectionTimeout(RELAY_TCP_CONNECT_TIMEOUT_MS);
 
   // Load persisted config; fall back to the compile-time secrets.
@@ -128,40 +238,49 @@ void setup() {
   cb.run = runRelay;
   cb.stop = stopRelay;
   cb.reboot = rebootMcu;
+  cb.state = relayStateName;
+  cb.detail = relayDetail;
   control.setCallbacks(cb);
   control.begin();  // prints "+OK bombercat ready" so the CLI can sync
 
 #if defined(RELAY_AUTOSTART) && RELAY_AUTOSTART
-  // Standalone mode: start straight away from the loaded config. With an
-  // unconfigured (empty SSID) fallback this just no-ops and waits for the CLI.
-  if (!runRelay()) {
-    LOG_WARN("Autostart skipped/failed; waiting for control CLI");
+  // Standalone mode: kick off the bring-up straight from the loaded config. It
+  // runs non-blocking in loop(), so a missing server/PN7150 can't stall boot or
+  // the REPL. With an unconfigured (empty SSID) fallback this just no-ops.
+  if (runRelay() != nullptr) {
+    LOG_WARN("Autostart not started (unconfigured?); waiting for control CLI");
   }
 #endif
 }
 
 void loop() {
-  control.poll();  // always service the control REPL
+  control.poll();  // always service the control REPL, every iteration
 
-  if (!g_running) {
-    return;  // idle until `run` (or autostart) brings the relay up
-  }
+  driveBringup();  // advance any in-progress bring-up (no-op when not connecting)
 
-  engine.loop();
-
-  // Non-blocking retry on link/handshake failure, so the control REPL stays
-  // responsive between attempts (no blocking delay()).
-  if (engine.state() == RelayEngine::State::Error) {
-    if (g_retryAt == 0) {
-      LOG_WARN("Relay in error state, retrying in 3s");
+  if (g_phase == Phase::Relaying) {
+    engine.loop();
+    // Link dropped mid-relay: schedule a non-blocking auto-retry (g_retryAt > 0
+    // marks this as a *runtime* loss, which we recover from — unlike a bring-up
+    // failure, which stays in Error until the user re-runs).
+    if (engine.state() == RelayEngine::State::Error) {
+      LOG_WARN("Relay link lost, retrying in 3s");
       engine.stop();
+      g_detail = "link lost, retrying";
       g_retryAt = millis() + 3000;
-    } else if ((int32_t)(millis() - g_retryAt) >= 0) {
-      g_retryAt = 0;
-      if (WiFi.status() != WL_CONNECTED) {
-        connectWiFi(cfg);
-      }
-      engine.begin();
+      g_phase = Phase::Error;
+    }
+  } else if (g_phase == Phase::Error && g_retryAt != 0 &&
+             (int32_t)(millis() - g_retryAt) >= 0) {
+    // Retry after a runtime link loss: re-associate WiFi if it dropped, else go
+    // straight back to reconnecting the TCP link (the PN7150 is still up).
+    g_retryAt = 0;
+    g_wifiBegun = false;
+    if (WiFi.status() == WL_CONNECTED) {
+      g_detail = "reconnecting server";
+      g_phase = Phase::Tcp;
+    } else {
+      startWifi();
     }
   }
 }
