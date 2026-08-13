@@ -67,6 +67,39 @@ size_t encodeFrame(uint8_t session, NfcOpcode op, const NfcData &nfc,
   return (size_t)plen + 5;
 }
 
+size_t encodeControlFrame(uint8_t session, NfcOpcode op, uint8_t *out,
+                          size_t outCap) {
+  if (outCap < 5) {
+    return 0;
+  }
+  // A PSH (opcode 0) with no data serializes to an empty payload, which the
+  // server treats as a disconnect. Control frames are SYN/ACK/FIN only.
+  if (op == NfcOpcode::PSH) {
+    return 0;
+  }
+
+  ServerData sd =
+      de_tu_darmstadt_seemoo_nfcgate_network_c2s_ServerData_init_zero;
+  sd.opcode =
+      (de_tu_darmstadt_seemoo_nfcgate_network_c2s_ServerData_Opcode)op;
+  // sd.data left empty: proto3 omits the zero-length bytes field, so the
+  // payload is just the opcode tag+value (e.g. OP_SYN -> {0x08, 0x01}).
+  pb_ostream_t ps = pb_ostream_from_buffer(out + 5, outCap - 5);
+  if (!pb_encode(&ps,
+                 de_tu_darmstadt_seemoo_nfcgate_network_c2s_ServerData_fields,
+                 &sd)) {
+    return 0;
+  }
+  uint32_t plen = (uint32_t)ps.bytes_written;
+
+  out[0] = (uint8_t)(plen >> 24);
+  out[1] = (uint8_t)(plen >> 16);
+  out[2] = (uint8_t)(plen >> 8);
+  out[3] = (uint8_t)(plen);
+  out[4] = session;
+  return (size_t)plen + 5;
+}
+
 bool decodeServerData(const uint8_t *payload, size_t len, ServerData &sd,
                       NfcData &nfc) {
   sd = de_tu_darmstadt_seemoo_nfcgate_network_c2s_ServerData_init_zero;

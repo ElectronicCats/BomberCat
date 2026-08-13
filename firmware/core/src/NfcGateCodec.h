@@ -73,6 +73,15 @@ bool makeNfcData(NfcData &nfc, NfcSource source, NfcType type,
 size_t encodeFrame(uint8_t session, NfcOpcode op, const NfcData &nfc,
                    uint8_t *out, size_t outCap);
 
+// Encode a data-less control frame ([4B len BE][1B session][payload]) whose
+// payload is a ServerData{opcode=op} with NO embedded NFCData — matching the
+// NFCGate app's sendServer(op, null) used for the SYN/ACK/FIN session handshake
+// (see NetworkManager.java). `op` must NOT be PSH: OP_PSH is the proto3 default
+// (0), so a data-less PSH would serialize to a 0-length payload, which the
+// server reads as a disconnect. Returns bytes written, or 0 on error.
+size_t encodeControlFrame(uint8_t session, NfcOpcode op, uint8_t *out,
+                          size_t outCap);
+
 // Decode a server->client payload (already de-framed — no length/session) into
 // `sd` and its embedded `nfc`. Returns false on any protobuf decode error.
 bool decodeServerData(const uint8_t *payload, size_t len, ServerData &sd,
