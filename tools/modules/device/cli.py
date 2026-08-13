@@ -35,12 +35,24 @@ def list_cmd(show_all):
     table.add_column("BomberCat")
     table.add_column("Description")
     table.add_column("HWID", style="dim")
+    usb_only = False
     for p in ports:
-        mark = "[green]✓[/green]" if p.device in responders else ""
+        if p.device in responders:
+            mark = "[green]✓[/green]"
+        elif p.matches_bombercat:
+            # USB VID/PID says BomberCat, but it didn't answer the handshake.
+            mark = "[yellow]USB id[/yellow]"
+            usb_only = True
+        else:
+            mark = ""
         table.add_row(p.device, mark, p.description, p.hwid)
     console.print(table)
 
-    if not responders:
+    if not responders and usb_only:
+        print_info("A BomberCat is present by USB id but did not answer the "
+                   "handshake — it may not be running the NFCGate relay firmware "
+                   "(see firmware/DEBUG_serial_no_handshake.md).")
+    elif not responders:
         print_info("No BomberCat answered the handshake. Is one connected and "
                    "flashed with the NFCGate firmware?")
 

@@ -16,6 +16,7 @@ from .usb_connection import (
     DEFAULT_BAUDRATE,
     DEFAULT_TIMEOUT,
     PortInfo,
+    bombercat_ports,
     list_ports_info,
     open_serial,
 )
@@ -78,13 +79,25 @@ class DeviceLink:
             raise DeviceError("link not open")
         deadline = time.monotonic() + (read_timeout or self.timeout * 4)
 
-        self._ser.reset_input_buffer()  # strict request/response: drop stale noise
-        self._ser.write((line.strip() + "\n").encode("ascii", "replace"))
-        self._ser.flush()
+        try:
+            self._ser.reset_input_buffer()  # strict req/response: drop stale noise
+            self._ser.write((line.strip() + "\n").encode("ascii", "replace"))
+            self._ser.flush()
+        except serial.SerialTimeoutException:
+            # write_timeout tripped: the device isn't draining its USB-OUT
+            # endpoint (wedged firmware / wrong sketch). See usb_connection.py.
+            raise DeviceError(
+                f"device did not accept {line!r} (write timed out); it may be "
+                "wedged or not running the relay firmware")
+        except serial.SerialException as e:
+            raise DeviceError(f"serial error sending {line!r}: {e}")
 
         data: Dict[str, str] = {}
         while time.monotonic() < deadline:
-            raw = self._ser.readline()
+            try:
+                raw = self._ser.readline()
+            except serial.SerialException as e:
+                raise DeviceError(f"serial error reading reply to {line!r}: {e}")
             if not raw:
                 continue  # readline timeout tick; keep waiting until deadline
             text = raw.decode("ascii", "replace").strip("\r\n")
@@ -142,7 +155,11 @@ class DeviceLink:
         if self._ser is None:
             raise DeviceError("link not open")
         while True:
-            raw = self._ser.readline()
+            try:
+                raw = self._ser.readline()
+            except serial.SerialException as e:
+                # Device unplugged (or otherwise gone) while monitoring.
+                raise DeviceError(f"serial link lost: {e}")
             if not raw:
                 continue
             yield raw.decode("ascii", "replace").rstrip("\r\n")
@@ -152,9 +169,17 @@ class DeviceLink:
 
 def discover_devices(baudrate: int = DEFAULT_BAUDRATE,
                      timeout: float = 1.0) -> List[PortInfo]:
-    """Ping every candidate serial port; return those that answer as a BomberCat."""
+    """Return the serial ports that answer as a BomberCat.
+
+    When any port is identified by its USB VID/PID (see usb_connection), only
+    those are handshaked — we don't open unrelated serial devices, since opening
+    a port can reset some MCUs. If nothing is tagged (e.g. a board mis-flashed to
+    a generic Arduino VID/PID), fall back to probing every candidate port.
+    """
+    tagged = bombercat_ports()
+    probe = tagged or list_ports_info()
     found: List[PortInfo] = []
-    for p in list_ports_info():
+    for p in probe:
         try:
             with DeviceLink(p.device, baudrate, timeout) as link:
                 if link.ping():
@@ -176,8 +201,24 @@ def resolve_port(preferred: Optional[str] = None,
     devices = discover_devices(baudrate)
     if len(devices) == 1:
         return devices[0].device
-    if not devices:
+    if len(devices) > 1:
+        ports = ", ".join(d.device for d in devices)
+        raise DeviceError(f"multiple BomberCats found ({ports}); pass --port")
+
+    # None answered. If USB still shows a BomberCat by VID/PID, the board is
+    # there but its firmware isn't serving the control REPL — point the user at
+    # that instead of a bare "not found". See DEBUG_serial_no_handshake.md.
+    tagged = bombercat_ports()
+    if len(tagged) == 1:
+        p = tagged[0]
         raise DeviceError(
-            "no BomberCat found; pass --port (e.g. --port /dev/ttyACM0)")
-    ports = ", ".join(d.device for d in devices)
-    raise DeviceError(f"multiple BomberCats found ({ports}); pass --port")
+            f"a BomberCat is connected at {p.device} (USB {p.hwid}) but it did "
+            "not answer the handshake — is it running the NFCGate relay "
+            "firmware? (see firmware/DEBUG_serial_no_handshake.md)")
+    if len(tagged) > 1:
+        ports = ", ".join(p.device for p in tagged)
+        raise DeviceError(
+            f"BomberCats detected by USB id ({ports}) but none answered the "
+            "handshake; pass --port and check the firmware")
+    raise DeviceError(
+        "no BomberCat found; pass --port (e.g. --port /dev/ttyACM0)")
