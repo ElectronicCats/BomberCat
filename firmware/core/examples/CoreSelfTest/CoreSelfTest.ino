@@ -21,6 +21,10 @@ RelayConfig cfg;
 WiFiClient wifiClient;
 NfcGateLink link(wifiClient);
 
+// RelayEngine (Fase 4/5) + SerialControl (Fase 6). Exercised for symbols only.
+RelayEngine engine(nfc, link, cfg);
+SerialControl control(Serial, config, cfg, engine, "selftest");
+
 void setup() {
   Serial.begin(9600);
   Log::begin(Serial, LogLevel::Debug);
@@ -66,6 +70,11 @@ void setup() {
   }
   link.setSession(cfg.session);  // reference NfcGateLink symbols
 
+  // --- SerialControl (Fase 6) --- announce readiness; no callbacks wired here.
+  SerialControl::Callbacks cb;  // all null: run/stop/reboot return -ERR/no-op
+  control.setCallbacks(cb);
+  control.begin();
+
   // --- NfcController ---
   bool ok = (cfg.roleEnum() == RelayRole::READER) ? nfc.beginReaderMode()
                                                    : nfc.beginEmulationMode();
@@ -77,6 +86,8 @@ void setup() {
 }
 
 void loop() {
+  control.poll();  // service the control REPL (Fase 6)
+
   uint8_t buf[256];
   uint8_t len = 0;
 
