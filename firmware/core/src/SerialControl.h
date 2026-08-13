@@ -1,0 +1,103 @@
+/**
+ * BomberCatCore - SerialControl
+ *
+ * A tiny line-based control REPL over a Stream (USB-serial), so the Python
+ * control CLI in tools/ can configure, start/stop and monitor the relay without
+ * carrying any APDUs on the wire (APDUs go over WiFi/TCP — see NFCGATE_PLAN.md).
+ *
+ * This is the device end of NFCGATE_PLAN.md Fase 6.
+ *
+ * Wire protocol (ASCII, one command per line, '\n'-terminated):
+ *
+ *   CLI -> device :  <cmd> [args...]\n
+ *   device -> CLI :  one or more RESPONSE lines, each with a leading marker so
+ *                    the CLI can tell them apart from human log output:
+ *                      ":<key> <value>"  a datum (info/status fields)
+ *                      "+OK [text]"       command succeeded (terminates a reply)
+ *                      "-ERR <text>"      command failed  (terminates a reply)
+ *                    Any line NOT starting with ':' '+' or '-' is log noise and
+ *                    the CLI ignores it. Every command yields exactly one
+ *                    terminating +OK / -ERR line.
+ *
+ * Commands:
+ *   ping                      -> +OK bombercat            (handshake / discovery)
+ *   info                      -> :fw :role :ssid :server :port :session :state
+ *                                +OK
+ *   get <key>                 -> :<key> <value> +OK       (key as in `set`)
+ *   set <key> <value...>      -> +OK / -ERR   keys: ssid pass server port
+ *                                session role  (value = rest of line; role is
+ *                                reader|card, port/session numeric)
+ *   save                      -> +OK / -ERR   persist current config to flash
+ *   load                      -> +OK          reload config from flash
+ *   clear                     -> +OK / -ERR   erase persisted config
+ *   run                       -> +OK / -ERR   start the relay (WiFi + engine)
+ *   stop                      -> +OK          stop the relay
+ *   status                    -> :state :connected :peer :relayed +OK
+ *   reboot                    -> +OK, then resets the MCU
+ *
+ * The relay actions (run/stop/reboot) are provided by the sketch as callbacks so
+ * this class — and all of core/ — stays free of any WiFiNINA dependency (the
+ * same decoupling as NfcGateLink / RelayEngine).
+ *
+ * Distributed as-is; no warranty is given.
+ */
+#ifndef BOMBERCAT_CORE_SERIALCONTROL_H
+#define BOMBERCAT_CORE_SERIALCONTROL_H
+
+#include <Arduino.h>
+
+#include "ConfigStore.h"
+#include "RelayEngine.h"
+
+class SerialControl {
+ public:
+  // Actions that need hardware the sketch owns (WiFi association, MCU reset).
+  // All optional; a null callback makes the matching command return -ERR.
+  struct Callbacks {
+    bool (*run)() = nullptr;    // start relay (WiFi + engine.begin); true = ok
+    void (*stop)() = nullptr;   // stop relay (engine.stop + drop WiFi if wanted)
+    void (*reboot)() = nullptr;  // reset the MCU
+  };
+
+  // `io`, `store`, `cfg` and `engine` must outlive the control object (all are
+  // typically globals in the sketch). `fwVersion` is reported by `info`/`get fw`.
+  SerialControl(Stream &io, ConfigStore &store, RelayConfig &cfg,
+                RelayEngine &engine, const char *fwVersion);
+
+  void setCallbacks(const Callbacks &cb) { _cb = cb; }
+
+  // Announce readiness so the CLI can sync (prints "+OK bombercat ready").
+  void begin();
+
+  // Read whatever bytes are available and dispatch each complete line. Call once
+  // per loop(); never blocks.
+  void poll();
+
+ private:
+  void dispatch(char *line);
+
+  // Response helpers (the leading-marker protocol above).
+  void ok();
+  void ok(const char *msg);
+  void err(const char *msg);
+  void kv(const char *key, const char *value);
+  void kv(const char *key, long value);
+
+  bool handleSet(char *args);  // `set <key> <value...>`; returns false -> -ERR
+  const char *roleName() const;
+  const char *stateName() const;
+
+  Stream &_io;
+  ConfigStore &_store;
+  RelayConfig &_cfg;
+  RelayEngine &_engine;
+  const char *_fw;
+  Callbacks _cb;
+
+  static const size_t LINE_MAX = 160;  // ssid/pass up to 63 each + verb + space
+  char _buf[LINE_MAX];
+  size_t _len = 0;
+  bool _overflow = false;  // current line exceeded LINE_MAX; drop to next '\n'
+};
+
+#endif  // BOMBERCAT_CORE_SERIALCONTROL_H
