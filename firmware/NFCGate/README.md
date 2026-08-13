@@ -56,7 +56,7 @@ When no config is persisted, the sketch falls back to compile-time values in
 | `RELAY_SERVER` / `RELAY_PORT` | `nfcgate-server` host and TCP port (default 5566) |
 | `RELAY_SESSION` | session byte (1..255) — **must match** the peer |
 | `RELAY_ROLE` | `0` = READER, `1` = CARD/HCE |
-| `RELAY_AUTOSTART` | `1` = start the relay on boot from config; `0` = wait for the CLI's `run`. With an empty SSID it no-ops and waits for the CLI regardless. |
+| `RELAY_AUTOSTART` | `0` = boot into the control REPL and wait for the CLI's `run` (**required for CLI-driven use** — the default). `1` = start the relay on boot (standalone). With a non-empty SSID, `1` blocks setup() on a WiFi/TCP bring-up before the REPL starts, so the CLI can't reach the board; only use `1` for a standalone device you won't drive over USB. |
 
 Persisted config (from the CLI) always takes precedence over these fallbacks.
 

@@ -26,5 +26,12 @@
 // --- Autostart ---
 // 1 = start the relay on boot from the persisted/secrets config (standalone).
 // 0 = boot into the SerialControl REPL only and wait for the CLI's `run`.
-// With an empty SSID above, autostart harmlessly no-ops and waits for the CLI.
-#define RELAY_AUTOSTART 1
+//
+// IMPORTANT: autostart runs a BLOCKING WiFi/TCP bring-up (connectWiFi ->
+// engine.begin) inside setup(), before loop() starts. If a non-empty SSID is
+// configured (persisted in flash or set below), that bring-up blocks setup()
+// for up to ~20 s — or hangs on the NINA SPI handshake — and the SerialControl
+// REPL never starts servicing USB, so the CLI's `ping` handshake times out and
+// `bombercat run` reports "no BomberCat found". Keep this 0 for CLI-driven use;
+// only set 1 for a truly standalone device you will not talk to over USB.
+#define RELAY_AUTOSTART 0

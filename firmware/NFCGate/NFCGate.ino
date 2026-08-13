@@ -34,6 +34,14 @@
 
 #define BOMBERCAT_FW_VERSION "0.6.0"
 
+// Bound the server TCP connect so a host that is reachable but silently drops
+// the SYN fails fast (clean -ERR) instead of hanging tens of seconds and blowing
+// past the CLI's run window. WiFiNINA's default connTimeout (0) leaves it to the
+// NINA firmware's long default. Keep the worst-case budget aligned with the CLI:
+//   CLI run read_timeout >= WiFi(20s) + NFC + TCP_CONNECT + SYN + margin.
+// See tools/modules/core/bombercat.py run() and firmware/DEBUG_run_timeout_mismatch.md.
+#define RELAY_TCP_CONNECT_TIMEOUT_MS 8000
+
 // --- Globals (must outlive the engine / control) ---
 NfcController nfc;
 WiFiClient wifiClient;
@@ -102,6 +110,11 @@ void setup() {
   }
   Log::begin(Serial, LogLevel::Debug);
   LOG_INFO("BomberCat NFCGate relay");
+
+  // Cap the server connect so engine.begin() can't stall on an unresponsive
+  // host (the NfcGateLink only sees a Client&, so the bound is set here on the
+  // concrete WiFiClient it wraps).
+  wifiClient.setConnectionTimeout(RELAY_TCP_CONNECT_TIMEOUT_MS);
 
   // Load persisted config; fall back to the compile-time secrets.
   if (store.begin() && store.load(cfg)) {
