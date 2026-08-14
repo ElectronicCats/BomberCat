@@ -70,6 +70,8 @@ def _fake_device(master_fd: int) -> None:
                 send("+OK")
             elif cmd == "save":
                 send("+OK")
+            elif cmd == "identify":
+                send("+OK")
             else:
                 send("-ERR unknown command")
 
@@ -106,6 +108,14 @@ def main() -> int:
         r = link.status()
         check("status relayed=7", r.ok and r.data.get("relayed") == "7")
         check("status connected=1", r.data.get("connected") == "1")
+
+        r = link.identify()  # `identify` (fw >= 0.7.0) blinks the LED
+        check("identify ok", r.ok)
+
+        # Older firmware answers -ERR unknown command; the CLI must surface that
+        # as a clean failure, not an exception.
+        r = link.command("identify-nope")
+        check("unknown command -> ERR", (not r.ok) and "unknown" in r.message)
     finally:
         link.close()
 

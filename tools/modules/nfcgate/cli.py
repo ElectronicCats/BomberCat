@@ -14,6 +14,7 @@ import serial
 from rich.table import Table
 
 from ..core.bombercat import DeviceError, DeviceLink, resolve_port
+from ..utils.cli_options import target_options
 from ..utils.output import (
     console,
     print_error,
@@ -22,13 +23,16 @@ from ..utils.output import (
     print_warning,
 )
 
-_PORT_OPTION = click.option("-p", "--port", default=None,
-                            help="Serial port (auto-detected if omitted).")
-
 
 @contextmanager
-def _device_session(port: Optional[str]) -> Iterator[Tuple[str, DeviceLink]]:
+def _device_session(port: Optional[str],
+                    device_id: Optional[int] = None
+                    ) -> Iterator[Tuple[str, DeviceLink]]:
     """Open a verified link, yield ``(target, link)``, and always close it.
+
+    The board is picked by ``--port`` (raw path) or ``--device/-d`` (ID from
+    `bombercat device list`), falling back to handshake auto-detection when a
+    single BomberCat is attached — see ``core.bombercat.resolve_port``.
 
     Any ``DeviceError`` or serial/OS error — whether raised while connecting
     OR while running commands inside the ``with`` block — is reported as a
@@ -38,7 +42,7 @@ def _device_session(port: Optional[str]) -> Iterator[Tuple[str, DeviceLink]]:
     """
     link: Optional[DeviceLink] = None
     try:
-        target = resolve_port(port)
+        target = resolve_port(port, device_id)
         link = DeviceLink(target).open()
         if not link.ping():
             print_error(
@@ -90,10 +94,10 @@ def config():
 @click.option("--password", "--pass", "password", default="",
               help="WiFi passphrase (empty for an open network).")
 @click.option("--save/--no-save", default=True, help="Persist to flash (default: save).")
-@_PORT_OPTION
-def config_wifi(ssid, password, save, port):
+@target_options
+def config_wifi(ssid, password, save, port, device_id):
     """Set the WiFi credentials."""
-    with _device_session(port) as (_, link):
+    with _device_session(port, device_id) as (_, link):
         _apply(link, [("ssid", ssid), ("pass", password)], save)
 
 
@@ -105,8 +109,8 @@ def config_wifi(ssid, password, save, port):
 @click.option("--role", type=click.Choice(["reader", "card"]), required=True,
               help="reader = read a physical card, card = emulate to a terminal.")
 @click.option("--save/--no-save", default=True, help="Persist to flash (default: save).")
-@_PORT_OPTION
-def config_nfcgate(server, session, role, save, port):
+@target_options
+def config_nfcgate(server, session, role, save, port, device_id):
     """Set the nfcgate-server, session and role."""
     host, _, port_str = server.partition(":")
     pairs = [("server", host)]
@@ -117,15 +121,15 @@ def config_nfcgate(server, session, role, save, port):
         pairs.append(("port", port_str))
     pairs += [("session", str(session)), ("role", role)]
 
-    with _device_session(port) as (_, link):
+    with _device_session(port, device_id) as (_, link):
         _apply(link, pairs, save)
 
 
 @config.command("show")
-@_PORT_OPTION
-def config_show(port):
+@target_options
+def config_show(port, device_id):
     """Show the device's current configuration."""
-    with _device_session(port) as (target, link):
+    with _device_session(port, device_id) as (target, link):
         r = link.info()
     if not r.ok:
         print_error(f"info failed: {r.message}")
@@ -148,10 +152,10 @@ _RUN_POLL_INTERVAL = 0.5  # seconds between `status` polls
 
 
 @click.command("run", context_settings={"help_option_names": ["-h", "--help"]})
-@_PORT_OPTION
-def run_cmd(port):
+@target_options
+def run_cmd(port, device_id):
     """Start the relay (associate WiFi, connect the server, begin the session)."""
-    with _device_session(port) as (target, link):
+    with _device_session(port, device_id) as (target, link):
         # Phase 1: `run` is non-blocking on the device — it only ACCEPTS the
         # request and starts the bring-up in the background. A -ERR here means it
         # couldn't even start (e.g. empty SSID, already running).
@@ -214,20 +218,20 @@ def run_cmd(port):
 
 
 @click.command("stop", context_settings={"help_option_names": ["-h", "--help"]})
-@_PORT_OPTION
-def stop_cmd(port):
+@target_options
+def stop_cmd(port, device_id):
     """Stop the relay."""
-    with _device_session(port) as (target, link):
+    with _device_session(port, device_id) as (target, link):
         r = link.stop()
     print_success(f"relay stopped on {target}") if r.ok else \
         print_error(f"stop failed: {r.message}")
 
 
 @click.command("status", context_settings={"help_option_names": ["-h", "--help"]})
-@_PORT_OPTION
-def status_cmd(port):
+@target_options
+def status_cmd(port, device_id):
     """Show live relay status (state, link, peer, relayed count)."""
-    with _device_session(port) as (target, link):
+    with _device_session(port, device_id) as (target, link):
         r = link.status()
     if not r.ok:
         print_error(f"status failed: {r.message}")
@@ -247,10 +251,10 @@ def status_cmd(port):
 
 
 @click.command("monitor", context_settings={"help_option_names": ["-h", "--help"]})
-@_PORT_OPTION
-def monitor_cmd(port):
+@target_options
+def monitor_cmd(port, device_id):
     """Stream the device's serial output live (relay logs + APDU hex). Ctrl-C to quit."""
-    with _device_session(port) as (target, link):
+    with _device_session(port, device_id) as (target, link):
         print_info(f"Monitoring {target} — press Ctrl-C to stop")
         try:
             for line in link.stream():

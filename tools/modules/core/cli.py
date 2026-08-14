@@ -13,6 +13,7 @@ import sys
 
 # Internal
 from ..utils._version import __version__
+from .bombercat import DeviceError, DeviceLink, resolve_port
 from ..device.cli import device as _device
 from ..nfcgate.cli import (
     config as _config,
@@ -23,6 +24,7 @@ from ..nfcgate.cli import (
 )
 from ..proto.cli import proto as _proto
 from ..testserver.cli import testserver as _testserver
+from ..utils.cli_options import target_options
 
 # External
 import click
@@ -119,6 +121,34 @@ def cli(verbose):
     if verbose:
         logger.level = logging.INFO
     pass
+
+
+@click.command("identify", context_settings={"help_option_names": ["-h", "--help"]})
+@target_options
+def identify_cmd(port, device_id):
+    """Blink a device's LED so you can tell which board an ID refers to."""
+    try:
+        target = resolve_port(port, device_id)
+        with DeviceLink(target) as link:
+            if not link.ping():
+                print_error(f"{target} did not answer the handshake.")
+                raise SystemExit(1)
+            r = link.identify()
+    except DeviceError as e:
+        print_error(str(e))
+        raise SystemExit(1)
+    except Exception as e:
+        print_error(f"{type(e).__name__}: {e}")
+        raise SystemExit(1)
+
+    if not r.ok:
+        print_error(f"identify failed: {r.message}")
+        if "unknown command" in r.message:
+            # Pre-0.7.0 firmware has no `identify`; the CLI is newer than the board.
+            print_info("this firmware predates `identify` — reflash "
+                       "firmware/NFCGate to use it.")
+        raise SystemExit(1)
+    print_success(f"{target} is blinking its LED for a couple of seconds")
 
 
 # ===================== Shell Completion Commands =====================
@@ -356,6 +386,7 @@ def main_cli() -> None:
 
     # Device control plane (Fase 6): talk to a BomberCat over USB-serial.
     cli.add_command(_device)
+    cli.add_command(identify_cmd)
     cli.add_command(_config)
     cli.add_command(_run)
     cli.add_command(_stop)

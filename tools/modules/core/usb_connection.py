@@ -2,13 +2,14 @@
 
 # Electronic Cats
 # usb_connection.py — low-level USB-serial transport for the BomberCat control
-# CLI: enumerate serial ports and open them. The line protocol on top lives in
-# bombercat.py (DeviceLink). See NFCGATE_PLAN.md Fase 6.
+# CLI: enumerate serial ports, group them into numbered devices and open them.
+# The line protocol on top lives in bombercat.py (DeviceLink).
+# See NFCGATE_PLAN.md Fase 6.
 # Distributed as-is; no warranty is given.
 
 import os
 from dataclasses import dataclass
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Sequence, Set, Tuple
 
 import serial
 from serial.tools import list_ports
@@ -45,6 +46,14 @@ BOMBERCAT_USB_IDS: Set[Tuple[int, int]] = {
     (0x1209, 0x805E),  # alternate application personality
     (0x1209, 0x015E),
     (0x1209, 0x025E),
+    # Sketches built against the stock Arduino Mbed RP2040 profile (rather than
+    # electroniccats:mbed_rp2040:bombercat) keep Arduino's Nano RP2040 Connect
+    # USB identity — that is what the boards on the bench actually report
+    # (`VID:PID=2341:005E`, see firmware/DEBUG_serial_no_handshake.md §2). Listing
+    # it here is what lets device numbering (`-d`) work on those builds. A real
+    # Nano RP2040 Connect matches too, so this only *tags* a port as a candidate:
+    # auto-detection and `device list`'s ✓ still require the control handshake.
+    (0x2341, 0x005E),
 }
 
 # ── Serial defaults ───────────────────────────────────────────────────────────
@@ -64,6 +73,8 @@ class PortInfo:
     hwid: str            # VID:PID / serial, when known
     vid: Optional[int] = None  # USB vendor id, when the OS reports one
     pid: Optional[int] = None  # USB product id, when the OS reports one
+    serial_number: Optional[str] = None  # USB iSerial, when the OS reports one
+    location: Optional[str] = None       # USB topology "bus-hub.port:cfg.intf"
 
     @property
     def is_candidate(self) -> bool:
@@ -84,7 +95,9 @@ def list_ports_info(include_all: bool = False) -> List[PortInfo]:
                  description=p.description or "",
                  hwid=p.hwid or "",
                  vid=p.vid,
-                 pid=p.pid)
+                 pid=p.pid,
+                 serial_number=p.serial_number,
+                 location=p.location)
         for p in list_ports.comports()
     ]
     # BomberCat-tagged ports first (stable within each group by device name), so
@@ -98,6 +111,99 @@ def list_ports_info(include_all: bool = False) -> List[PortInfo]:
 def bombercat_ports() -> List[PortInfo]:
     """Ports whose USB VID/PID identify them as a BomberCat (no handshake)."""
     return [p for p in list_ports_info() if p.matches_bombercat]
+
+
+# ════════════════════════════════════════════════════════════════════════════ #
+# Device model — numbered devices for `--device/-d`                            #
+# ════════════════════════════════════════════════════════════════════════════ #
+#
+# A BomberCat exposes exactly ONE USB CDC-ACM interface (the control REPL), so
+# unlike the CatSniffer — three interfaces per unit that must be grouped by USB
+# serial number and mapped to roles — here one port *is* one device. What we do
+# need from that model is the stable numbering: with several boards attached the
+# host assigns /dev/ttyACM* (or COM*) in a non-deterministic order, so the CLI
+# addresses devices by an ID derived from a stable USB identity instead.
+
+
+@dataclass
+class BomberCatDevice:
+    """One physical BomberCat, addressable by `--device/-d <id>`."""
+
+    device_id: int                       # 1-based, stable while the set of
+                                         # attached boards doesn't change
+    port: str                            # serial port path (/dev/ttyACM0, COM3)
+    serial_number: Optional[str] = None  # USB iSerial — the identity we sort on
+    description: str = ""
+    hwid: str = ""
+    usb_tagged: bool = True              # False = matched only as a fallback,
+                                         # its USB VID/PID isn't a BomberCat's
+
+    @property
+    def identity(self) -> str:
+        """Short human label for the identity the ID is derived from."""
+        return self.serial_number or self.port
+
+    def __str__(self) -> str:
+        return f"BomberCat #{self.device_id}"
+
+    def __repr__(self) -> str:
+        return (f"BomberCatDevice(id={self.device_id}, port={self.port!r}, "
+                f"serial={self.serial_number!r})")
+
+
+def _identity_key(port: PortInfo) -> Tuple[int, str]:
+    """Sort key that keeps device IDs stable across replugs and reboots.
+
+    Priority: USB serial number (survives re-enumeration and a changed ttyACM
+    number), then the USB topology location prefix — the "bus-hub.port" part
+    before the ':' — which is stable as long as the board stays in the same
+    physical socket, and finally the port path as a last resort.
+    """
+    if port.serial_number:
+        return (0, port.serial_number)
+    if port.location:
+        return (1, port.location.split(":")[0])
+    return (2, port.device)
+
+
+def find_devices(ports: Optional[Sequence[PortInfo]] = None
+                 ) -> List[BomberCatDevice]:
+    """Enumerate attached BomberCats and number them 1..N (no handshake).
+
+    Numbering is USB-only — cheap, and it doesn't open any port (opening one can
+    reset the MCU). Ports tagged with a BomberCat USB VID/PID are used when there
+    are any; if none is tagged (e.g. a board re-flashed to a generic Arduino
+    identity) every candidate port is numbered instead, so `-d` still addresses
+    something and `bombercat device list` shows what each ID maps to.
+    """
+    all_ports = list(ports) if ports is not None else list_ports_info()
+    tagged = [p for p in all_ports if p.matches_bombercat]
+    pool = tagged or all_ports
+    return [
+        BomberCatDevice(device_id=i,
+                        port=p.device,
+                        serial_number=p.serial_number,
+                        description=p.description,
+                        hwid=p.hwid,
+                        usb_tagged=p.matches_bombercat)
+        for i, p in enumerate(sorted(pool, key=_identity_key), start=1)
+    ]
+
+
+def find_device(device_id: Optional[int] = None) -> Optional[BomberCatDevice]:
+    """Return one numbered BomberCat: the given ID, or the first one attached."""
+    devices = find_devices()
+    if not devices:
+        return None
+    if device_id is None:
+        return devices[0]
+    return next((d for d in devices if d.device_id == device_id), None)
+
+
+def describe_devices(devices: Optional[Sequence[BomberCatDevice]] = None) -> str:
+    """One-line "#1 /dev/ttyACM0, #2 /dev/ttyACM1" summary for error messages."""
+    devices = find_devices() if devices is None else devices
+    return ", ".join(f"#{d.device_id} {d.port}" for d in devices)
 
 
 def open_serial(port: str,

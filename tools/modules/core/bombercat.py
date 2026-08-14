@@ -15,9 +15,11 @@ import serial
 from .usb_connection import (
     DEFAULT_BAUDRATE,
     DEFAULT_TIMEOUT,
-    PortInfo,
+    BomberCatDevice,
     bombercat_ports,
-    list_ports_info,
+    describe_devices,
+    find_device,
+    find_devices,
     open_serial,
 )
 
@@ -147,6 +149,10 @@ class DeviceLink:
     def stop(self) -> Response:
         return self.command("stop")
 
+    def identify(self) -> Response:
+        """Blink the device's LED so the user can tell which board is which."""
+        return self.command("identify")
+
     def stream(self) -> Iterator[str]:
         """Yield decoded serial lines forever (for `monitor`). Read-only; does
         not send anything, so it does not disturb a running relay."""
@@ -166,42 +172,66 @@ class DeviceLink:
 # ── Discovery helpers ─────────────────────────────────────────────────────────
 
 def discover_devices(baudrate: int = DEFAULT_BAUDRATE,
-                     timeout: float = 1.0) -> List[PortInfo]:
-    """Return the serial ports that answer as a BomberCat.
+                     timeout: float = 1.0) -> List[BomberCatDevice]:
+    """Return the numbered BomberCats that answer the handshake.
 
-    When any port is identified by its USB VID/PID (see usb_connection), only
-    those are handshaked — we don't open unrelated serial devices, since opening
-    a port can reset some MCUs. If nothing is tagged (e.g. a board mis-flashed to
-    a generic Arduino VID/PID), fall back to probing every candidate port.
+    Candidates and their IDs come from find_devices(): when any port is
+    identified by its USB VID/PID (see usb_connection), only those are
+    handshaked — we don't open unrelated serial devices, since opening a port can
+    reset some MCUs. If nothing is tagged (e.g. a board mis-flashed to a generic
+    Arduino VID/PID), every candidate port is probed instead. IDs are those
+    assigned by find_devices(), so a device keeps its number whether or not its
+    neighbours answer.
     """
-    tagged = bombercat_ports()
-    probe = tagged or list_ports_info()
-    found: List[PortInfo] = []
-    for p in probe:
+    found: List[BomberCatDevice] = []
+    for dev in find_devices():
         try:
-            with DeviceLink(p.device, baudrate, timeout) as link:
+            with DeviceLink(dev.port, baudrate, timeout) as link:
                 if link.ping():
-                    found.append(p)
+                    found.append(dev)
         except (serial.SerialException, DeviceError, OSError):
             continue
     return found
 
 
 def resolve_port(preferred: Optional[str] = None,
+                 device_id: Optional[int] = None,
                  baudrate: int = DEFAULT_BAUDRATE) -> str:
     """
-    Pick the port to talk to. If `preferred` is given, use it as-is. Otherwise
-    auto-detect by handshake: exactly one BomberCat -> that port; zero or many
-    -> DeviceError telling the user to pass --port.
+    Pick the port to talk to:
+
+      * `preferred` (--port) wins — used as-is, no enumeration.
+      * `device_id` (--device/-d) selects one of the numbered devices reported by
+        `bombercat device list`, without handshaking the others.
+      * otherwise auto-detect by handshake: exactly one BomberCat -> that port;
+        zero or many -> DeviceError telling the user to pass -d/--port.
     """
+    if preferred and device_id is not None:
+        raise DeviceError("--port and --device are mutually exclusive; "
+                          "pass one or the other")
     if preferred:
         return preferred
+
+    if device_id is not None:
+        dev = find_device(device_id)
+        if dev is not None:
+            return dev.port
+        known = find_devices()
+        if known:
+            raise DeviceError(
+                f"no BomberCat with ID {device_id}; attached: "
+                f"{describe_devices(known)} (see `bombercat device list`)")
+        raise DeviceError(
+            f"no BomberCat with ID {device_id}: none is attached "
+            "(see `bombercat device list`)")
+
     devices = discover_devices(baudrate)
     if len(devices) == 1:
-        return devices[0].device
+        return devices[0].port
     if len(devices) > 1:
-        ports = ", ".join(d.device for d in devices)
-        raise DeviceError(f"multiple BomberCats found ({ports}); pass --port")
+        raise DeviceError(
+            f"multiple BomberCats found ({describe_devices(devices)}); "
+            "pass --device/-d <id> (or --port)")
 
     # None answered. If USB still shows a BomberCat by VID/PID, the board is
     # there but its firmware isn't serving the control REPL — point the user at
@@ -214,9 +244,9 @@ def resolve_port(preferred: Optional[str] = None,
             "not answer the handshake — is it running the NFCGate relay "
             "firmware? (see firmware/DEBUG_serial_no_handshake.md)")
     if len(tagged) > 1:
-        ports = ", ".join(p.device for p in tagged)
         raise DeviceError(
-            f"BomberCats detected by USB id ({ports}) but none answered the "
-            "handshake; pass --port and check the firmware")
+            f"BomberCats detected by USB id ({describe_devices()}) but none "
+            "answered the handshake; pass --device/-d <id> and check the "
+            "firmware")
     raise DeviceError(
         "no BomberCat found; pass --port (e.g. --port /dev/ttyACM0)")
