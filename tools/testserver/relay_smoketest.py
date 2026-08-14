@@ -21,6 +21,7 @@ Usage:
     python tools/testserver/relay_smoketest.py [host] [port]
 """
 import os
+import random
 import socket
 import struct
 import sys
@@ -33,7 +34,12 @@ from plugins import c2c_pb2, c2s_pb2  # noqa: E402
 
 HOST = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 5566
-SESSION = 0x2A  # any non-zero byte; both peers must match
+# Any non-zero byte; both peers must match. Picked at random rather than fixed
+# because the server relays every frame to *all* clients in the session: a real
+# BomberCat on the same server (firmware default RELAY_SESSION 42 == 0x2A) would
+# join the session and its OP_SYN would arrive here, breaking the byte-identity
+# assertions below. Excluding 42 keeps this test isolated from a live device.
+SESSION = random.choice([b for b in range(1, 256) if b != 42])
 
 
 def recvn(sock, n):

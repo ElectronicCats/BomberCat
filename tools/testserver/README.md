@@ -50,13 +50,23 @@ cd server && python server.py log                   # listens on 0.0.0.0:5566
 With the server running, in another terminal:
 
 ```bash
-# needs protobuf==3.20.3 available (reuse the venv above)
+bombercat testserver smoke [host] [port]           # recommended
+
+# or directly — needs protobuf==3.20.3 available (reuse the venv above)
 python tools/testserver/relay_smoketest.py [host] [port]
 ```
 
+The `bombercat` wrapper bootstraps `tools/.venv-smoke/` with the pinned protobuf
+runtime the first time it runs, so the interpreter running the CLI (usually the
+system Python, which PEP 668 makes read-only) needs nothing installed. Override
+its location with `BOMBERCAT_SMOKE_VENV=/path/to/venv`.
+
 It opens two TCP clients on the same session, has a "reader" push a SELECT PPSE
 APDU and a "card" push the response, and asserts each peer receives the identical
-`ServerData` blob. Expected output:
+`ServerData` blob. The session byte is random per run (never 42): the server
+relays to *every* client in a session, so a live BomberCat using the firmware
+default `RELAY_SESSION 42` would otherwise inject its `OP_SYN` into the test and
+fail the byte-identity assertion. Expected output:
 
 ```
 [OK] reader->card  opcode=OP_PSH source=READER apdu=00a4...

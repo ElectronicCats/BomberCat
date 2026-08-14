@@ -32,6 +32,7 @@ hardware/BomberCat-backups/
 __pycache__/
 *.pyc
 tools/.venv-proto/
+tools/.venv-smoke/
 
 # Dev-only nfcgate-server test fixture, cloned on demand by
 # tools/testserver/fetch_server.sh (pinned nfcgate/server@4d32cc1).
