@@ -82,6 +82,29 @@ def _apply(link: DeviceLink, pairs: List[Tuple[str, str]], save: bool) -> None:
         print_info("not persisted (--no-save); lost on reboot")
 
 
+def _blink(link: DeviceLink, target: str) -> None:
+    """Blink the LED of the board we just configured, so `-d 2` can be matched
+    to a physical device on the desk without counting cables.
+
+    Never fatal: the configuration is already applied and saved by the time we
+    get here, so a board that can't blink (pre-0.7.0 firmware has no
+    `identify`) only earns a warning.
+    """
+    try:
+        r = link.identify()
+    except DeviceError as e:
+        print_warning(f"could not blink {target}: {e}")
+        return
+    if r.ok:
+        print_info(f"{target} is blinking its LED — that's the board you just "
+                   "configured")
+    elif "unknown command" in r.message:
+        print_warning("this firmware predates `identify` — reflash "
+                      "firmware/NFCGate to see which board was configured")
+    else:
+        print_warning(f"identify failed: {r.message}")
+
+
 # ── config group ──────────────────────────────────────────────────────────────
 
 @click.group("config", context_settings={"help_option_names": ["-h", "--help"]})
@@ -97,8 +120,9 @@ def config():
 @target_options
 def config_wifi(ssid, password, save, port, device_id):
     """Set the WiFi credentials."""
-    with _device_session(port, device_id) as (_, link):
+    with _device_session(port, device_id) as (target, link):
         _apply(link, [("ssid", ssid), ("pass", password)], save)
+        _blink(link, target)
 
 
 @config.command("nfcgate")
@@ -121,8 +145,9 @@ def config_nfcgate(server, session, role, save, port, device_id):
         pairs.append(("port", port_str))
     pairs += [("session", str(session)), ("role", role)]
 
-    with _device_session(port, device_id) as (_, link):
+    with _device_session(port, device_id) as (target, link):
         _apply(link, pairs, save)
+        _blink(link, target)
 
 
 @config.command("show")
