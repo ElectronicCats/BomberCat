@@ -179,6 +179,13 @@ void SerialControl::dispatch(char *line) {
     kv("peer", (long)(_engine.peerReady() ? 1 : 0));
     kv("relayed", (long)_engine.relayedCount());
     ok();
+  } else if (strcmp(verb, "identify") == 0) {
+    if (_cb.identify == nullptr) {
+      err("identify unavailable");
+    } else {
+      _cb.identify();  // only ARMS the blink; the sketch's loop() runs it
+      ok();
+    }
   } else if (strcmp(verb, "reboot") == 0) {
     ok();
     _io.flush();

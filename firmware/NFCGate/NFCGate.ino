@@ -19,8 +19,13 @@
  * Python CLI in tools/ can configure it (WiFi + nfcgate params, persisted in
  * ConfigStore), start/stop the relay and read status over USB-serial — no APDUs
  * travel on the serial link. Send `ping`, `info`, `set ...`, `save`, `run`,
- * `status`, `stop`. If RELAY_AUTOSTART is set (arduino_secrets.h) the relay also
- * starts on boot from the persisted/secrets config, so it still runs standalone.
+ * `status`, `stop`, `identify`. If RELAY_AUTOSTART is set (arduino_secrets.h) the
+ * relay also starts on boot from the persisted/secrets config, so it still runs
+ * standalone.
+ *
+ * With several BomberCats attached the CLI addresses each one by a stable ID
+ * derived from its USB identity (`bombercat device list`, then `-d <id>` on any
+ * command); `identify` blinks the LED so an ID can be matched to a board.
  *
  * Board: Arduino Mbed OS RP2040 (electroniccats:mbed_rp2040:bombercat).
  * Libraries: BomberCatCore, WiFiNINA, Electronic Cats PN7150.
@@ -32,7 +37,7 @@
 
 #include "arduino_secrets.h"
 
-#define BOMBERCAT_FW_VERSION "0.6.0"
+#define BOMBERCAT_FW_VERSION "0.7.0"
 
 // Bound the server TCP connect so a host that is reachable but silently drops
 // the SYN fails fast (clean -ERR) instead of hanging tens of seconds and blowing
@@ -194,6 +199,41 @@ static void stopRelay() {
 
 static void rebootMcu() { NVIC_SystemReset(); }
 
+// --- `identify`: blink the LED so a CLI device ID maps to a board on the desk --
+// With several BomberCats attached the CLI addresses them by number
+// (`bombercat device list` / `-d <id>`); those numbers come from USB identity, so
+// this is what ties one to the physical board. Armed by the `identify` command
+// and driven from loop() — never blocking, so it is safe to ask a relaying
+// device to identify itself mid-session.
+static const uint32_t IDENTIFY_DURATION_MS = 2000;
+static const uint32_t IDENTIFY_PERIOD_MS = 150;  // half-period: on/off toggle
+
+static uint32_t g_identifyUntil = 0;  // 0 = not identifying
+static uint32_t g_identifyNext = 0;   // next LED toggle (millis)
+static bool g_identifyLedOn = false;
+
+static void startIdentify() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  g_identifyUntil = millis() + IDENTIFY_DURATION_MS;
+  if (g_identifyUntil == 0) g_identifyUntil = 1;  // 0 is the "idle" sentinel
+  g_identifyNext = millis();  // toggle on the next loop() iteration
+}
+
+static void driveIdentify() {
+  if (g_identifyUntil == 0) return;
+  if ((int32_t)(millis() - g_identifyUntil) >= 0) {  // done: leave the LED off
+    g_identifyUntil = 0;
+    g_identifyLedOn = false;
+    digitalWrite(LED_BUILTIN, LOW);
+    return;
+  }
+  if ((int32_t)(millis() - g_identifyNext) >= 0) {
+    g_identifyLedOn = !g_identifyLedOn;
+    digitalWrite(LED_BUILTIN, g_identifyLedOn ? HIGH : LOW);
+    g_identifyNext = millis() + IDENTIFY_PERIOD_MS;
+  }
+}
+
 // Control-plane state name for `status`/`info` (see SerialControl::Callbacks).
 static const char *relayStateName() {
   switch (g_phase) {
@@ -238,6 +278,7 @@ void setup() {
   cb.run = runRelay;
   cb.stop = stopRelay;
   cb.reboot = rebootMcu;
+  cb.identify = startIdentify;
   cb.state = relayStateName;
   cb.detail = relayDetail;
   control.setCallbacks(cb);
@@ -255,6 +296,8 @@ void setup() {
 
 void loop() {
   control.poll();  // always service the control REPL, every iteration
+
+  driveIdentify();  // run an armed `identify` blink (no-op when not identifying)
 
   driveBringup();  // advance any in-progress bring-up (no-op when not connecting)
 

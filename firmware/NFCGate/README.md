@@ -87,7 +87,7 @@ The control link runs at **115200 baud**. After flashing, verify the device
 answers over serial:
 
 ```sh
-bombercat device info      # -> fw 0.6.0, state idle
+bombercat device info      # -> fw 0.7.0, state idle
 ```
 
 Then configure it (above), point it at a running `nfcgate-server` with a card in
@@ -99,6 +99,12 @@ bombercat run              # associate WiFi, connect server, begin session
 bombercat status           # state / link / peer / relayed count
 bombercat monitor          # live serial stream (relay logs + APDU hex)
 ```
+
+Both ends of a relay are usually plugged into the same host. List them with
+`bombercat device list` and address each one by its ID — every command above
+takes `-d <ID>` (e.g. `bombercat run -d 2`); `bombercat identify -d 2`
+blinks that board's LED so you can tell which is which. See `tools/README.md`
+§ Multiple devices.
 
 ## Testing without hardware
 

@@ -40,6 +40,10 @@
  *   status                    -> :state :detail :connected :peer :relayed +OK
  *                                state: idle|connecting|relaying|error;
  *                                detail: current phase or last error (human text)
+ *   identify                  -> +OK           blink the LED for a couple of
+ *                                seconds so the user can tell which physical
+ *                                board a CLI device ID refers to. Returns at
+ *                                once; the blinking runs from the sketch loop().
  *   reboot                    -> +OK, then resets the MCU
  *
  * The relay actions (run/stop/reboot) are provided by the sketch as callbacks so
@@ -69,6 +73,10 @@ class SerialControl {
     const char *(*run)() = nullptr;
     void (*stop)() = nullptr;   // stop relay (engine.stop + drop WiFi if wanted)
     void (*reboot)() = nullptr;  // reset the MCU
+    // Start a short visual identification (LED blink) so the user can match a
+    // CLI device ID to a board on the desk. Must return promptly — the sketch
+    // drives the blinking from loop(), it must not stall the relay.
+    void (*identify)() = nullptr;
     // Control-plane state name: "idle"|"connecting"|"relaying"|"error". Owned by
     // the sketch because the "connecting" sub-phases (WiFi/NFC/TCP/SYN) live
     // there. If null, `status`/`info` fall back to the engine's own state.
