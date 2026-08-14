@@ -26,14 +26,26 @@ bool NfcController::reset() {
   return true;
 }
 
+// Order matters: connectNCI() (inside reset()) is what pulses VEN and calls
+// Wire.begin() to wake the PN7150. The library's setReaderWriterMode() /
+// setEmulationMode() are NOT mere flags — each runs a full mode+reset sequence
+// that talks I2C (stopDiscovery/configMode/startDiscovery). Calling them before
+// connectNCI() drives the I2C bus while Wire is still un-begun and the chip is
+// asleep, which hangs the bus and wedges loop(). So bring the chip up first,
+// then select the RF role — mirroring the known-good host_/client_Relay_NFC
+// sketches (connectNCI at boot, setReaderWriterMode/setEmulationMode after).
 bool NfcController::beginReaderMode() {
-  _nfc.setReaderWriterMode();
-  return reset();
+  if (!reset()) {
+    return false;
+  }
+  return _nfc.setReaderWriterMode();
 }
 
 bool NfcController::beginEmulationMode() {
-  _nfc.setEmulationMode();
-  return reset();
+  if (!reset()) {
+    return false;
+  }
+  return _nfc.setEmulationMode();
 }
 
 bool NfcController::waitForTag(uint16_t timeoutMs) {
