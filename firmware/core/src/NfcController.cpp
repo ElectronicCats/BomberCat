@@ -92,10 +92,19 @@ bool NfcController::cardSend(uint8_t *buf, uint8_t len) {
 }
 
 bool NfcController::cardReArm() {
-  // Library reset() = stopDiscovery + (configureSettings only if no protocol is
-  // latched) + configMode + startDiscovery, in the current (EMULATION) mode.
-  // This is exactly the re-arm the library runs on RF_DEACTIVATE_NTF inside
-  // ProcessCardMode, minus the connectNCI() chip re-init that our heavier
-  // reset() would do — so it recovers listen mode without dropping the chip.
-  return _nfc.reset();
+  // A terminal left the field. The raw cardModeReceive() path never processes
+  // the RF_DEACTIVATE_NTF (61 06) the PN7150 emits on field-off — unlike the
+  // library's own ProcessCardMode(), which StopDiscovery+StartDiscovery on it —
+  // so the emulated target is torn down and never rebuilt by the receive path.
+  //
+  // The light library reset() proved INSUFFICIENT to restore a detectable
+  // ISO-DEP listen target after the first activation (the "worked exactly once,
+  // dormant afterwards" symptom): it skips configureSettings() once a protocol
+  // is latched and never re-pulses the chip, so the re-armed discovery does not
+  // present the same target the fresh bring-up did. Re-run the FULL emulation
+  // bring-up that provably presents a detectable card at boot (connectNCI +
+  // configureSettings + configMode(EMU) + startDiscovery, then setEmulationMode
+  // + a final reset — mode is already EMULATION here, so no RW detour). It costs
+  // a chip re-init (~tens of ms) but only runs once per terminal departure.
+  return beginEmulationMode();
 }
