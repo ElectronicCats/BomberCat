@@ -21,6 +21,8 @@ bool RelayEngine::beginNfc() {
   _peerReady = false;
   _tagReady = false;
   _awaitingResponse = false;
+  _lastCardActivity = millis();
+  _cardActivitySinceReArm = false;
 
   // Bring up the PN7150 in the role's RF mode.
   const bool isReader = _cfg.roleEnum() == RelayRole::READER;
@@ -70,6 +72,21 @@ void RelayEngine::loop() {
     return;
   }
 
+  // Diagnostic heartbeat for BOTH roles: the reader path is fully frame-driven
+  // and otherwise prints nothing, so without this its monitor looks dead even
+  // when the loop is healthy. Throttled to once every HEARTBEAT_MS.
+  const unsigned long nowMs = millis();
+  if (nowMs - _lastHeartbeat >= HEARTBEAT_MS) {
+    _lastHeartbeat = nowMs;
+    if (_cfg.roleEnum() == RelayRole::READER) {
+      LOG_INFO(_peerReady ? "reader: vivo, peer presente, esperando comando del peer"
+                          : "reader: vivo, sin peer aun");
+    } else {
+      LOG_INFO(_awaitingResponse ? "card: esperando respuesta del peer (relay)"
+                                 : "card: esperando comando del terminal (RF)");
+    }
+  }
+
   // Drain every complete frame that has arrived. poll() is non-blocking and
   // returns one frame per call: 1 = frame, 0 = nothing yet, -1 = link reset.
   ServerData sd;
@@ -101,6 +118,19 @@ void RelayEngine::stop() {
 }
 
 void RelayEngine::handleFrame(const ServerData &sd, const NfcData &nfc) {
+  // Log every frame the server relays to us: tells us at a glance whether the
+  // reader ever actually receives the card's forwarded command (op=PSH,
+  // src=READER) and whether the card receives the response (op=PSH, src=CARD).
+  if (Log::enabled(LogLevel::Info)) {
+    String m = "frame rx: op=";
+    m += (int)sd.opcode;
+    m += " src=";
+    m += (int)nfc.data_source;
+    m += " len=";
+    m += (int)nfc.data.size;
+    Log::line(LogLevel::Info, m);
+  }
+
   switch ((NfcOpcode)sd.opcode) {
     case NfcOpcode::SYN:
       // Peer announced itself; acknowledge and mark it present.
@@ -188,18 +218,50 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
 void RelayEngine::cardPollTerminal() {
   // Strict request/response: only ask the terminal for a new command once the
   // previous one's response has been injected. The terminal itself won't issue
-  // the next command until it is answered, so this just keeps us in lock-step
-  // (and avoids forwarding a stray frame out of order).
+  // the next command until it is answered, so this keeps us in lock-step.
+  //
+  // BUT never latch here forever: if the peer reader can't service the command
+  // (it never received the relayed frame, has no physical card in field, or the
+  // transceive failed — all of which leave readerHandleCommand producing no
+  // response), a permanent _awaitingResponse deadlock would stop us polling the
+  // terminal for good. Time it out and resume so the terminal can be re-read.
   if (_awaitingResponse) {
-    return;
+    if (millis() - _awaitStart < AWAIT_TIMEOUT_MS) {
+      return;
+    }
+    LOG_WARN("card: timeout esperando respuesta del peer; re-poll del terminal");
+    _awaitingResponse = false;
   }
 
   uint8_t cmd[RELAY_MAX_APDU];
   uint8_t cmdLen = 0;
   if (!_nfc.cardReceive(cmd, &cmdLen)) {
+    // No command right now. If a terminal was here and has since left the field
+    // (idle for REARM_IDLE_MS), re-arm the emulation discovery ONCE so the next
+    // terminal can activate us again. Without this the raw cardReceive path,
+    // which drops RF_DEACTIVATE_NTF without restarting discovery, leaves the
+    // emulated card dormant after the first activation — exactly the "worked
+    // once, can't reproduce" symptom.
+    if (_cardActivitySinceReArm &&
+        millis() - _lastCardActivity >= REARM_IDLE_MS) {
+      LOG_INFO("card: terminal fuera del campo; re-armando discovery de emulación");
+      if (!_nfc.cardReArm()) {
+        LOG_WARN("card: re-arm de emulación falló");
+      }
+      _cardActivitySinceReArm = false;
+      _lastCardActivity = millis();
+    }
     return;  // no command from the terminal yet
   }
+
+  // A frame came back from the PN7150: the terminal activated the emulated card
+  // and the RF front-end is alive. Record the activity (so an idle gap later
+  // triggers the re-arm above) and log even an empty frame, so RF activation is
+  // observable *before* the first real APDU (DEBUG_card_emulation_no_rf_activation.md §4.4).
+  _lastCardActivity = millis();
+  _cardActivitySinceReArm = true;
   if (cmdLen == 0) {
+    LOG_INFO("card: activación RF sin APDU (cardReceive frame vacío)");
     return;
   }
   Log::hex(LogLevel::Debug, "C<- term cmd:", cmd, cmdLen);
@@ -210,7 +272,17 @@ void RelayEngine::cardPollTerminal() {
     LOG_ERROR("RelayEngine: failed to forward terminal command");
     return;
   }
+  // Confirm at INFO that a real terminal command was captured AND the link send
+  // reported success — so we can tell "RF never activated" apart from "forwarded
+  // but the server/peer never acted on it".
+  if (Log::enabled(LogLevel::Info)) {
+    String m = "card: comando de ";
+    m += (int)cmdLen;
+    m += " B capturado y reenviado al peer (send ok)";
+    Log::line(LogLevel::Info, m);
+  }
   _awaitingResponse = true;
+  _awaitStart = millis();
 }
 
 void RelayEngine::cardHandleResponse(const NfcData &nfc) {

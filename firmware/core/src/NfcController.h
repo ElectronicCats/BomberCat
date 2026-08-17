@@ -72,6 +72,16 @@ class NfcController {
   // not "acknowledged".)
   bool cardSend(uint8_t *buf, uint8_t len);
 
+  // Re-arm card-emulation discovery after a terminal has left the RF field.
+  // The raw cardReceive path swallows the PN7150's RF_DEACTIVATE_NTF without
+  // restarting discovery (unlike the library's ProcessCardMode), so once a
+  // terminal deactivates, the chip stops listening and no further terminal can
+  // activate the emulated card. This performs the same re-arm ProcessCardMode
+  // does — stopDiscovery + configMode + startDiscovery in the already-selected
+  // EMULATION mode, WITHOUT a full connectNCI chip re-init. Returns true on
+  // success.
+  bool cardReArm();
+
   // Escape hatch for advanced use / verbatim legacy sequences.
   Electroniccats_PN7150 &raw() { return _nfc; }
 

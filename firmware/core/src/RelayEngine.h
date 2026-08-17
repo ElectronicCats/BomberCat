@@ -106,6 +106,25 @@ class RelayEngine {
   bool _awaitingResponse = false;  // CARD: a command was forwarded, response due
   uint32_t _relayed = 0;
 
+  // Diagnostics / robustness (Fase 7 RF bring-up).
+  unsigned long _lastHeartbeat = 0;  // throttles the per-role liveness log
+  unsigned long _awaitStart = 0;     // CARD: millis() when _awaitingResponse latched
+
+  // CARD emulation re-arm: the raw cardReceive path does not restart discovery
+  // on RF_DEACTIVATE_NTF, so after a terminal leaves the emulated card goes
+  // dormant. We re-arm once the card has been idle for REARM_IDLE_MS *after*
+  // having seen terminal activity — recovering listen mode for the next
+  // terminal without churning discovery when no terminal is ever present.
+  unsigned long _lastCardActivity = 0;      // millis() of last frame from terminal
+  bool _cardActivitySinceReArm = false;     // a terminal has activated us since re-arm
+
+  // CARD: if the peer never returns a response (reader has no card, transceive
+  // failed, or the relayed frame never reached it), don't deadlock forever —
+  // clear _awaitingResponse after this long and re-poll the terminal.
+  static const unsigned long AWAIT_TIMEOUT_MS = 3000;
+  static const unsigned long HEARTBEAT_MS = 3000;
+  static const unsigned long REARM_IDLE_MS = 2000;
+
   // Max APDU length either role handles in one frame. NfcController's
   // reader/card primitives use uint8_t lengths (as the legacy sketches do), so
   // a single frame is capped at 255 B here; longer NFCData frames are dropped

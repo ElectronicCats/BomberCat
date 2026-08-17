@@ -45,7 +45,22 @@ bool NfcController::beginEmulationMode() {
   if (!reset()) {
     return false;
   }
-  return _nfc.setEmulationMode();
+  if (!_nfc.setEmulationMode()) {
+    return false;
+  }
+  // Re-arm discovery now that the mode is EMULATION. This mirrors the known-good
+  // legacy sequence `nfc.setEmulationMode(); resetMode();`
+  // (client_Relay_NFC.ino:1397), whose trailing resetMode() re-runs
+  // connectNCI + configureSettings + configMode + startDiscovery *after* the
+  // mode switch. Without it the chip is left armed only by setEmulationMode()'s
+  // internal library reset(), which begins with stopDiscovery() and skips
+  // configureSettings() when a protocol is already latched — leaving the RF
+  // front-end not cleanly in listen/CARDEMU mode, so no terminal can activate
+  // the emulated card (0 APDUs relayed; see DEBUG_card_emulation_no_rf_activation.md).
+  if (!reset()) {
+    return false;
+  }
+  return true;
 }
 
 bool NfcController::waitForTag(uint16_t timeoutMs) {
@@ -74,4 +89,13 @@ bool NfcController::cardReceive(uint8_t *buf, uint8_t *len) {
 bool NfcController::cardSend(uint8_t *buf, uint8_t len) {
   _nfc.cardModeSend(buf, len);
   return true;
+}
+
+bool NfcController::cardReArm() {
+  // Library reset() = stopDiscovery + (configureSettings only if no protocol is
+  // latched) + configMode + startDiscovery, in the current (EMULATION) mode.
+  // This is exactly the re-arm the library runs on RF_DEACTIVATE_NTF inside
+  // ProcessCardMode, minus the connectNCI() chip re-init that our heavier
+  // reset() would do — so it recovers listen mode without dropping the chip.
+  return _nfc.reset();
 }
