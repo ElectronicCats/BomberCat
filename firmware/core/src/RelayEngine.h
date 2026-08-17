@@ -104,6 +104,8 @@ class RelayEngine {
   bool _peerReady = false;
   bool _tagReady = false;  // READER: a physical card is currently activated
   bool _awaitingResponse = false;  // CARD: a command was forwarded, response due
+  uint8_t _awaitTimeouts = 0;      // CARD: consecutive forwarded-but-unanswered
+                                   // commands (dead-link detector; see below)
   uint32_t _relayed = 0;
 
   // Diagnostics / robustness (Fase 7 RF bring-up).
@@ -124,6 +126,15 @@ class RelayEngine {
   static const unsigned long AWAIT_TIMEOUT_MS = 3000;
   static const unsigned long HEARTBEAT_MS = 3000;
   static const unsigned long REARM_IDLE_MS = 2000;
+
+  // CARD: how many consecutive forwarded-but-unanswered commands to tolerate
+  // before we conclude the TCP link is dead and force a reconnect. WiFiNINA's
+  // connected()/write() keep reporting success on a half-open socket (server
+  // closed its side during an idle gap), so a forwarded frame silently never
+  // reaches the server — its log shows no OP_PSH and the response can never
+  // come. A healthy relay answers in well under AWAIT_TIMEOUT_MS, so even 1 is
+  // safe; bump this if a slow reader peer causes spurious reconnects.
+  static const uint8_t AWAIT_TIMEOUTS_BEFORE_RECONNECT = 1;
 
   // Max APDU length either role handles in one frame. NfcController's
   // reader/card primitives use uint8_t lengths (as the legacy sketches do), so

@@ -21,6 +21,7 @@ bool RelayEngine::beginNfc() {
   _peerReady = false;
   _tagReady = false;
   _awaitingResponse = false;
+  _awaitTimeouts = 0;
   _lastCardActivity = millis();
   _cardActivitySinceReArm = false;
 
@@ -231,6 +232,20 @@ void RelayEngine::cardPollTerminal() {
     }
     LOG_WARN("card: timeout esperando respuesta del peer; re-poll del terminal");
     _awaitingResponse = false;
+
+    // We forwarded a command and got nothing back in time. On WiFiNINA a
+    // server-side close leaves connected() == true and write() reporting the
+    // full byte count into a dead (half-open) socket, so the forwarded frame
+    // silently never reached the server (its log shows no OP_PSH) and the
+    // response can never come. After enough of these, stop re-polling the
+    // terminal into a permanent loop and force a reconnect via the sketch's
+    // auto-retry (State::Error -> stop() -> reconnect TCP + re-SYN).
+    if (++_awaitTimeouts >= AWAIT_TIMEOUTS_BEFORE_RECONNECT) {
+      LOG_WARN("card: enlace probablemente caido (respuesta perdida); forzando reconexion");
+      _awaitTimeouts = 0;
+      _state = State::Error;
+      return;
+    }
   }
 
   uint8_t cmd[RELAY_MAX_APDU];
@@ -303,5 +318,6 @@ void RelayEngine::cardHandleResponse(const NfcData &nfc) {
   _nfc.cardSend(resp, (uint8_t)respLen);
 
   _awaitingResponse = false;
+  _awaitTimeouts = 0;  // a full round-trip proves the link is alive
   _relayed++;
 }
