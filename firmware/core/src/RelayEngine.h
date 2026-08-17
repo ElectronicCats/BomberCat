@@ -132,22 +132,55 @@ class RelayEngine {
   // and torn down mid-recovery. See readerHandleCommand()'s retry loop.
   static const unsigned long AWAIT_TIMEOUT_MS = 5000;
   static const unsigned long HEARTBEAT_MS = 3000;
-  static const unsigned long REARM_IDLE_MS = 2000;
+
+  // CARD emulation re-arm idle threshold. cardReArm() does a FULL chip re-init
+  // (beginEmulationMode), which tears down the emulated card's ISO-DEP session —
+  // fine BETWEEN transactions (recovering listen mode for the next terminal),
+  // catastrophic DURING one. At 2000 ms this fired on a mere mid-transaction
+  // pause: a terminal that took a beat to build the GPO after the SELECT AID FCI
+  // came back to a re-armed (fresh) card and aborted, so the card never even
+  // captured the GPO (intermittent: it only crossed when the terminal was fast
+  // enough to beat the timer). A coupled EMV transaction completes in a few
+  // seconds of continuous activity, so only a much longer gap reliably means the
+  // terminal truly left — raised to 8000 so a normal inter-command pause can
+  // never trip the re-arm mid-flow.
+  static const unsigned long REARM_IDLE_MS = 8000;
 
   // CARD: how many consecutive forwarded-but-unanswered commands to tolerate
   // before we conclude the TCP link is dead and force a reconnect. WiFiNINA's
   // connected()/write() keep reporting success on a half-open socket (server
   // closed its side during an idle gap), so a forwarded frame silently never
   // reaches the server — its log shows no OP_PSH and the response can never
-  // come. A healthy relay answers in well under AWAIT_TIMEOUT_MS, so even 1 is
-  // safe; bump this if a slow reader peer causes spurious reconnects.
-  static const uint8_t AWAIT_TIMEOUTS_BEFORE_RECONNECT = 1;
+  // come. Forcing a reconnect is EXPENSIVE and destructive: it sends FIN, drops
+  // the TCP for 3s (NFCGate.ino auto-retry) and can discard a response that was
+  // already in flight — long enough to abort the terminal's EMV transaction.
+  //
+  // With a threshold of 1 the very FIRST 5s stall tore down the link, which is
+  // exactly what broke Camino A (two BomberCats): on the first command of a
+  // transaction the reader peer re-arms its RF front-end
+  // (waitForTag + beginReaderMode + waitForTag + readerTransceive ≈ 2.5–4s, plus
+  // WiFi/TCP round trips), so a legitimately-slow-but-healthy reader can brush
+  // past AWAIT_TIMEOUT_MS on that first APDU. A threshold of 1 then reconnected
+  // right as the reader was re-arming, losing the response and livelocking into
+  // "relays zero". Against the NFCGate phone (Camino B2) the reader answers fast
+  // with no re-arm, so this is inert there. Tolerate a few re-poll cycles first
+  // (the terminal re-drives each one); only a genuinely dead half-open socket
+  // stays silent across all of them and still reconnects (just later).
+  static const uint8_t AWAIT_TIMEOUTS_BEFORE_RECONNECT = 3;
 
-  // Max APDU length either role handles in one frame. NfcController's
-  // reader/card primitives use uint8_t lengths (as the legacy sketches do), so
-  // a single frame is capped at 255 B here; longer NFCData frames are dropped
-  // with a warning. EMV short APDUs fit comfortably.
+  // Max command/received-frame length handled in one go. NfcController's receive
+  // primitives (cardModeReceive) report length in a single NCI byte, so an
+  // inbound frame is capped at 255 B here; longer ones are dropped with a
+  // warning. EMV commands fit comfortably.
   static const size_t RELAY_MAX_APDU = 255;
+
+  // Max response length injected back to the terminal. Unlike commands, ISO-DEP
+  // *responses* routinely exceed 255 B (EMV READ RECORD certificate records
+  // reach 256 B — a 256 B response was silently dropped end-to-end in Camino B2,
+  // see DEBUG_nfcgate_app_camino_b.md). NfcController::cardSend() fragments the
+  // outbound NCI data packets (PBF), so the ceiling here is the NFCData.data
+  // field capacity (512), not the 255 B single-packet limit.
+  static const size_t RELAY_MAX_RESP = 512;
 };
 
 #endif  // BOMBERCAT_CORE_RELAYENGINE_H

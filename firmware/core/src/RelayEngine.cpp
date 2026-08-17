@@ -151,6 +151,15 @@ void RelayEngine::handleFrame(const ServerData &sd, const NfcData &nfc) {
       break;
 
     case NfcOpcode::PSH:
+      // The real NFCGate reader peer emits a one-off data_type=INITIAL frame
+      // carrying the physical tag's config (anticollision/ATS bytes), NOT an
+      // APDU. We can't apply that to the PN7150 (no ATS API) and treating it as
+      // an APDU would inject garbage to the terminal (a bogus `C-> term resp:`)
+      // or replay it to the card. Only CONTINUATION frames are real APDUs.
+      if ((NfcType)nfc.data_type == NfcType::INITIAL) {
+        LOG_DEBUG("RelayEngine: trama INITIAL del peer (config de tag) ignorada");
+        break;
+      }
       if (_cfg.roleEnum() == RelayRole::READER) {
         // Only a command (READER-tagged) is ours to service; a CARD-tagged PSH
         // is a response we ourselves produce, so ignore it here.
@@ -219,7 +228,12 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
 
     if (_nfc.readerTransceive(cmd, (uint8_t)cmdLen, resp, &respLen)) {
       Log::hex(LogLevel::Debug, "R-> resp:", resp, respLen);
-      if (!_link.send(NfcSource::CARD, resp, respLen)) {
+      // CONTINUATION, not INITIAL: an APDU is never the peer's one-off tag
+      // config. The real NFCGate app routes data_type=INITIAL into its daemon
+      // config parser (NfcManager.applyData) instead of transceiving/injecting
+      // it, which mis-handles or crashes the app. (Two BomberCats ignore
+      // data_type, so this was invisible in Camino A.)
+      if (!_link.send(NfcSource::CARD, resp, respLen, NfcType::CONTINUATION)) {
         LOG_ERROR("RelayEngine: failed to send response");
         return;
       }
@@ -304,8 +318,13 @@ void RelayEngine::cardPollTerminal() {
   Log::hex(LogLevel::Debug, "C<- term cmd:", cmd, cmdLen);
 
   // The command's content is terminal -> card, i.e. READER-tagged (see the
-  // data-source semantics in the header). Forward it to our reader peer.
-  if (!_link.send(NfcSource::READER, cmd, cmdLen)) {
+  // data-source semantics in the header). Forward it to our reader peer as a
+  // CONTINUATION: with the real NFCGate app peer, an INITIAL-tagged frame is
+  // fed to its daemon config parser (NfcManager.applyData's isInitial() branch)
+  // instead of being transceived to the physical card — which crashes the app
+  // and stalls the relay (Camino B2). Only the reader's one-off tag config is
+  // ever INITIAL, and we never produce that.
+  if (!_link.send(NfcSource::READER, cmd, cmdLen, NfcType::CONTINUATION)) {
     LOG_ERROR("RelayEngine: failed to forward terminal command");
     return;
   }
@@ -327,17 +346,18 @@ void RelayEngine::cardHandleResponse(const NfcData &nfc) {
   if (respLen == 0) {
     return;  // nothing to inject
   }
-  if (respLen > RELAY_MAX_APDU) {
+  if (respLen > RELAY_MAX_RESP) {
     LOG_WARN("RelayEngine: response APDU too long for card path, dropping");
     return;
   }
   Log::hex(LogLevel::Debug, "C-> term resp:", nfc.data.bytes, respLen);
 
   // nfc.data.bytes is const here; cardSend takes a non-const buffer, so copy
-  // into a local scratch to inject to the terminal.
-  uint8_t resp[RELAY_MAX_APDU];
+  // into a local scratch to inject to the terminal. cardSend fragments across
+  // NCI packets when respLen > 255 (EMV records), so no truncating cast here.
+  uint8_t resp[RELAY_MAX_RESP];
   memcpy(resp, nfc.data.bytes, respLen);
-  _nfc.cardSend(resp, (uint8_t)respLen);
+  _nfc.cardSend(resp, (uint16_t)respLen);
 
   _awaitingResponse = false;
   _awaitTimeouts = 0;  // a full round-trip proves the link is alive

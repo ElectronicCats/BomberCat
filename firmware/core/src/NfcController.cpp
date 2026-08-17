@@ -72,12 +72,28 @@ bool NfcController::readerTransceive(uint8_t *cmd, uint8_t cmdLen,
                                      uint16_t timeoutMs) {
   _nfc.cardModeSend(cmd, cmdLen);
 
-  // cardModeReceive() returns non-zero (NFC_ERROR) while no frame is ready and
-  // 0 (NFC_SUCCESS) once one has been read. Spin until success or timeout.
+  // Reproduce the known-good legacy reader exchange (host_Relay_NFC seekTrack2,
+  // used for EVERY relayed APDU — SELECT, GPO, READ RECORD — not only PPSE):
+  // after a command the PN7150 hands back the tag's real answer on the SECOND
+  // data packet; the first is an intermediate frame. So spin for the first data
+  // packet (bounded by timeoutMs so a missing/removed card can't hang loop()),
+  // then read ONCE MORE — that second frame is the actual APDU response.
+  //
+  // cardModeReceive() returns 0 (NFC_SUCCESS) once a data packet is in the
+  // buffer and non-zero (NFC_ERROR) otherwise, and it leaves resp/respLen
+  // untouched on a non-data frame — so if no distinct second packet arrives the
+  // first packet stays put as a safe fallback.
+  //
+  // The single-receive refactor that replaced this returned the first
+  // (intermediate) frame, and with the previous 1000 ms cap it reported a false
+  // transceive timeout the moment the first getMessage() cycle came back without
+  // data. That broke every transaction at GPO (the first non-SELECT command) and
+  // then tripped the destructive mid-transaction re-arm in readerHandleCommand.
   unsigned long start = millis();
   while (_nfc.cardModeReceive(resp, respLen)) {
     if (millis() - start > timeoutMs) return false;
   }
+  _nfc.cardModeReceive(resp, respLen);  // second data packet = the tag's answer
   return true;
 }
 
@@ -86,8 +102,40 @@ bool NfcController::cardReceive(uint8_t *buf, uint8_t *len) {
   return !_nfc.cardModeReceive(buf, len);
 }
 
-bool NfcController::cardSend(uint8_t *buf, uint8_t len) {
-  _nfc.cardModeSend(buf, len);
+bool NfcController::cardSend(uint8_t *buf, uint16_t len) {
+  // A single NCI data packet carries its payload length in one byte, so it caps
+  // at 255 B — but ISO-DEP responses can be larger (EMV records reach 256 B).
+  // The library's cardModeSend() only ever emits one packet, silently capping
+  // the relay at 255 B (a 256 B READ RECORD response was dropped end-to-end; see
+  // DEBUG_nfcgate_app_camino_b.md). Fragment here instead: emit <=255 B NCI data
+  // packets and set the Packet Boundary Flag (PBF, bit 4 of the header) on every
+  // segment except the last, so the PN7150 reassembles them into one RF frame.
+  // Header layout matches the library's cardModeSend(): [conn-id/PBF][RFU=0][len].
+  //
+  // writeData()'s return is deliberately IGNORED, exactly as the library's
+  // cardModeSend() does ((void)writeData). It surfaces I2C endTransmission()
+  // codes that are transiently non-zero on a healthy bus (the PN7150 NACKs the
+  // odd frame); EMV terminals simply re-issue the command. Treating it as fatal
+  // here (aborting the send + logging) turned that harmless hiccup into a visible
+  // failure and a Camino A regression — so for a <=255 B response this is now
+  // byte-for-byte the same I2C sequence as the known-good cardModeSend().
+  const uint16_t MAX_SEG = 255;
+  uint8_t pkt[3 + MAX_SEG];
+  uint16_t off = 0;
+  do {
+    uint16_t seg = len - off;
+    bool last = true;
+    if (seg > MAX_SEG) {
+      seg = MAX_SEG;
+      last = false;  // more segments follow -> set PBF on this one
+    }
+    pkt[0] = last ? 0x00 : 0x10;  // conn id 0; bit 4 = PBF
+    pkt[1] = 0x00;
+    pkt[2] = (uint8_t)seg;
+    memcpy(&pkt[3], buf + off, seg);
+    (void)_nfc.writeData(pkt, (uint32_t)seg + 3);
+    off += seg;
+  } while (off < len);
   return true;
 }
 

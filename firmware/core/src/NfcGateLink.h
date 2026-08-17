@@ -41,10 +41,13 @@ class NfcGateLink {
   void setSession(uint8_t s) { _session = s; }
 
   // Send one APDU as an OP_PSH frame. `source` marks who produced it (READER or
-  // CARD). Returns false if not connected, the APDU is too large, or the write
-  // is short.
+  // CARD). Defaults to CONTINUATION: an APDU is always a continuation, never the
+  // reader's one-off INITIAL tag config — the real NFCGate app routes an
+  // INITIAL-tagged frame into its daemon config parser instead of transceiving
+  // it, which crashes the app (see RelayEngine forwarding). Returns false if not
+  // connected, the APDU is too large, or the write is short.
   bool send(NfcSource source, const uint8_t *apdu, size_t len,
-            NfcType type = NfcType::INITIAL, int64_t timestamp = 0);
+            NfcType type = NfcType::CONTINUATION, int64_t timestamp = 0);
 
   // Send a pre-built NFCData with an explicit opcode (SYN/ACK/FIN or PSH).
   bool sendRaw(NfcOpcode op, const NfcData &nfc);

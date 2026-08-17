@@ -55,22 +55,29 @@ class NfcController {
   bool waitForTag(uint16_t timeoutMs = 500);
 
   // --- Reader role -------------------------------------------------------
-  // Send `cmd` into the RF field and wait for a single response frame into
-  // `resp` (`respLen` set to the length). Returns false if no response arrives
-  // within timeoutMs. This is the clean equivalent of the sketches'
-  // exchangeReader flow; it does not reproduce the legacy double-receive.
+  // Send `cmd` into the RF field and wait for the tag's response frame into
+  // `resp` (`respLen` set to the length). Returns false if the first data packet
+  // does not arrive within timeoutMs. Reproduces the legacy host_Relay_NFC
+  // double-receive (the answer is the SECOND data packet). timeoutMs bounds only
+  // the wait for the first packet, and is a safety-net ceiling (a present card
+  // answers fast); it must outlast an initial non-data getMessage() cycle
+  // (~2 s each), so it is 4000 — the old 1000 killed the exchange at GPO.
   bool readerTransceive(uint8_t *cmd, uint8_t cmdLen, uint8_t *resp,
-                        uint8_t *respLen, uint16_t timeoutMs = 1000);
+                        uint8_t *respLen, uint16_t timeoutMs = 4000);
 
   // --- Card / HCE role ---------------------------------------------------
   // Non-blocking: pull one command frame from the terminal into `buf`
   // (`len` set to the length). Returns true when a frame was available.
   bool cardReceive(uint8_t *buf, uint8_t *len);
 
-  // Push a response frame back to the terminal. Returns true once queued.
-  // (The PN7150 library does not report send status, so this reflects "sent",
-  // not "acknowledged".)
-  bool cardSend(uint8_t *buf, uint8_t len);
+  // Push a response frame back to the terminal. Always returns true (the PN7150
+  // library does not report a meaningful send status, so like its cardModeSend()
+  // this reflects "sent", not "acknowledged"). Responses larger than one NCI data
+  // packet (>255 B, e.g. an EMV READ RECORD certificate record) are fragmented
+  // across NCI packets via the Packet Boundary Flag; the PN7150 reassembles them
+  // into a single RF frame. (The library's own cardModeSend() emits only one
+  // packet and caps at 255 B, so this replaces it rather than wrapping it.)
+  bool cardSend(uint8_t *buf, uint16_t len);
 
   // Re-arm card-emulation discovery after a terminal has left the RF field.
   // The raw cardReceive path swallows the PN7150's RF_DEACTIVATE_NTF without
