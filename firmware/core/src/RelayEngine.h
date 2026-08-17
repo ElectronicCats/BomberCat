@@ -123,7 +123,14 @@ class RelayEngine {
   // CARD: if the peer never returns a response (reader has no card, transceive
   // failed, or the relayed frame never reached it), don't deadlock forever —
   // clear _awaitingResponse after this long and re-poll the terminal.
-  static const unsigned long AWAIT_TIMEOUT_MS = 3000;
+  //
+  // Budget note: on the first command of a new transaction the reader peer may
+  // need to re-arm its RF front-end and re-activate the physical card (a stale
+  // ISO-DEP session from the previous transaction) — a failed transceive can
+  // block ~2s and a re-arm + re-activation + retry adds more. Keep this window
+  // wide enough that a healthy-but-busy reader is not mistaken for a dead link
+  // and torn down mid-recovery. See readerHandleCommand()'s retry loop.
+  static const unsigned long AWAIT_TIMEOUT_MS = 5000;
   static const unsigned long HEARTBEAT_MS = 3000;
   static const unsigned long REARM_IDLE_MS = 2000;
 

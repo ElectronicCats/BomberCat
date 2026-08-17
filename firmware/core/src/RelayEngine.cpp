@@ -182,38 +182,60 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
   }
   Log::hex(LogLevel::Debug, "R<- cmd:", nfc.data.bytes, cmdLen);
 
-  // Make sure a physical card is activated in the field before transceiving.
-  // We keep it activated across the transaction; on a transceive failure we
-  // drop readiness so the next command re-activates (e.g. after card removal).
-  if (!_tagReady) {
-    if (_nfc.waitForTag(500)) {
-      _tagReady = true;
-      LOG_DEBUG("RelayEngine: card activated");
-    } else {
-      LOG_WARN("RelayEngine: no card in field, dropping command");
-      return;
-    }
-  }
-
-  uint8_t resp[RELAY_MAX_APDU];
-  uint8_t respLen = 0;
   // nfc.data.bytes is const here; NfcController's API takes a non-const buffer
   // (it never writes the command), so copy into a local scratch to transceive.
   uint8_t cmd[RELAY_MAX_APDU];
   memcpy(cmd, nfc.data.bytes, cmdLen);
+  uint8_t resp[RELAY_MAX_APDU];
+  uint8_t respLen = 0;
 
-  if (!_nfc.readerTransceive(cmd, (uint8_t)cmdLen, resp, &respLen)) {
-    LOG_WARN("RelayEngine: card transceive failed/timeout");
-    _tagReady = false;  // force re-activation on the next command
-    return;
-  }
+  // Service the command, re-activating the physical card as needed. We keep the
+  // card activated across ONE transaction (_tagReady), but BETWEEN transactions
+  // its ISO-DEP session dies during the idle gap and the raw reader path never
+  // re-polls — so the first command of the next transaction finds a stale
+  // _tagReady, the transceive times out, and the command would be dropped with
+  // no response. The card peer then never gets an answer and reconnects forever
+  // (DEBUG_card_stale_link_second_txn.md). This is the reader-side analog of the
+  // card's re-arm: on a failed activation OR a failed exchange, re-arm the reader
+  // front-end and retry once before giving up, so a new transaction self-heals.
+  //
+  // Re-sending a command after a re-arm is safe for the transaction-boundary
+  // commands where this actually triggers (SELECT PPSE is idempotent); a
+  // mid-transaction session death is rare (commands ~0.5s apart keep it alive).
+  for (int attempt = 0; attempt < 2; ++attempt) {
+    if (!_tagReady) {
+      if (_nfc.waitForTag(500)) {
+        _tagReady = true;
+        LOG_DEBUG("reader: tarjeta activada");
+      } else if (attempt == 0) {
+        LOG_WARN("reader: sin tarjeta en campo; re-armando discovery y reintentando");
+        _nfc.beginReaderMode();  // full re-arm (reset + reader mode), as at boot
+        continue;                // retry activation on the next pass
+      } else {
+        LOG_WARN("reader: sin tarjeta tras re-arm; descartando comando");
+        return;
+      }
+    }
 
-  Log::hex(LogLevel::Debug, "R-> resp:", resp, respLen);
-  if (!_link.send(NfcSource::CARD, resp, respLen)) {
-    LOG_ERROR("RelayEngine: failed to send response");
-    return;
+    if (_nfc.readerTransceive(cmd, (uint8_t)cmdLen, resp, &respLen)) {
+      Log::hex(LogLevel::Debug, "R-> resp:", resp, respLen);
+      if (!_link.send(NfcSource::CARD, resp, respLen)) {
+        LOG_ERROR("RelayEngine: failed to send response");
+        return;
+      }
+      _relayed++;
+      return;  // relayed one command/response pair
+    }
+
+    // Transceive failed/timed out: the card session is likely stale. Drop
+    // readiness and, on the first attempt, re-arm discovery so a dormant reader
+    // front-end starts polling again; the next pass re-activates and retries.
+    LOG_WARN("reader: transceive fallo/timeout; re-activando");
+    _tagReady = false;
+    if (attempt == 0) {
+      _nfc.beginReaderMode();
+    }
   }
-  _relayed++;
 }
 
 void RelayEngine::cardPollTerminal() {
