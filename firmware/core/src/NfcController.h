@@ -71,7 +71,18 @@ class NfcController {
   // legs were ~450 ms total); single-packet cards would otherwise busy-wait the
   // library's hardcoded getMessage(2000). Tune here if a two-packet card ever
   // needs longer — but keep it far below the 2000 ms it replaces.
-  static const unsigned long SECOND_PACKET_WINDOW_MS = 120;
+  //
+  // LATENCY (Fase D, 2026-08-18): a SINGLE-packet card (the audit target) never
+  // produces a second packet, so it busy-waits this FULL window on EVERY relayed
+  // APDU — ~18 APDUs x this value of pure dead time per transaction. The window
+  // only needs to outlast the gap between reading packet 1 and packet 2's IRQ on
+  // a TWO-packet card, where packet 2 is ALREADY buffered in the PN7150 after the
+  // single RF transceive (the chip just has to surface it and raise IRQ — a few
+  // ms, not 120). Dropped 120 -> 25 ms to reclaim ~1.7 s on single-packet cards
+  // while keeping ample margin for two-packet cards (they exit on IRQ, not on
+  // this timeout). If a two-packet card ever mis-relays an intermediate frame,
+  // raise this and record the working value in LATENCIA_OPTIMIZACION.md §Fase D.
+  static const unsigned long SECOND_PACKET_WINDOW_MS = 25;
 
   // --- Card / HCE role ---------------------------------------------------
   // Non-blocking: pull one command frame from the terminal into `buf`
