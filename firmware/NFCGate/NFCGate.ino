@@ -37,7 +37,7 @@
 
 #include "arduino_secrets.h"
 
-#define BOMBERCAT_FW_VERSION "0.7.0"
+#define BOMBERCAT_FW_VERSION "0.8.0"
 
 // Bound the server TCP connect so a host that is reachable but silently drops
 // the SYN fails fast (clean -ERR) instead of hanging tens of seconds and blowing
