@@ -6,6 +6,48 @@ NfcController::NfcController(uint8_t irqPin, uint8_t venPin, uint8_t i2cAddress,
                             ChipModel chipModel)
     : _nfc(irqPin, venPin, i2cAddress, chipModel) {}
 
+bool NfcController::receiveNoGarbage(uint8_t *pData, uint8_t *pDataSize,
+                                     uint16_t toutMs) {
+  // Faithful replica of the library's cardModeReceive() MINUS its useless
+  // writeData(Ans, 255) (H2 / Fase C, LATENCIA_OPTIMIZACION.md §2, §4).
+  //
+  // That write transmits ~23 ms of *uninitialised* garbage on the I2C bus on
+  // EVERY relayed receive: mbed_rp2040's Wire txBuffer is 256 B (>= 255), so
+  // _wire->write(Ans,255) accepts all 255 bytes and endTransmission() actually
+  // fires. getMessage() never consumes it — readData() is purely IRQ-gated
+  // (reads only when the PN7150 raises IRQ HIGH, i.e. when the CHIP has data for
+  // us, which our write does not request). Dropping it reclaims ~23 ms per
+  // receive (~0.8-1.2 s/txn across both boards) with no functional change.
+  //
+  // Parsing mirrors cardModeReceive: a data packet has header 0x00 0x00,
+  // buf[2] = payload length, payload at buf[3..].
+  //
+  // CRITICAL — skip non-data frames (this is what the library's outer
+  // `while (cardModeReceive(...))` loop actually did, and dropping it broke the
+  // reader in a first attempt at Fase C). In reader mode, after cardModeSend()
+  // the PN7150 emits a CORE_CONN_CREDITS_NTF (0x60 0x06) control frame *before*
+  // the tag's DATA response; other NTFs (e.g. RF_DEACTIVATE_NTF 0x61 0x06) can
+  // also interleave. A single read that returned on the first frame handed back
+  // the credits NTF (0x60 != 0x00), so the transceive reported failure on every
+  // command. Keep reading (IRQ-gated) and IGNORE any non-data frame until a real
+  // data packet arrives or toutMs elapses. On timeout, pData/pDataSize are left
+  // untouched so callers keep any earlier value as a safe fallback.
+  delay(1);  // kept for timing fidelity with the known-good path; 1 ms << 23 ms
+  uint8_t buf[MAX_NCI_FRAME_SIZE];
+  const unsigned long start = millis();
+  while (millis() - start < toutMs) {
+    uint32_t n = _nfc.readData(buf);  // public primitive; reads only when IRQ HIGH
+    if (!n) continue;                 // no frame yet — keep polling within toutMs
+    if (buf[0] == 0x00 && buf[1] == 0x00) {  // DATA packet = the answer
+      *pDataSize = buf[2];
+      memcpy(pData, &buf[3], *pDataSize);
+      return true;
+    }
+    // Non-data frame (credits/notification): drop it and keep waiting for DATA.
+  }
+  return false;
+}
+
 bool NfcController::reset() {
   // The PN7150 library uses 0 == success for these calls; the relay sketches
   // test them as `if (call()) { error }`, which we replicate exactly here so
@@ -79,27 +121,27 @@ bool NfcController::readerTransceive(uint8_t *cmd, uint8_t cmdLen,
   // packet (bounded by timeoutMs so a missing/removed card can't hang loop()),
   // then read ONCE MORE — that second frame is the actual APDU response.
   //
-  // cardModeReceive() returns 0 (NFC_SUCCESS) once a data packet is in the
-  // buffer and non-zero (NFC_ERROR) otherwise, and it leaves resp/respLen
-  // untouched on a non-data frame — so if no distinct second packet arrives the
-  // first packet stays put as a safe fallback.
+  // receiveNoGarbage() returns true once a data packet is in `resp` and false
+  // otherwise, and it leaves resp/respLen untouched on a non-data frame — so if
+  // no distinct second packet arrives the first packet stays put as a safe
+  // fallback. It replaces the library's cardModeReceive() to drop the ~23 ms
+  // garbage I2C write (H2 / Fase C); it busy-polls readData() (IRQ-gated) up to
+  // timeoutMs, so a missing/removed card still can't hang loop().
   //
   // The single-receive refactor that replaced this returned the first
   // (intermediate) frame, and with the previous 1000 ms cap it reported a false
-  // transceive timeout the moment the first getMessage() cycle came back without
+  // transceive timeout the moment the first receive cycle came back without
   // data. That broke every transaction at GPO (the first non-SELECT command) and
   // then tripped the destructive mid-transaction re-arm in readerHandleCommand.
-  unsigned long start = millis();
-  while (_nfc.cardModeReceive(resp, respLen)) {
-    if (millis() - start > timeoutMs) return false;
-  }
+  if (!receiveNoGarbage(resp, respLen, timeoutMs)) return false;
 
   // The legacy path then read a SECOND packet unconditionally, because some
   // cards answer on the second data packet (the first being an intermediate
-  // frame). But cardModeReceive() hardcodes an internal getMessage(2000): when
-  // the card sends only ONE data packet (its answer is already in `resp`), that
-  // second read finds nothing and busy-waits the FULL 2000 ms on EVERY relayed
-  // APDU — ~2 s of dead time per command, enough to make an EMV terminal abandon
+  // frame). The library's cardModeReceive() hardcoded an internal
+  // getMessage(2000): when the card sends only ONE data packet (its answer is
+  // already in `resp`), that second read finds nothing and busy-waits the FULL
+  // 2000 ms on EVERY relayed APDU — ~2 s of dead time per command, enough to
+  // make an EMV terminal abandon
   // the transaction (LogServerReaderCard.md: reader legs ~2.4 s, txn dies at READ
   // RECORD). This directly contradicts NFCGATE_PLAN.md §17's assumption that the
   // second receive never hits the 2000 ms ceiling — hardware shows it does.
@@ -116,13 +158,17 @@ bool NfcController::readerTransceive(uint8_t *cmd, uint8_t cmdLen,
       return true;  // single-packet card: the answer is already in `resp`
     }
   }
-  _nfc.cardModeReceive(resp, respLen);  // genuine second data packet = the answer
+  // IRQ is HIGH: a frame is waiting, so this read returns at once.
+  receiveNoGarbage(resp, respLen, 50);  // genuine second data packet = the answer
   return true;
 }
 
 bool NfcController::cardReceive(uint8_t *buf, uint8_t *len) {
-  // Returns NFC_SUCCESS (0/false) when a frame was received; normalise to true.
-  return !_nfc.cardModeReceive(buf, len);
+  // Non-blocking-ish pull of one terminal command. Uses receiveNoGarbage (H2 /
+  // Fase C) to skip the library's ~23 ms garbage I2C write; keeps the library's
+  // 2000 ms IRQ-gated wait so an idle poll blocks the same as before (returns
+  // immediately when the terminal actually sends). Returns true on a data frame.
+  return receiveNoGarbage(buf, len, 2000);
 }
 
 bool NfcController::cardSend(uint8_t *buf, uint16_t len) {

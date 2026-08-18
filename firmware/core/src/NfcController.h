@@ -112,6 +112,13 @@ class NfcController {
   Electroniccats_PN7150 &raw() { return _nfc; }
 
  private:
+  // Receive one NCI data packet WITHOUT the library cardModeReceive()'s useless
+  // writeData(Ans,255) (~23 ms of garbage I2C per call; H2 / Fase C). Busy-polls
+  // the public readData() (IRQ-gated) up to toutMs. Returns true and fills
+  // pData/pDataSize on a data packet (header 0x00 0x00); false on timeout or a
+  // non-data frame, leaving pData/pDataSize untouched. See NfcController.cpp.
+  bool receiveNoGarbage(uint8_t *pData, uint8_t *pDataSize, uint16_t toutMs);
+
   Electroniccats_PN7150 _nfc;
 };
 
