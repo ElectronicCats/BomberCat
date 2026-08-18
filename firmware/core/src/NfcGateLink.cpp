@@ -79,22 +79,33 @@ int NfcGateLink::poll(ServerData &sd, NfcData &nfc) {
     return -1;
   }
 
-  // Phase 1: accumulate the 4-byte big-endian length header.
-  while (!_haveHdr && _c.available() > 0) {
-    int b = _c.read();
-    if (b < 0) {
-      break;
-    }
-    _hdr[_hdrHave++] = (uint8_t)b;
-    if (_hdrHave == 4) {
-      _need = ((uint32_t)_hdr[0] << 24) | ((uint32_t)_hdr[1] << 16) |
-              ((uint32_t)_hdr[2] << 8) | (uint32_t)_hdr[3];
-      _haveHdr = true;
-      _fill = 0;
-      if (_need > sizeof(_rx)) {
-        LOG_ERROR("NfcGateLink: oversized frame, dropping link");
-        stop();
-        return -1;
+  // Phase 1: accumulate the 4-byte big-endian length header. Read whatever of
+  // the header is still missing in ONE bulk _c.read() instead of byte-by-byte
+  // (Fase F, LATENCIA_OPTIMIZACION.md §2 H5). On the BomberCat the WiFiClient is
+  // WiFiNINA: the ESP32-WROOM is an SPI coprocessor, so *every* _c.read() and
+  // _c.available() is a full SPI command round-trip (command + slave-ready
+  // handshake) to it. The old byte-at-a-time loop cost up to 4 read() + 4
+  // available() calls per frame; since Fase E made the server ship header+payload
+  // as ONE TCP segment, the whole header is normally already buffered on the
+  // ESP32, so this collapses to a single available()+read() — cutting ~6 SPI
+  // transactions off every server->board frame (~18/txn per board) with zero RF
+  // risk (pure transport; never touches I2C/PN7150). Partial-header arrival is
+  // still handled: read() takes only the bytes present and _hdrHave carries the
+  // count across poll() calls exactly as before.
+  if (!_haveHdr && _c.available() > 0) {
+    int n = _c.read(&_hdr[_hdrHave], (size_t)(4 - _hdrHave));
+    if (n > 0) {
+      _hdrHave += (uint8_t)n;
+      if (_hdrHave == 4) {
+        _need = ((uint32_t)_hdr[0] << 24) | ((uint32_t)_hdr[1] << 16) |
+                ((uint32_t)_hdr[2] << 8) | (uint32_t)_hdr[3];
+        _haveHdr = true;
+        _fill = 0;
+        if (_need > sizeof(_rx)) {
+          LOG_ERROR("NfcGateLink: oversized frame, dropping link");
+          stop();
+          return -1;
+        }
       }
     }
   }
