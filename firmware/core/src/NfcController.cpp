@@ -93,7 +93,30 @@ bool NfcController::readerTransceive(uint8_t *cmd, uint8_t cmdLen,
   while (_nfc.cardModeReceive(resp, respLen)) {
     if (millis() - start > timeoutMs) return false;
   }
-  _nfc.cardModeReceive(resp, respLen);  // second data packet = the tag's answer
+
+  // The legacy path then read a SECOND packet unconditionally, because some
+  // cards answer on the second data packet (the first being an intermediate
+  // frame). But cardModeReceive() hardcodes an internal getMessage(2000): when
+  // the card sends only ONE data packet (its answer is already in `resp`), that
+  // second read finds nothing and busy-waits the FULL 2000 ms on EVERY relayed
+  // APDU — ~2 s of dead time per command, enough to make an EMV terminal abandon
+  // the transaction (LogServerReaderCard.md: reader legs ~2.4 s, txn dies at READ
+  // RECORD). This directly contradicts NFCGATE_PLAN.md §17's assumption that the
+  // second receive never hits the 2000 ms ceiling — hardware shows it does.
+  //
+  // IRQ-gate it: the PN7150 drives its IRQ line HIGH only when a frame is
+  // pending, so poll hasMessage() for a short window. If a genuine second packet
+  // arrives (two-packet cards — fast, well under this window per §17's ~450 ms
+  // legs) read it as the real answer; if the window elapses with no IRQ
+  // (single-packet cards) keep the first packet's answer and return at once.
+  // Preserves both card behaviors; removes the per-APDU dead wait.
+  const unsigned long secondStart = millis();
+  while (!_nfc.hasMessage()) {
+    if (millis() - secondStart >= SECOND_PACKET_WINDOW_MS) {
+      return true;  // single-packet card: the answer is already in `resp`
+    }
+  }
+  _nfc.cardModeReceive(resp, respLen);  // genuine second data packet = the answer
   return true;
 }
 

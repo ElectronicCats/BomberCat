@@ -281,6 +281,13 @@ def monitor_cmd(port, device_id):
     """Stream the device's serial output live (relay logs + APDU hex). Ctrl-C to quit."""
     with _device_session(port, device_id) as (target, link):
         print_info(f"Monitoring {target} — press Ctrl-C to stop")
+        # The relay runs silent by default (firmware log level Warn); raise it to
+        # Debug so the per-APDU hex dumps this view highlights are actually
+        # emitted. Restore Warn on exit so we don't leave the hot path chatty.
+        try:
+            link.command("loglevel 4")
+        except Exception:
+            pass  # older firmware without `loglevel`: stream whatever it prints
         try:
             for line in link.stream():
                 if not line:
@@ -296,3 +303,8 @@ def monitor_cmd(port, device_id):
                     console.print(line)
         except KeyboardInterrupt:
             console.print("\n[dim]stopped[/dim]")
+        finally:
+            try:
+                link.command("loglevel 2")  # back to silent (Warn)
+            except Exception:
+                pass

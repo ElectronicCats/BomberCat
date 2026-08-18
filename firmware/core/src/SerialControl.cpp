@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Log.h"
+
 SerialControl::SerialControl(Stream &io, ConfigStore &store, RelayConfig &cfg,
                              RelayEngine &engine, const char *fwVersion)
     : _io(io), _store(store), _cfg(cfg), _engine(engine), _fw(fwVersion) {}
@@ -202,6 +204,27 @@ void SerialControl::dispatch(char *line) {
       ok();
     } else {
       err("capture must be on|off");
+    }
+  } else if (strcmp(verb, "loglevel") == 0) {
+    // Runtime log verbosity, so the relay runs SILENT by default (level Warn)
+    // and the per-APDU hex dumps are opt-in for diagnosis only. At Debug those
+    // dumps run on every relayed APDU and, standalone (no host draining USB
+    // CDC), can block Serial.print mid-transaction on the relay hot path —
+    // exactly the added latency we want gone. Levels: 0=None 1=Error 2=Warn
+    // 3=Info 4=Debug. `loglevel` / `loglevel status` reports the current level.
+    if (args[0] == '\0' || strcmp(args, "status") == 0) {
+      kv("loglevel", (long)Log::getLevel());
+      ok();
+    } else {
+      char *end = nullptr;
+      long lvl = strtol(args, &end, 10);
+      if (end == args || *end != '\0' || lvl < 0 || lvl > 4) {
+        err("loglevel must be 0..4");
+      } else {
+        Log::setLevel((LogLevel)lvl);
+        kv("loglevel", lvl);
+        ok();
+      }
     }
   } else if (strcmp(verb, "reboot") == 0) {
     ok();

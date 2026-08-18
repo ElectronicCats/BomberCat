@@ -75,6 +75,11 @@ void setup() {
   control.setCallbacks(cb);
   control.begin();
 
+  // --- APDU capture tap (Fase 8) --- reference the symbols.
+  engine.setCapture(&Serial);
+  LOG_INFO(engine.capturing() ? "capture on" : "capture off");
+  engine.setCapture(nullptr);
+
   // --- NfcController ---
   bool ok = (cfg.roleEnum() == RelayRole::READER) ? nfc.beginReaderMode()
                                                    : nfc.beginEmulationMode();

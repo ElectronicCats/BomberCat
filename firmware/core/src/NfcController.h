@@ -65,6 +65,14 @@ class NfcController {
   bool readerTransceive(uint8_t *cmd, uint8_t cmdLen, uint8_t *resp,
                         uint8_t *respLen, uint16_t timeoutMs = 4000);
 
+  // How long readerTransceive waits (IRQ-polled) for a genuine SECOND response
+  // packet before concluding the card is single-packet and returning the first
+  // packet's answer. Two-packet cards deliver it in well under this (§17 reader
+  // legs were ~450 ms total); single-packet cards would otherwise busy-wait the
+  // library's hardcoded getMessage(2000). Tune here if a two-packet card ever
+  // needs longer — but keep it far below the 2000 ms it replaces.
+  static const unsigned long SECOND_PACKET_WINDOW_MS = 120;
+
   // --- Card / HCE role ---------------------------------------------------
   // Non-blocking: pull one command frame from the terminal into `buf`
   // (`len` set to the length). Returns true when a frame was available.

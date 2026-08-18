@@ -37,7 +37,7 @@
 
 #include "arduino_secrets.h"
 
-#define BOMBERCAT_FW_VERSION "0.8.0"
+#define BOMBERCAT_FW_VERSION "0.9.1"
 
 // Bound the server TCP connect so a host that is reachable but silently drops
 // the SYN fails fast (clean -ERR) instead of hanging tens of seconds and blowing
@@ -258,8 +258,14 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 2000) {
   }
-  Log::begin(Serial, LogLevel::Debug);
-  LOG_INFO("BomberCat NFCGate relay");
+  // Relay runs SILENT by default (Warn): the per-APDU Debug hex dumps used to
+  // run on every relayed APDU and, standalone (no host draining USB CDC), could
+  // block Serial.print mid-transaction on the relay hot path — added latency for
+  // no benefit once the relay is validated. Raise it at runtime with the CLI
+  // (`loglevel 4`) or `bombercat monitor` when diagnosing. Capture is a separate
+  // sink (`capture on`) and is unaffected by this level.
+  Log::begin(Serial, LogLevel::Warn);
+  LOG_WARN("BomberCat NFCGate relay");
 
   // Cap the server connect so the Tcp phase (engine.connectLink()) can't stall
   // on an unresponsive host (the NfcGateLink only sees a Client&, so the bound
