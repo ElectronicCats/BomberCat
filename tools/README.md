@@ -46,6 +46,27 @@ Both relay peers must share the same `--server` and `--session`; one runs
 `--role reader` (reads a physical card), the other `--role card` (emulates one to
 a terminal). See `firmware/NFCGate/README.md` for wiring and flashing.
 
+### Capture to Wireshark / pcap
+
+With the relay running, `capture` taps a **copy** of every relayed APDU (it does
+not touch the relay hot path — APDUs still go over WiFi/TCP) and turns each into
+an ISO 14443 frame Wireshark opens directly (link type `DLT_ISO_14443`):
+
+```sh
+bombercat capture start                    # open Wireshark on a live FIFO
+bombercat capture start -o emv.pcap        # live Wireshark + save to a file
+bombercat capture start --no-wireshark -o emv.pcap   # file only
+bombercat capture stop                     # disarm a board left armed
+```
+
+Press Ctrl-C to stop; the tap is disarmed automatically. Command APDUs
+(terminal → card) show as `PCD → PICC`, responses (card → terminal) as
+`PICC → PCD`, timestamped with the device's own `millis()` clock (ground-truth
+timing) anchored to host wall-clock at the first APDU. In a two-board relay,
+capture the **reader** side for the pre-mutation APDU and the **card** side for
+the post-mutation one. Requires firmware ≥ 0.8.0 (the `capture` control command)
+and, for the live feed, Wireshark installed. NFCGATE_PLAN.md Fase 8 / §16.
+
 ### Multiple devices
 
 A relay needs two peers, so both BomberCats are usually plugged into the same
@@ -91,7 +112,7 @@ trusting an ID. A board with a custom USB identity can be declared with the
 One command per line; replies use a leading marker so the CLI can ignore
 interleaved device logs: `:key value` (data), `+OK [msg]` (success), `-ERR msg`
 (failure). Commands: `ping info get set save load clear run stop status identify
-reboot`.
+capture reboot`.
 Mirrored on the device by `firmware/core/src/SerialControl.{h,cpp}` and on the
 host by `modules/core/bombercat.py` (`DeviceLink`).
 
@@ -109,5 +130,6 @@ bombercat testserver smoke [host port]# relay smoke test (no RF)
 
 ```sh
 python3 tools/tests/serialctl_hosttest.py         # DeviceLink protocol parser (pty)
+python3 tools/tests/capture_hosttest.py           # pcap writer + ISO 14443 vs tshark
 tools/testserver/codec_hosttest/build_and_run.sh  # firmware codec vs live server
 ```
