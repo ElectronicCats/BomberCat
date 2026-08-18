@@ -151,6 +151,21 @@ class RelayEngine {
   static const unsigned long AWAIT_TIMEOUT_MS = 5000;
   static const unsigned long HEARTBEAT_MS = 3000;
 
+  // READER: time budget for activating the physical card at a TRANSACTION
+  // BOUNDARY (the first command, where readerHandleCommand's sessionWasLive is
+  // false). A marginal card — present but poorly coupled/positioned — can miss a
+  // single 500 ms discovery window, and the old fixed "2 attempts" dropped the
+  // whole transaction on the second miss (~1 s of trying). Instead, keep looping
+  // discovery windows + re-arms until this budget elapses, so a present-but-marginal
+  // card gets several chances to activate. Re-arming (beginReaderMode) between
+  // windows resets a stuck discovery, which helps a marginal card more than one
+  // longer wait would. Sized to stay well under the card peer's AWAIT_TIMEOUT_MS
+  // (5000): activation ≤ this + a fast SELECT PPSE transceive + WiFi/TCP round
+  // trips must still answer within one await cycle, so we leave ~2 s of headroom.
+  // MID-transaction this NEVER runs (sessionWasLive gates it), so it cannot
+  // inflate a per-APDU window or the terminal's WTX budget — that path fail-fasts.
+  static const unsigned long READER_BOUNDARY_ACTIVATE_MS = 3000;
+
   // CARD emulation re-arm idle threshold. cardReArm() does a FULL chip re-init
   // (beginEmulationMode), which tears down the emulated card's ISO-DEP session —
   // fine BETWEEN transactions (recovering listen mode for the next terminal),

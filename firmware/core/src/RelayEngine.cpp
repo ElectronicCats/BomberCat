@@ -229,16 +229,33 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
   // (fail fast — one transceive window, no re-arm, no replay — and let the card
   // peer's AWAIT_TIMEOUT_MS recovery take it from there). This keeps any single
   // command inside one transceive budget so the WTX ceiling is never approached.
+  //
+  // BOUNDARY PERSISTENCE (2026-08-18, complement of the above): the flip side of
+  // fail-fast is that at the boundary we should try HARDER, not give up on the
+  // first miss. A marginal card (present but poorly coupled) can miss a single
+  // discovery window, and the old fixed "2 attempts" dropped the whole
+  // transaction after ~1 s. So the boundary now loops discovery windows + re-arms
+  // until READER_BOUNDARY_ACTIVATE_MS elapses (sized under AWAIT_TIMEOUT_MS), and
+  // the same time budget also caps the boundary self-heal so it can never stack a
+  // second ~4 s transceive past the WTX budget. Both regimes key off the SINGLE
+  // gate `!sessionWasLive && within budget`: mid-transaction (sessionWasLive)
+  // fail-fasts on the first miss; the boundary persists within its budget.
   const bool sessionWasLive = _tagReady;
-  for (int attempt = 0; attempt < 2; ++attempt) {
+  const unsigned long cmdStart = millis();
+  for (;;) {
+    // Boundary self-heal / persistence is allowed only until the budget runs out;
+    // after that (and always mid-transaction) we drop the command instead.
+    const bool mayRecover =
+        !sessionWasLive && (millis() - cmdStart < READER_BOUNDARY_ACTIVATE_MS);
+
     if (!_tagReady) {
       if (_nfc.waitForTag(500)) {
         _tagReady = true;
         LOG_DEBUG("reader: tarjeta activada");
-      } else if (attempt == 0 && !sessionWasLive) {
-        LOG_WARN("reader: sin tarjeta en campo; re-armando discovery y reintentando");
+      } else if (mayRecover) {
+        LOG_WARN("reader: sin tarjeta en campo; re-armando discovery y reintentando (borde)");
         _nfc.beginReaderMode();  // full re-arm (reset + reader mode), as at boot
-        continue;                // retry activation on the next pass
+        continue;                // retry activation while budget remains
       } else {
         LOG_WARN("reader: sin tarjeta; descartando comando");
         return;
@@ -262,19 +279,20 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
     }
 
     // Transceive failed/timed out. Drop readiness. Only re-arm + retry at a
-    // TRANSACTION BOUNDARY (sessionWasLive == false, first attempt): there the
-    // command is the idempotent SELECT PPSE and the card session was already
-    // stale, so a full re-arm is the intended self-heal. MID-transaction
-    // (sessionWasLive == true) fail fast instead — a second ~4 s transceive
-    // window would over-run the terminal's WTX budget, and replaying a
-    // non-idempotent APDU against a re-armed session is invalid. Returning with
-    // no response hands recovery to the card peer's AWAIT_TIMEOUT_MS path.
+    // TRANSACTION BOUNDARY with budget left: there the command is the idempotent
+    // SELECT PPSE and the card session was already stale, so a full re-arm is the
+    // intended self-heal. MID-transaction (sessionWasLive), or once the boundary
+    // budget is spent, fail fast instead — a second ~4 s transceive window would
+    // over-run the terminal's WTX budget, and replaying a non-idempotent APDU
+    // against a re-armed session is invalid. Returning with no response hands
+    // recovery to the card peer's AWAIT_TIMEOUT_MS path. Recompute the budget
+    // here: the transceive above may have consumed part of it (up to ~4 s).
     _tagReady = false;
-    if (attempt == 0 && !sessionWasLive) {
+    if (!sessionWasLive && millis() - cmdStart < READER_BOUNDARY_ACTIVATE_MS) {
       LOG_WARN("reader: transceive fallo/timeout; re-activando (borde de transacción)");
       _nfc.beginReaderMode();
     } else {
-      LOG_WARN("reader: transceive fallo/timeout a mitad de transacción; fail-fast (presupuesto WTX)");
+      LOG_WARN("reader: transceive fallo/timeout; fail-fast (presupuesto WTX/tiempo)");
       return;
     }
   }
