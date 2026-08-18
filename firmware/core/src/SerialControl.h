@@ -44,6 +44,12 @@
  *                                seconds so the user can tell which physical
  *                                board a CLI device ID refers to. Returns at
  *                                once; the blinking runs from the sketch loop().
+ *   capture <on|off>          -> +OK capture on|off   arm/disarm the APDU tap.
+ *                                While on, the engine copies each relayed APDU
+ *                                out as ":apdu <dir> <ts_ms> <hex>" (dir=cmd|resp)
+ *                                on this stream — the host turns it into a pcap
+ *                                for Wireshark (Fase 8). Bare `capture` or
+ *                                `capture status` -> :capture <0|1> +OK.
  *   reboot                    -> +OK, then resets the MCU
  *
  * The relay actions (run/stop/reboot) are provided by the sketch as callbacks so

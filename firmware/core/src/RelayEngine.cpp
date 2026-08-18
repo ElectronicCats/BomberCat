@@ -190,6 +190,7 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
     return;
   }
   Log::hex(LogLevel::Debug, "R<- cmd:", nfc.data.bytes, cmdLen);
+  emitCapture("cmd", nfc.data.bytes, cmdLen);
 
   // nfc.data.bytes is const here; NfcController's API takes a non-const buffer
   // (it never writes the command), so copy into a local scratch to transceive.
@@ -228,6 +229,7 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
 
     if (_nfc.readerTransceive(cmd, (uint8_t)cmdLen, resp, &respLen)) {
       Log::hex(LogLevel::Debug, "R-> resp:", resp, respLen);
+      emitCapture("resp", resp, respLen);
       // CONTINUATION, not INITIAL: an APDU is never the peer's one-off tag
       // config. The real NFCGate app routes data_type=INITIAL into its daemon
       // config parser (NfcManager.applyData) instead of transceiving/injecting
@@ -316,6 +318,7 @@ void RelayEngine::cardPollTerminal() {
     return;
   }
   Log::hex(LogLevel::Debug, "C<- term cmd:", cmd, cmdLen);
+  emitCapture("cmd", cmd, cmdLen);
 
   // The command's content is terminal -> card, i.e. READER-tagged (see the
   // data-source semantics in the header). Forward it to our reader peer as a
@@ -351,6 +354,7 @@ void RelayEngine::cardHandleResponse(const NfcData &nfc) {
     return;
   }
   Log::hex(LogLevel::Debug, "C-> term resp:", nfc.data.bytes, respLen);
+  emitCapture("resp", nfc.data.bytes, respLen);
 
   // nfc.data.bytes is const here; cardSend takes a non-const buffer, so copy
   // into a local scratch to inject to the terminal. cardSend fragments across
@@ -362,4 +366,24 @@ void RelayEngine::cardHandleResponse(const NfcData &nfc) {
   _awaitingResponse = false;
   _awaitTimeouts = 0;  // a full round-trip proves the link is alive
   _relayed++;
+}
+
+void RelayEngine::emitCapture(const char *dir, const uint8_t *data, size_t len) {
+  // A copy of one relayed APDU for the host-side pcap writer. Off the hot path:
+  // guarded so it costs nothing (no serial traffic) while capture is disabled.
+  if (_captureOut == nullptr || len == 0) {
+    return;
+  }
+  static const char kHexDigits[] = "0123456789abcdef";
+  _captureOut->print(":apdu ");
+  _captureOut->print(dir);
+  _captureOut->print(' ');
+  _captureOut->print(millis());  // device ground-truth timestamp (ms)
+  _captureOut->print(' ');
+  for (size_t i = 0; i < len; ++i) {
+    const uint8_t b = data[i];
+    _captureOut->write(kHexDigits[b >> 4]);
+    _captureOut->write(kHexDigits[b & 0x0F]);
+  }
+  _captureOut->print('\n');
 }

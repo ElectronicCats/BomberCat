@@ -90,11 +90,25 @@ class RelayEngine {
   // Count of command/response APDU pairs relayed (READER role).
   uint32_t relayedCount() const { return _relayed; }
 
+  // --- APDU capture tap (Fase 8: pcap / Wireshark) -------------------------
+  // When a sink is set, a COPY of every relayed APDU is emitted to it as one
+  // structured event line:  ":apdu <dir> <ts_ms> <hex>\n"  where dir is "cmd"
+  // (terminal -> card, i.e. PCD -> PICC) or "resp" (card -> terminal, i.e.
+  // PICC -> PCD) and ts_ms is the device's millis() at that moment (ground-truth
+  // timestamp). This runs OFF the hot path: the relay APDU itself still travels
+  // over WiFi/TCP; this is only a copy for the host-side pcap writer
+  // (tools/ `bombercat capture`). Pass nullptr to disable. The sink is normally
+  // the same Serial the control REPL uses; the ":" marker keeps it distinct from
+  // human log lines, matching SerialControl's leading-marker protocol.
+  void setCapture(Print *sink) { _captureOut = sink; }
+  bool capturing() const { return _captureOut != nullptr; }
+
  private:
   void handleFrame(const ServerData &sd, const NfcData &nfc);
   void readerHandleCommand(const NfcData &nfc);
   void cardPollTerminal();
   void cardHandleResponse(const NfcData &nfc);
+  void emitCapture(const char *dir, const uint8_t *data, size_t len);
 
   NfcController &_nfc;
   NfcGateLink &_link;
@@ -107,6 +121,10 @@ class RelayEngine {
   uint8_t _awaitTimeouts = 0;      // CARD: consecutive forwarded-but-unanswered
                                    // commands (dead-link detector; see below)
   uint32_t _relayed = 0;
+
+  // Fase 8 APDU capture tap: when non-null, each relayed APDU is copied out as
+  // a ":apdu <dir> <ts_ms> <hex>" event (see setCapture()). null = disabled.
+  Print *_captureOut = nullptr;
 
   // Diagnostics / robustness (Fase 7 RF bring-up).
   unsigned long _lastHeartbeat = 0;  // throttles the per-role liveness log

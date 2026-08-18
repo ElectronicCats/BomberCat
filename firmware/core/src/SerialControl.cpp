@@ -186,6 +186,23 @@ void SerialControl::dispatch(char *line) {
       _cb.identify();  // only ARMS the blink; the sketch's loop() runs it
       ok();
     }
+  } else if (strcmp(verb, "capture") == 0) {
+    // Arm/disarm the APDU capture tap (Fase 8). When on, the engine copies each
+    // relayed APDU out as a ":apdu <dir> <ts_ms> <hex>" event on this same
+    // stream, which the host `bombercat capture` turns into a pcap for
+    // Wireshark. Off the relay hot path — only a copy of the log we already emit.
+    if (strcmp(args, "on") == 0) {
+      _engine.setCapture(&_io);
+      ok("capture on");
+    } else if (strcmp(args, "off") == 0) {
+      _engine.setCapture(nullptr);
+      ok("capture off");
+    } else if (args[0] == '\0' || strcmp(args, "status") == 0) {
+      kv("capture", (long)(_engine.capturing() ? 1 : 0));
+      ok();
+    } else {
+      err("capture must be on|off");
+    }
   } else if (strcmp(verb, "reboot") == 0) {
     ok();
     _io.flush();
