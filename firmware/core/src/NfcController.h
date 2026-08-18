@@ -78,11 +78,16 @@ class NfcController {
   // only needs to outlast the gap between reading packet 1 and packet 2's IRQ on
   // a TWO-packet card, where packet 2 is ALREADY buffered in the PN7150 after the
   // single RF transceive (the chip just has to surface it and raise IRQ — a few
-  // ms, not 120). Dropped 120 -> 25 ms to reclaim ~1.7 s on single-packet cards
-  // while keeping ample margin for two-packet cards (they exit on IRQ, not on
-  // this timeout). If a two-packet card ever mis-relays an intermediate frame,
-  // raise this and record the working value in LATENCIA_OPTIMIZACION.md §Fase D.
-  static const unsigned long SECOND_PACKET_WINDOW_MS = 25;
+  // ms, not 120). Dropped 120 -> 25 ms (Fase D) to reclaim ~1.7 s on single-packet
+  // cards, then 25 -> 10 ms (Fase G) for ~270 ms more: a two-packet card's second
+  // packet is already buffered in the PN7150 after the single RF transceive, so
+  // the chip only has to surface it and raise IRQ (a few ms) — 10 ms keeps ample
+  // margin for that while nearly halving the per-APDU dead time single-packet
+  // cards pay here. They exit on IRQ, not on this timeout, so lowering it cannot
+  // truncate a real second packet unless the IRQ takes >10 ms to rise (not seen).
+  // If a two-packet card ever mis-relays an intermediate frame, raise this and
+  // record the working value in LATENCIA_OPTIMIZACION.md §Fase D/§Fase G.
+  static const unsigned long SECOND_PACKET_WINDOW_MS = 10;
 
   // --- Card / HCE role ---------------------------------------------------
   // Non-blocking: pull one command frame from the terminal into `buf`
