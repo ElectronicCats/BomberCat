@@ -7,6 +7,7 @@
 # and this only consumes a copy over the control serial. NFCGATE_PLAN.md Fase 8.
 # Distributed as-is; no warranty is given.
 
+import _thread
 import platform
 import re
 import threading
@@ -17,7 +18,7 @@ import click
 import serial
 
 from ..core.bombercat import DeviceError, DeviceLink
-from ..core.pipes import UnixPipe, WindowsPipe, Wireshark
+from ..core.pipes import UnixPipe, WindowsPipe, Wireshark, find_wireshark_path
 from ..nfcgate.cli import _device_session
 from ..utils.cli_options import target_options
 from ..utils.output import (
@@ -71,6 +72,29 @@ def _new_pipe():
     return WindowsPipe() if platform.system() == "Windows" else UnixPipe()
 
 
+def _watch_wireshark(ws: Wireshark, sink: "_CaptureSink",
+                     stop_event: threading.Event) -> None:
+    """Notice when the user quits Wireshark and react without waiting for APDUs.
+
+    The FIFO write end only breaks on the *next* write, so a capture that is
+    idle would keep waiting on a pipe with no reader. Poll the process instead:
+    detach the pipe from the sink and either carry on with the file, or — with
+    no file to fall back to — interrupt the main thread so `start`'s normal
+    Ctrl-C path disarms the tap and cleans up.
+    """
+    while not stop_event.wait(0.5):
+        if not ws.has_exited():
+            continue
+        # Detach only; `start`'s finally block owns removing the pipe.
+        sink.pipe = None
+        if sink.fileobj is not None:
+            print_warning("Wireshark closed — continuing to the file only.")
+        else:
+            print_warning("Wireshark closed — stopping capture.")
+            _thread.interrupt_main()
+        return
+
+
 # ── capture group ─────────────────────────────────────────────────────────────
 
 @click.group("capture", context_settings={"help_option_names": ["-h", "--help"]})
@@ -86,8 +110,8 @@ def capture():
     "--wireshark/--no-wireshark",
     "-ws/-nws",
     "wireshark",
-    default=True,
-    help="Launch Wireshark on a live FIFO (default: yes).",
+    default=False,
+    help="Launch Wireshark on a live FIFO (opt-in, like catnip's -ws).",
 )
 @click.option("--profile", default=None,
               help="Wireshark configuration profile to launch with.")
@@ -96,9 +120,9 @@ def capture_start(output, wireshark, profile, port, device_id):
     """Arm the tap and stream APDUs to Wireshark and/or a file until Ctrl-C.
 
     \b
-        bombercat capture start                     # live Wireshark only
-        bombercat capture start -o emv.pcap         # live Wireshark + file
-        bombercat capture start --no-wireshark -o emv.pcap   # file only
+        bombercat capture start -ws                 # live Wireshark only
+        bombercat capture start -ws -o emv.pcap     # live Wireshark + file
+        bombercat capture start -o emv.pcap         # file only
 
     Run the relay (`bombercat run`) and tap a terminal on the card so APDUs
     flow; each command/response pair appears as an ISO 14443 frame. Capture the
@@ -106,25 +130,23 @@ def capture_start(output, wireshark, profile, port, device_id):
     one.
     """
     if not wireshark and not output:
-        print_error("nothing to do: pass -o FILE or drop --no-wireshark.")
+        print_error("nothing to do: pass -o FILE to record, -ws to open Wireshark.")
         raise SystemExit(1)
 
     # A Wireshark binary is required only for the live feed; a file-only capture
     # never needs it. Bail early with a clear message rather than hanging on a
     # FIFO no one will read.
     ws_thread: Optional[Wireshark] = None
-    if wireshark:
-        probe = Wireshark(profile=profile)
-        exe = probe.get_wireshark_path()
-        if exe is None or not exe.exists():
-            if output:
-                print_warning("Wireshark not found; capturing to the file only.")
-                wireshark = False
-            else:
-                print_error(
-                    "Wireshark not found. Install it, or use "
-                    "--no-wireshark -o FILE to capture to a file.")
-                raise SystemExit(1)
+    ws_stop = threading.Event()
+    if wireshark and find_wireshark_path() is None:
+        if output:
+            print_warning("Wireshark not found; capturing to the file only.")
+            wireshark = False
+        else:
+            print_error(
+                "Wireshark not found. Install it, or use -o FILE to capture "
+                "to a file.")
+            raise SystemExit(1)
 
     with _device_session(port, device_id) as (target, link):
         # Arm the device tap. -ERR here means the firmware predates capture.
@@ -164,6 +186,11 @@ def capture_start(output, wireshark, profile, port, device_id):
                     sink.pipe = pipe
                     sink.pipe_header()
                     print_success("Wireshark attached — streaming APDUs")
+                    threading.Thread(
+                        target=_watch_wireshark,
+                        args=(ws_thread, sink, ws_stop),
+                        daemon=True,
+                    ).start()
 
             print_info(f"capturing from {target} — press Ctrl-C to stop")
             _pump(link, sink)
@@ -173,6 +200,7 @@ def capture_start(output, wireshark, profile, port, device_id):
         finally:
             # Best-effort: disarm the tap and tear down the sinks. The port is
             # closed by _device_session; we just clean up our own resources.
+            ws_stop.set()
             try:
                 link.command("capture off")
             except DeviceError:
@@ -216,8 +244,11 @@ def _pump(link: DeviceLink, sink: _CaptureSink) -> None:
         try:
             sink.frame(builder.frame(direction, apdu, ts_seconds))
         except BrokenPipeError:
-            print_warning("Wireshark closed the pipe; stopping capture.")
-            return
+            sink.pipe = None
+            if sink.fileobj is None:
+                print_warning("Wireshark closed the pipe; stopping capture.")
+                return
+            print_warning("Wireshark closed the pipe; continuing to the file only.")
         count += 1
         arrow = "→ card " if direction == "cmd" else "← card "
         console.print(f"[cyan]{arrow}[/cyan] [dim]{ts_ms:>8} ms[/dim]  {apdu.hex()}")

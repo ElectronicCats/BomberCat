@@ -53,9 +53,9 @@ not touch the relay hot path — APDUs still go over WiFi/TCP) and turns each in
 an ISO 14443 frame Wireshark opens directly (link type `DLT_ISO_14443`):
 
 ```sh
-bombercat capture start                    # open Wireshark on a live FIFO
-bombercat capture start -o emv.pcap        # live Wireshark + save to a file
-bombercat capture start --no-wireshark -o emv.pcap   # file only
+bombercat capture start -ws                # open Wireshark on a live FIFO
+bombercat capture start -ws -o emv.pcap    # live Wireshark + save to a file
+bombercat capture start -o emv.pcap        # file only
 bombercat capture stop                     # disarm a board left armed
 ```
 

@@ -9,6 +9,7 @@
 
 import os
 import platform
+import shutil
 import threading
 import subprocess
 import logging
@@ -37,6 +38,47 @@ if platform.system().lower() == "windows":
 
 def show_generic_error(title: str = "", e: object = "") -> None:
     logger.error(f"{title}: {e}")
+
+
+# Where Wireshark usually lands, per OS. An ordered candidate list (the same
+# idea as catnip's find_wireshark_path) plus a PATH lookup, so installs outside
+# /usr/bin — Homebrew, snap, flatpak's exported wrapper — are found too.
+_WIRESHARK_CANDIDATES = {
+    "Windows": (
+        "C:\\Program Files\\Wireshark\\Wireshark.exe",
+        "C:\\Program Files (x86)\\Wireshark\\Wireshark.exe",
+    ),
+    "Linux": (
+        "/usr/bin/wireshark",
+        "/usr/local/bin/wireshark",
+        "/snap/bin/wireshark",
+    ),
+    "Darwin": (
+        "/Applications/Wireshark.app/Contents/MacOS/Wireshark",
+        "/opt/homebrew/bin/wireshark",
+        "/usr/local/bin/wireshark",
+    ),
+}
+
+
+def find_wireshark_path():
+    """Return the Wireshark executable as a Path, or None if it is not installed.
+
+    Callers use the None to decide *before* creating a FIFO whether the live
+    feed is possible at all — a FIFO nobody will ever read just hangs."""
+    candidates = _WIRESHARK_CANDIDATES.get(platform.system())
+    if candidates is None:
+        show_generic_error("Unsupported OS", "We don't support this OS yet.")
+        return None
+    for candidate in candidates:
+        path = Path(candidate)
+        if path.exists():
+            return path
+    # Not in the usual places: let PATH have the last word.
+    found = shutil.which("wireshark")
+    if found is None and platform.system() == "Windows":
+        found = shutil.which("Wireshark.exe")
+    return Path(found) if found else None
 
 
 class UnixPipe:
@@ -241,34 +283,33 @@ class Wireshark(threading.Thread):
         self.wireshark_process: subprocess.Popen | None = None
 
     def get_wireshark_path(self):
-        if self.system == "Windows":
-            exe_path = Path("C:\\Program Files\\Wireshark\\Wireshark.exe")
-            if not exe_path.exists():
-                exe_path = Path("C:\\Program Files (x86)\\Wireshark\\Wireshark.exe")
-        elif self.system == "Linux":
-            exe_path = Path("/usr/bin/wireshark")
-            if not exe_path.exists():
-                exe_path = Path("/usr/local/bin/wireshark")
-        elif self.system == "Darwin":
-            exe_path = Path("/Applications/Wireshark.app/Contents/MacOS/Wireshark")
-        else:
-            show_generic_error("Unsupported OS", "We don't support this OS yet.")
-            return None
-        return exe_path
+        """The Wireshark executable (Path), or None when it is not installed."""
+        return find_wireshark_path()
+
+    def has_exited(self) -> bool:
+        """True once Wireshark was launched AND has quit. A FIFO write end only
+        breaks on the *next* write, so polling the process is how a capture
+        notices the user closed Wireshark while no packets were flowing."""
+        proc = self.wireshark_process
+        return proc is not None and proc.poll() is not None
 
     def get_wireshark_pipepath(self):
         return self.pipe_name
 
     def get_wireshark_cmd(self):
         exe_path = self.get_wireshark_path()
-        fifo_path = self.get_wireshark_pipepath()
-        cmd = [str(exe_path), "-k", "-i", fifo_path]
+        if exe_path is None:
+            return None
+        cmd = [str(exe_path), "-k", "-i", self.get_wireshark_pipepath()]
         if self.profile:
-            cmd = [str(exe_path), "-k", "-i", fifo_path, "-C", self.profile]
+            cmd += ["-C", self.profile]
         return cmd
 
     def run(self):
         cmd = self.get_wireshark_cmd()
+        if cmd is None:
+            show_generic_error("Can't start Wireshark", "executable not found")
+            return
         try:
             self.wireshark_process = subprocess.Popen(cmd)
             # Wait for the process to finish, otherwise the thread exits immediately
