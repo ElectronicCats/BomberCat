@@ -212,17 +212,35 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
   // Re-sending a command after a re-arm is safe for the transaction-boundary
   // commands where this actually triggers (SELECT PPSE is idempotent); a
   // mid-transaction session death is rare (commands ~0.5s apart keep it alive).
+  //
+  // WTX-BUDGET HARDENING (2026-08-18): the self-heal above (full beginReaderMode
+  // re-arm + a SECOND up-to-4 s transceive) is only safe and affordable at a
+  // TRANSACTION BOUNDARY — the first command after the idle gap, where _tagReady
+  // is stale-false and the command (SELECT PPSE) is idempotent. Doing it
+  // MID-transaction is doubly wrong: (a) it burns a second ~4 s window on top of
+  // the first, and the card peer must hold the terminal that whole time with
+  // ISO-DEP S(WTX) requests — enough back-to-back extensions exhaust the
+  // terminal's Waiting-Time-Extension budget and it aborts the transaction
+  // blaming latency, not a decline; and (b) it would re-issue a possibly
+  // NON-idempotent APDU (e.g. GENERATE AC) against a freshly re-armed ISO-DEP
+  // session, which is protocol-invalid. So we gate the expensive path on whether
+  // the session was already live for THIS transaction: sessionWasLive == false
+  // means we are at the boundary (self-heal), true means mid-transaction
+  // (fail fast — one transceive window, no re-arm, no replay — and let the card
+  // peer's AWAIT_TIMEOUT_MS recovery take it from there). This keeps any single
+  // command inside one transceive budget so the WTX ceiling is never approached.
+  const bool sessionWasLive = _tagReady;
   for (int attempt = 0; attempt < 2; ++attempt) {
     if (!_tagReady) {
       if (_nfc.waitForTag(500)) {
         _tagReady = true;
         LOG_DEBUG("reader: tarjeta activada");
-      } else if (attempt == 0) {
+      } else if (attempt == 0 && !sessionWasLive) {
         LOG_WARN("reader: sin tarjeta en campo; re-armando discovery y reintentando");
         _nfc.beginReaderMode();  // full re-arm (reset + reader mode), as at boot
         continue;                // retry activation on the next pass
       } else {
-        LOG_WARN("reader: sin tarjeta tras re-arm; descartando comando");
+        LOG_WARN("reader: sin tarjeta; descartando comando");
         return;
       }
     }
@@ -243,13 +261,21 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
       return;  // relayed one command/response pair
     }
 
-    // Transceive failed/timed out: the card session is likely stale. Drop
-    // readiness and, on the first attempt, re-arm discovery so a dormant reader
-    // front-end starts polling again; the next pass re-activates and retries.
-    LOG_WARN("reader: transceive fallo/timeout; re-activando");
+    // Transceive failed/timed out. Drop readiness. Only re-arm + retry at a
+    // TRANSACTION BOUNDARY (sessionWasLive == false, first attempt): there the
+    // command is the idempotent SELECT PPSE and the card session was already
+    // stale, so a full re-arm is the intended self-heal. MID-transaction
+    // (sessionWasLive == true) fail fast instead — a second ~4 s transceive
+    // window would over-run the terminal's WTX budget, and replaying a
+    // non-idempotent APDU against a re-armed session is invalid. Returning with
+    // no response hands recovery to the card peer's AWAIT_TIMEOUT_MS path.
     _tagReady = false;
-    if (attempt == 0) {
+    if (attempt == 0 && !sessionWasLive) {
+      LOG_WARN("reader: transceive fallo/timeout; re-activando (borde de transacción)");
       _nfc.beginReaderMode();
+    } else {
+      LOG_WARN("reader: transceive fallo/timeout a mitad de transacción; fail-fast (presupuesto WTX)");
+      return;
     }
   }
 }
