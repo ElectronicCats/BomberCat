@@ -162,8 +162,18 @@ board (or check the app's session/role for Path B).
 <a id="testserver-issues"></a>
 ## `testserver` errors
 
-- **`testserver run`**: needs Docker on `PATH`. `could not launch the server:` is
-  almost always `bash` or Docker missing.
+- **`testserver run`**: needs Docker on `PATH` **and** the server fetched once
+  (`tools/testserver/fetch_server.sh`) — the clone at `<repo>/server` is the
+  Docker *build context*, not just a dependency of `smoke`. Full list in the
+  [reference](reference.md#requirements).
+  - `could not launch the server:` — `bash` (or Docker) missing.
+  - `unable to prepare context: path "…/server" not found` — the server was
+    never fetched. Unlike `smoke`, `run` does not pre-check it, so the raw
+    `docker build` error is what surfaces.
+  - `Cannot connect to the Docker daemon` — daemon down, or your user is not in
+    the `docker` group.
+  - `port is already allocated` — something else holds the host port; pick
+    another with `testserver run -p <port>`.
 - **`testserver smoke`**: needs the server fetched once
   (`tools/testserver/fetch_server.sh`) and the `protobuf==3.20.3` runtime. The CLI
   bootstraps a throwaway venv (`tools/.venv-smoke`, override with

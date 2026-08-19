@@ -32,6 +32,7 @@ control link — see [Capture / Wireshark](capture.md).
       - [`proto gen`](#proto-gen)
     - [`testserver`](#testserver)
       - [`testserver run`](#testserver-run)
+        - [Requirements](#requirements)
       - [`testserver smoke`](#testserver-smoke)
   - [`completion`](#completion)
     - [`completion install`](#completion-install)
@@ -450,6 +451,46 @@ Wraps `tools/testserver/run.sh`.
 bombercat testserver run          # publish on host :5566
 bombercat testserver run -p 6000  # publish on host :6000
 ```
+
+##### Requirements
+
+`testserver run` shells out to `tools/testserver/run.sh`, which builds and runs
+the pinned `nfcgate-server` in Docker. It is pure dev tooling: it never touches
+USB, serial or RF, so no board has to be plugged in — but the host must have:
+
+| Requirement | Why | Check |
+|---|---|---|
+| `bash` on `PATH` | the CLI launches the script as `bash run.sh` | `bash --version` |
+| Docker installed, daemon running, usable by your user | `run.sh` does `docker build` + `docker run` | `docker run --rm hello-world` |
+| The server clone at `<repo>/server` | it *is* the Docker build context (`docker build … <repo>/server`) | `ls server/server.py` |
+| Network access on the **first** run | the image pulls `python:3.11-slim` and installs `protobuf==3.20.3` | — |
+| The host port free (default `5566`) | it is published as `-p <port>:5566` | `ss -ltn \| grep 5566` |
+
+The server is a dev-only fixture — not committed, not a submodule — so fetch it
+once (needs `git`), the same step [`testserver smoke`](#testserver-smoke) needs:
+
+```sh
+tools/testserver/fetch_server.sh                            # clones nfcgate/server@4d32cc1
+SERVER_REPO=/path/to/clone tools/testserver/fetch_server.sh # offline / mirror
+```
+
+Good to know:
+
+- The container **always** listens on 5566; `-p/--port` only changes the *host*
+  port (the CLI passes it to `run.sh` as [`PORT`](#environment-variables)).
+- The image (`bombercat-nfcgate-server`) is rebuilt on every invocation, but
+  Docker's layer cache makes that a no-op after the first build — only that first
+  build needs the network.
+- Ctrl-C stops and removes the container (`bombercat-nfcgate-server-run`); a
+  leftover container from a crashed run is force-removed at the next start.
+- Nothing here needs `protobuf` on the host: that is only for
+  [`testserver smoke`](#testserver-smoke), which bootstraps its own venv.
+- If the relay peers live on other machines (a phone running the NFCGate app, a
+  BomberCat on the WLAN), the host firewall must allow inbound TCP on that port,
+  and they must target the host's LAN address — not `127.0.0.1`.
+
+Failure modes are listed in
+[Troubleshooting](troubleshooting.md#testserver-issues).
 
 #### `testserver smoke`
 
