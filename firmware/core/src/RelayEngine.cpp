@@ -7,6 +7,90 @@
 
 #include "Log.h"
 
+namespace {
+// NFCGate NCI-config option type bytes (app nfc/config/OptionType.java, commit
+// 35f73ee). These are the TLV `type` tags the app's daemon parser expects.
+enum : uint8_t {
+  LA_BIT_FRAME_SDD = 0x30,    // ATQA byte 0
+  LA_PLATFORM_CONFIG = 0x31,  // ATQA byte 1
+  LA_SEL_INFO = 0x32,         // SAK
+  LA_NFCID1 = 0x33,           // UID / NFCID1
+  LI_A_RATS_TB1 = 0x58,       // ATS TB(1): FWI / SFGI
+  LI_A_HIST_BY = 0x59,        // ATS historical bytes
+  LI_A_RATS_TC1 = 0x5C,       // ATS TC(1): NAD / CID support
+};
+
+// Append one [type][len][value...] TLV (ConfigBuilder.build() wire format:
+// type, 1-byte length, value). Returns the new offset, or 0 on overflow so the
+// caller can bail.
+size_t pushTlv(uint8_t *out, size_t cap, size_t off, uint8_t type,
+               const uint8_t *val, uint8_t len) {
+  if (off + 2u + len > cap) return 0;
+  out[off++] = type;
+  out[off++] = len;
+  memcpy(out + off, val, len);
+  return off + len;
+}
+
+size_t pushTlv1(uint8_t *out, size_t cap, size_t off, uint8_t type, uint8_t v) {
+  return pushTlv(out, cap, off, type, &v, 1);
+}
+
+// Serialize the currently-activated NFC-A/ISO-DEP tag's parameters into the
+// NFCGate NCI-config TLV stream the app's daemon (NfcManager.applyData ->
+// beginSetConfig) expects. Mirrors NfcAReader.getConfig() + IsoDepReader
+// .getConfig()/parseAtsRes() from the pinned app. Returns the byte count, or 0
+// if no usable NFC-A tag is activated.
+size_t buildTagConfig(RemoteDevice &dev, uint8_t *out, size_t cap) {
+  const uint8_t *uid = dev.getNFCID();
+  const uint8_t uidLen = dev.getNFCIDLen();
+  const uint8_t *atqa = dev.getSensRes();  // 2 bytes for NFC-A
+  const uint8_t atqaLen = dev.getSensResLen();
+  const uint8_t *sak = dev.getSelRes();
+  const uint8_t sakLen = dev.getSelResLen();
+  if (uidLen == 0 || atqaLen < 2 || sakLen < 1) {
+    return 0;  // not an NFC-A tag: nothing the app's Listen-A config can carry
+  }
+
+  // Core NFC-A anticollision. This alone is enough for the peer to present an
+  // ISO-DEP target and let the terminal route SELECT PPSE. ATQA is split into
+  // its two bytes exactly as the app does.
+  size_t off = 0;
+  off = pushTlv1(out, cap, off, LA_BIT_FRAME_SDD, atqa[0]);
+  if (off) off = pushTlv1(out, cap, off, LA_PLATFORM_CONFIG, atqa[1]);
+  if (off) off = pushTlv1(out, cap, off, LA_SEL_INFO, sak[0]);
+  if (off) off = pushTlv(out, cap, off, LA_NFCID1, uid, uidLen);
+  if (!off) return 0;
+
+  // ISO-DEP (Type 4 / EMV): forward the ATS-derived Listen params so the
+  // emulated card answers RATS like the physical card. ATS layout (ISO 14443-4):
+  //   [TL] T0 [TA(1)] [TB(1)] [TC(1)] hist...
+  // The app's parseAtsRes() starts at T0, so detect and skip a leading TL byte
+  // (TL == total ATS length is its defining property).
+  //
+  // ⚠ HARDWARE-VERIFY: whether the PN7150's getRats() includes the leading TL
+  // byte is the one thing not confirmed on device. The TL==len detection below
+  // handles both; if a real card's ATS still mis-parses, log the raw getRats()
+  // bytes and adjust. The four core options above do NOT depend on this.
+  if (dev.getProtocol() == PROT_ISODEP && dev.getRatsLen() >= 2) {
+    const uint8_t *ats = dev.getRats();
+    const uint8_t atsLen = dev.getRatsLen();
+    uint8_t i = (ats[0] == atsLen) ? 1 : 0;  // skip TL if present
+    const uint8_t t0 = ats[i++];
+    const uint8_t TA_P = 0x10, TB_P = 0x20, TC_P = 0x40;  // T0 presence bits
+    if ((t0 & TA_P) && i < atsLen) i++;  // TA(1) = bit rate; skip (default 106k)
+    if ((t0 & TB_P) && i < atsLen)
+      off = pushTlv1(out, cap, off, LI_A_RATS_TB1, ats[i++]);
+    if (off && (t0 & TC_P) && i < atsLen)
+      off = pushTlv1(out, cap, off, LI_A_RATS_TC1, ats[i++]);
+    if (off && i < atsLen)
+      off = pushTlv(out, cap, off, LI_A_HIST_BY, ats + i, atsLen - i);
+    if (!off) return 0;
+  }
+  return off;
+}
+}  // namespace
+
 RelayEngine::RelayEngine(NfcController &nfc, NfcGateLink &link,
                          const RelayConfig &cfg)
     : _nfc(nfc), _link(link), _cfg(cfg) {}
@@ -24,6 +108,8 @@ bool RelayEngine::beginNfc() {
   _awaitTimeouts = 0;
   _lastCardActivity = millis();
   _cardActivitySinceReArm = false;
+  _initialSent = false;
+  _initialAttemptAt = 0;
 
   // Bring up the PN7150 in the role's RF mode.
   const bool isReader = _cfg.roleEnum() == RelayRole::READER;
@@ -80,8 +166,12 @@ void RelayEngine::loop() {
   if (nowMs - _lastHeartbeat >= HEARTBEAT_MS) {
     _lastHeartbeat = nowMs;
     if (_cfg.roleEnum() == RelayRole::READER) {
-      LOG_INFO(_peerReady ? "reader: vivo, peer presente, esperando comando del peer"
-                          : "reader: vivo, sin peer aun");
+      LOG_INFO(!_peerReady
+                   ? "reader: vivo, sin peer aun"
+                   : (!_initialSent
+                          ? "reader: vivo, peer presente, enviando trama INITIAL "
+                            "(coloca la tarjeta sobre el reader)"
+                          : "reader: vivo, peer presente, esperando comando del peer"));
     } else {
       LOG_INFO(_awaitingResponse ? "card: esperando respuesta del peer (relay)"
                                  : "card: esperando comando del terminal (RF)");
@@ -100,6 +190,15 @@ void RelayEngine::loop() {
     LOG_WARN("RelayEngine: link reset while polling");
     _state = State::Error;
     return;
+  }
+
+  // READER role: once the peer is present, emit the one-off INITIAL tag-config
+  // frame (Camino B1: a rooted NFCGate emulator peer needs it to present our
+  // physical card to its terminal). Inert for Camino A/B2 — a BomberCat card peer
+  // ignores INITIAL (see handleFrame's PSH guard). emitInitialConfig() is
+  // self-throttled and a no-op once sent.
+  if (_cfg.roleEnum() == RelayRole::READER && _peerReady && !_initialSent) {
+    emitInitialConfig();
   }
 
   // CARD/HCE role: pull a command from the terminal (RF) and forward it. The
@@ -148,6 +247,10 @@ void RelayEngine::handleFrame(const ServerData &sd, const NfcData &nfc) {
     case NfcOpcode::FIN:
       LOG_INFO("RelayEngine: peer FIN");
       _peerReady = false;
+      // Re-arm the one-off INITIAL for the next peer that joins this session, so
+      // a reconnecting emulator gets the tag config again.
+      _initialSent = false;
+      _initialAttemptAt = 0;
       break;
 
     case NfcOpcode::PSH:
@@ -296,6 +399,51 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
       return;
     }
   }
+}
+
+bool RelayEngine::emitInitialConfig() {
+  // Throttle re-attempts: while no card is on the reader yet, waitForTag() blocks
+  // up to 500 ms; without this we would spin that probe every loop() and starve
+  // frame draining. Once a card is present, waitForTag returns fast and this
+  // fires on the first attempt.
+  const unsigned long nowMs = millis();
+  if (_initialAttemptAt != 0 && nowMs - _initialAttemptAt < INITIAL_RETRY_MS) {
+    return false;
+  }
+  _initialAttemptAt = nowMs;
+
+  // Activate the physical card so remoteDevice holds its real UID/SAK/ATQA/ATS.
+  // Keep _tagReady so readerHandleCommand reuses this activation for the first
+  // command (the boundary self-heal re-activates if the session goes stale in the
+  // idle gap before the terminal drives SELECT PPSE).
+  if (!_tagReady) {
+    if (!_nfc.waitForTag(500)) {
+      LOG_DEBUG("reader: sin tarjeta para la trama INITIAL; reintentare");
+      return false;
+    }
+    _tagReady = true;
+    LOG_DEBUG("reader: tarjeta activada (para trama INITIAL)");
+  }
+
+  uint8_t cfg[96];
+  const size_t cfgLen = buildTagConfig(_nfc.raw().remoteDevice, cfg, sizeof(cfg));
+  if (cfgLen == 0) {
+    // Not NFC-A (or no usable params). A rooted emulator peer can't present a tag
+    // without this, but a BomberCat peer doesn't need it — so don't spin: mark
+    // sent and let the normal command path proceed.
+    LOG_WARN("reader: sin config de tag NFC-A; no envio INITIAL");
+    _initialSent = true;
+    return false;
+  }
+
+  Log::hex(LogLevel::Debug, "reader INITIAL cfg:", cfg, cfgLen);
+  if (!_link.send(NfcSource::CARD, cfg, cfgLen, NfcType::INITIAL)) {
+    LOG_ERROR("reader: fallo al enviar la trama INITIAL; reintentare");
+    return false;  // transient link issue: retry next window
+  }
+  _initialSent = true;
+  LOG_INFO("reader: trama INITIAL (config de tag) enviada al peer");
+  return true;
 }
 
 void RelayEngine::cardPollTerminal() {

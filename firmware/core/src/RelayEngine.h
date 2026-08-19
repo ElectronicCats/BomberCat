@@ -106,6 +106,14 @@ class RelayEngine {
  private:
   void handleFrame(const ServerData &sd, const NfcData &nfc);
   void readerHandleCommand(const NfcData &nfc);
+
+  // READER (Camino B1): emit the one-off NFCGate INITIAL frame carrying the
+  // physical tag's activation config (UID/SAK/ATQA/ATS) so a rooted NFCGate
+  // emulator peer configures its HCE and presents THIS tag to the terminal. Sets
+  // _initialSent on success; self-throttled while waiting for a card to be
+  // placed. A BomberCat card peer ignores INITIAL, so this is inert for A/B2.
+  bool emitInitialConfig();
+
   void cardPollTerminal();
   void cardHandleResponse(const NfcData &nfc);
   void emitCapture(const char *dir, const uint8_t *data, size_t len);
@@ -120,6 +128,9 @@ class RelayEngine {
   bool _awaitingResponse = false;  // CARD: a command was forwarded, response due
   uint8_t _awaitTimeouts = 0;      // CARD: consecutive forwarded-but-unanswered
                                    // commands (dead-link detector; see below)
+  bool _initialSent = false;         // READER: one-off tag-config INITIAL emitted
+  unsigned long _initialAttemptAt = 0;  // READER: millis() of last INITIAL attempt
+                                        // (throttles the waitForTag probe)
   uint32_t _relayed = 0;
 
   // Fase 8 APDU capture tap: when non-null, each relayed APDU is copied out as
@@ -165,6 +176,12 @@ class RelayEngine {
   // MID-transaction this NEVER runs (sessionWasLive gates it), so it cannot
   // inflate a per-APDU window or the terminal's WTX budget — that path fail-fasts.
   static const unsigned long READER_BOUNDARY_ACTIVATE_MS = 3000;
+
+  // READER: minimum gap between attempts to emit the one-off INITIAL tag-config
+  // frame while no physical card is on the reader yet. Bounds the cost of the
+  // blocking waitForTag(500) probe so a connected-but-card-less reader does not
+  // spin it every loop(); once a card is present the INITIAL goes out at once.
+  static const unsigned long INITIAL_RETRY_MS = 1000;
 
   // CARD emulation re-arm idle threshold. cardReArm() does a FULL chip re-init
   // (beginEmulationMode), which tears down the emulated card's ISO-DEP session —
