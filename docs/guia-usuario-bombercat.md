@@ -1,8 +1,6 @@
 # Guía de Uso — BomberCat para Auditorías NFC
 
-> **Manual del usuario final.** Escrito para personas con poco o ningún
-> conocimiento técnico sobre NFC o ataques de *relay/replay*. Si sigues los
-> pasos en orden, no necesitas saber nada más de antemano.
+> **Read this in another language:** [English](guia-usuario-bombercat.en.md)
 
 ---
 

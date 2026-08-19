@@ -1,5 +1,7 @@
 # Guía — Rootear un teléfono Android para NFCGate (Modo 2)
 
+> **Read this in another language:** [English](guia-rooteo-android-nfcgate.en.md)
+
 > **Manual complementario de la [Guía de Uso de BomberCat](guia-usuario-bombercat.md).**
 > Solo necesitas este documento si vas a usar el **Modo 2** (BomberCat *reader* +
 > teléfono con NFCGate en modo *tarjeta*/HCE), que **exige un teléfono rooteado**.
