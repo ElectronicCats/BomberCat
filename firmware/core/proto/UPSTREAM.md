@@ -10,7 +10,7 @@ change the protocol; edit only to re-sync with a newer pinned upstream.
 |---|---|---|---|
 | `protocol` | https://github.com/nfcgate/protocol | `804fa9a` | source of `c2c.proto`, `c2s.proto` |
 | `nfcgate` (app) | https://github.com/nfcgate/nfcgate | `35f73ee` | `v2.6.1-2-g35f73ee` |
-| `server` | https://github.com/nfcgate/server | `4d32cc1` | local test server (`../../server`) |
+| `server` | https://github.com/ElectronicCats/nfcgate-server | `fc9103d` | local test server (`../../server`); our fork = `nfcgate/server@4d32cc1` + `tools/testserver/latency-fixes.patch` |
 
 Both `nfcgate` and `server` reference `protocol` as the submodule
 `protobuf/src/main/proto/protocol` / `protocol` respectively.
