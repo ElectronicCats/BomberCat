@@ -14,7 +14,8 @@ from pathlib import Path
 import click
 
 # Internal
-from ..utils.output import print_info, print_error
+from . import preflight
+from ..utils.output import print_info, print_error, print_error_panel, fmt_command
 
 # tools/modules/testserver/cli.py -> parents[2] == tools/
 TOOLS_DIR = Path(__file__).resolve().parents[2]
@@ -23,6 +24,9 @@ RUN_SH = TESTSERVER_DIR / "run.sh"
 SMOKETEST = TESTSERVER_DIR / "relay_smoketest.py"
 SMOKE_REQS = TESTSERVER_DIR / "requirements.txt"
 SERVER_DIR = TOOLS_DIR.parent / "server"
+# Kept in sync with run.sh, which names the container it starts.
+CONTAINER = "bombercat-nfcgate-server-run"
+FETCH_SH = TESTSERVER_DIR / "fetch_server.sh"
 
 # The smoke test imports the server's committed *_pb2.py, which need the classic
 # protobuf 3.x runtime (see requirements.txt). We do not want that pin leaking
@@ -97,6 +101,13 @@ def run(port):
         print_error(f"Server launcher not found: {RUN_SH}")
         sys.exit(1)
 
+    # Everything the build needs, checked before we claim to be starting
+    # anything — each of these exits with its own explanation. Order matters:
+    # the port check asks Docker about leftover containers.
+    preflight.check_server_sources(SERVER_DIR, FETCH_SH)
+    preflight.check_docker()
+    preflight.check_port(port, CONTAINER)
+
     env = {**os.environ, "PORT": str(port)}
     print_info(f"Starting nfcgate-server on host port {port} (Ctrl-C to stop) …")
     try:
@@ -106,9 +117,19 @@ def run(port):
         # signal reaches us too, so just swallow it and report a normal stop.
         print_info("server stopped.")
         rc = 0
-    except FileNotFoundError as e:
-        # Almost always: `bash` (or Docker, further down) not on PATH.
-        print_error(f"could not launch the server: {e}")
+    except FileNotFoundError:
+        # `bash` itself is missing: Docker was already proven usable above.
+        print_error_panel(
+            preflight.TITLE,
+            "bash is not installed, or not on your PATH.",
+            "The CLI starts the server through a shell script "
+            f"({preflight.short_path(RUN_SH)}),\nso it needs bash to launch it.",
+            fix=[
+                "Install bash with your package manager (e.g. "
+                + fmt_command("sudo apt install bash"),
+                f"{fmt_command('bombercat testserver run')}\n     re-run this command",
+            ],
+        )
         rc = 1
     sys.exit(rc)
 
@@ -123,12 +144,7 @@ def smoke(host, port):
         sys.exit(1)
 
     # The test imports server/plugins/*_pb2.py from the on-demand clone.
-    if not (SERVER_DIR / "plugins").is_dir():
-        print_error(
-            f"nfcgate-server not found at {SERVER_DIR}\n"
-            "Fetch it once with: tools/testserver/fetch_server.sh"
-        )
-        sys.exit(1)
+    preflight.check_server_sources(SERVER_DIR, FETCH_SH)
 
     python = _smoketest_python()
 

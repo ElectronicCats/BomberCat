@@ -166,23 +166,32 @@ board (or check the app's session/role for Path B).
   (`tools/testserver/fetch_server.sh`) — the clone at `<repo>/server` is the
   Docker *build context*, not just a dependency of `smoke`. Full list in the
   [reference](reference.md#requirements).
-  `run.sh` pre-checks all three before building, so a clean machine gets an
-  actionable message instead of a raw `docker build` error:
-  - `could not launch the server:` — `bash` missing (the CLI cannot even start
-    the script).
-  - `nfcgate-server not found at …/server` — the server was never fetched; run
-    `tools/testserver/fetch_server.sh` once.
-  - `docker is not installed (or not on PATH)` — install Docker Engine, or run
-    the server without Docker (see [`testserver/README.md`](../testserver/README.md)).
-  - `no permission to reach the Docker daemon (/var/run/docker.sock)` — your
-    user is not in the `docker` group: `sudo usermod -aG docker "$USER"`, then
-    log out and back in (or `newgrp docker` for the current shell). Group
-    membership is only applied at login, so adding yourself is not enough
-    without a fresh session.
-  - `the Docker daemon is not running` — `sudo systemctl start docker`, or
+  The CLI pre-checks all of it *before* building and prints a framed panel with
+  the numbered commands that fix it, so you should never see a raw `docker
+  build` error. What each panel means:
+  - **The nfcgate-server sources are missing** — the server was never fetched.
+    On a terminal the CLI offers to run `tools/testserver/fetch_server.sh` for
+    you; answer `n` to do it yourself. The clone at `<repo>/server` is the
+    Docker *build context*, not just a dependency of `smoke`.
+  - **Docker is not installed, or not on your PATH** — install Docker Engine,
+    or run the server without Docker (see
+    [`testserver/README.md`](../testserver/README.md)).
+  - **Docker refused the connection: permission denied on its socket** — the
+    panel tells you which of the three cases you are in, because the fix
+    differs: not in the `docker` group (`sudo usermod -aG docker "$USER"`), a
+    member but in a session that predates it (`newgrp docker` — membership is
+    only applied at login), or the group is already active and the socket
+    refuses anyway (unusual ownership, or rootless Docker).
+  - **The Docker daemon is not running** — `sudo systemctl start docker`, or
     launch Docker Desktop on macOS/Windows.
-  - `port is already allocated` — something else holds the host port; pick
-    another with `testserver run -p <port>`.
+  - **Host port N is already in use** — the panel distinguishes a test server
+    you left running (`docker rm -f bombercat-nfcgate-server-run`) from any
+    other program holding the port (`testserver run -p <port>`).
+  - `bash is not installed` — the CLI launches the server through
+    `tools/testserver/run.sh`, so it needs a shell to do it.
+
+  Running `tools/testserver/run.sh` directly gets the same checks in terse
+  form, without the panels.
 - **`testserver smoke`**: needs the server fetched once
   (`tools/testserver/fetch_server.sh`) and the `protobuf==3.20.3` runtime. The CLI
   bootstraps a throwaway venv (`tools/.venv-smoke`, override with

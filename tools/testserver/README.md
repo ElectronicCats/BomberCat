@@ -18,6 +18,9 @@ tools/testserver/fetch_server.sh            # clones nfcgate/server@4d32cc1
 SERVER_REPO=/path/to/clone tools/testserver/fetch_server.sh   # offline / mirror
 ```
 
+You can skip this: `bombercat testserver run` and `bombercat testserver smoke`
+detect the missing clone and offer to fetch it for you.
+
 ## Run the server
 
 ```bash

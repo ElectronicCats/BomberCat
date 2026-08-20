@@ -2,6 +2,8 @@
 output.py - Shared Rich console and output helpers for all modules
 """
 
+from __future__ import annotations
+
 from rich.console import Console
 from rich.style import Style
 from rich.panel import Panel
@@ -186,3 +188,57 @@ def print_separator(char: str = "=", width: int = 60) -> None:
 def print_raw(text: str) -> None:
     """Print raw text without additional formatting."""
     console.print(text)
+
+
+def fmt_command(text: str) -> str:
+    """Mark up `text` as a copy-pasteable command (for use inside messages)."""
+    return f"[green]{text}[/green]"
+
+
+def print_error_panel(
+    title: str,
+    problem: str,
+    why: str = "",
+    fix: list[str] | None = None,
+    fix_title: str = "How to fix it",
+    notes: list[str] | None = None,
+) -> None:
+    """A framed error: what failed, why, and the numbered steps that fix it.
+
+    For failures the user has to *act* on — a missing dependency, a permission
+    that must be granted — where a one-line `print_error` would leave them to
+    guess the next move. Ordinary failures should stay on `print_error`.
+
+    `problem` is the one-line summary, `why` the paragraph explaining it, `fix`
+    the ordered steps (mark commands with `fmt_command` so they stand out), and
+    `notes` the trailing asides. All accept Rich markup.
+    """
+    body: list[str] = [f"[red bold]✗  {problem}[/red bold]"]
+
+    if why:
+        body += ["", why]
+
+    if fix:
+        body += ["", f"[yellow bold]{fix_title}[/yellow bold]", ""]
+        # Right-align the numbers so multi-line steps stay visually aligned.
+        width = len(str(len(fix)))
+        body += [
+            f"  [white]{i:>{width}}.[/white] {step}" for i, step in enumerate(fix, 1)
+        ]
+
+    notes = [n for n in (notes or []) if n]
+    if notes:
+        body += [""] + [f"[dim]{note}[/dim]" for note in notes]
+
+    console.print("")
+    console.print(
+        Panel(
+            "\n".join(body),
+            title=f"[red bold]{title}[/red bold]",
+            title_align="left",
+            border_style=STYLES["error"],
+            padding=(1, 2),
+            expand=False,
+        )
+    )
+    console.print("")

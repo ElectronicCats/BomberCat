@@ -467,9 +467,11 @@ USB, serial or RF, so no board has to be plugged in — but the host must have:
 | Network access on the **first** run | the image pulls `python:3.11-slim` and installs `protobuf==3.20.3` | — |
 | The host port free (default `5566`) | it is published as `-p <port>:5566` | `ss -ltn \| grep 5566` |
 
-`run.sh` pre-checks Docker, the daemon, socket permissions and the server clone
-before it builds, and fails with the fix to apply instead of a raw Docker error — see
-[troubleshooting](troubleshooting.md#testserver-issues) for the exact messages.
+All of it is pre-checked before the build starts: the CLI verifies the server
+clone, Docker, the daemon, socket permissions and the host port, and on failure
+prints the fix to apply instead of a raw Docker error — see
+[troubleshooting](troubleshooting.md#testserver-issues) for what each one says.
+When the clone is missing and you are on a terminal, it offers to fetch it.
 
 The server is a dev-only fixture — not committed, not a submodule — so fetch it
 once (needs `git`), the same step [`testserver smoke`](#testserver-smoke) needs:

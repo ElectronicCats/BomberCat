@@ -20,6 +20,10 @@ CONTAINER="bombercat-nfcgate-server-run"
 # --------------------------------------------------------------------------- #
 # Preflight: fail with an actionable message instead of a raw Docker/context
 # error. These are the ways a clean machine trips over `run.sh`.
+#
+# `bombercat testserver run` checks the same things first and explains them at
+# length (tools/modules/testserver/preflight.py); this terse copy is what backs
+# the script when it is invoked directly.
 # --------------------------------------------------------------------------- #
 die() {
     echo "ERROR: $1" >&2
