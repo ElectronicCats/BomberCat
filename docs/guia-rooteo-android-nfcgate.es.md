@@ -2,7 +2,7 @@
 
 > **Read this in another language:** [English](guia-rooteo-android-nfcgate.en.md)
 
-> **Manual complementario de la [Guía de Uso de BomberCat](guia-usuario-bombercat.md).**
+> **Manual complementario de la [Guía de Uso de BomberCat](guia-usuario-bombercat.es.md).**
 > Solo necesitas este documento si vas a usar el **Modo 2** (BomberCat *reader* +
 > teléfono con NFCGate en modo *tarjeta*/HCE), que **exige un teléfono rooteado**.
 > Si tu teléfono no está rooteado y no quieres rootearlo, **usa el Modo 3** de la
@@ -187,7 +187,7 @@ instala mediante **Zygisk** (dentro de Magisk) y **LSPosed**.
 
 > **Vuelve a la guía principal:** una vez el teléfono está rooteado y NFCGate
 > muestra su *status* correcto, continúa con el
-> [Modo 2 de la Guía de Uso de BomberCat](guia-usuario-bombercat.md#modo-2--bombercat-reader--móvil-con-nfcgate-en-modo-card).
+> [Modo 2 de la Guía de Uso de BomberCat](guia-usuario-bombercat.es.md#modo-2--bombercat-reader--móvil-con-nfcgate-en-modo-card).
 
 > **Recordatorio:** rootea solo un teléfono **dedicado a pruebas** y usa BomberCat
 > únicamente en auditorías **autorizadas**. La responsabilidad es **exclusivamente

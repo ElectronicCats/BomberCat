@@ -1,6 +1,6 @@
 # Guide — Rooting an Android phone for NFCGate (Mode 2)
 
-> **Read this in another language:** [Español](guia-rooteo-android-nfcgate.md)
+> **Read this in another language:** [Español](guia-rooteo-android-nfcgate.es.md)
 
 > **Companion manual to the [BomberCat User Guide](guia-usuario-bombercat.en.md).**
 > You only need this document if you are going to use **Mode 2** (BomberCat

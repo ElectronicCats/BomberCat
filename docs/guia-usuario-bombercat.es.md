@@ -235,7 +235,7 @@ tarjeta física.
 > invertidos y funciona en teléfonos normales.
 >
 > 📱 **¿No sabes cómo rootear el teléfono ni preparar NFCGate?** Sigue la
-> [Guía para rootear un teléfono Android para NFCGate](guia-rooteo-android-nfcgate.md),
+> [Guía para rootear un teléfono Android para NFCGate](guia-rooteo-android-nfcgate.es.md),
 > que explica paso a paso el rooteo con Magisk y la instalación del módulo de
 > NFCGate (Zygisk + LSPosed), con sus advertencias correspondientes.
 

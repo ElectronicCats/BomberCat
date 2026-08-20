@@ -1,6 +1,6 @@
 # User Guide — BomberCat for NFC Audits
 
-> **Read this in another language:** [Español](guia-usuario-bombercat.md)
+> **Read this in another language:** [Español](guia-usuario-bombercat.es.md)
 
 ---
 

@@ -85,7 +85,7 @@ selectors:
 | `-p`, `--port PATH` | Raw serial port (`/dev/ttyACM0`, `COM3`). Used as-is; no enumeration. |
 | `-d`, `--device ID` | Stable device ID from `bombercat device list` (for multiple boards). |
 
-Resolution rules (implemented in `resolve_port`, see [protocol](protocol.md#port-discovery)):
+Resolution rules (implemented in `resolve_port`, see [protocol](protocol.md#port-discovery--numbering)):
 
 - `--port` wins and is used verbatim.
 - `--device` selects one of the numbered devices without handshaking the others.
@@ -133,7 +133,7 @@ The **BomberCat** column:
 - `✓` — the port answered the control handshake (it is running the relay firmware).
 - `USB id` — its USB VID/PID says BomberCat, but it did **not** answer the
   handshake (probably not running the NFCGate relay firmware — see
-  [Troubleshooting](troubleshooting.md#board-present-but-no-handshake)).
+  [Troubleshooting](troubleshooting.md#board-present-by-usb-id-but-no-handshake)).
 - blank — not a BomberCat candidate.
 
 IDs are derived from a **stable USB identity** (serial number first, then USB
@@ -328,7 +328,7 @@ bombercat status -d 2
 ```
 
 `state` is one of `idle`, `connecting`, `relaying`, `error` (see the
-[protocol](protocol.md#status)).
+[protocol](protocol.md#status-fields)).
 
 ## `monitor`
 
@@ -470,7 +470,7 @@ USB, serial or RF, so no board has to be plugged in — but the host must have:
 All of it is pre-checked before the build starts: the CLI verifies the server
 clone, Docker, the daemon, socket permissions and the host port, and on failure
 prints the fix to apply instead of a raw Docker error — see
-[troubleshooting](troubleshooting.md#testserver-issues) for what each one says.
+[troubleshooting](troubleshooting.md#testserver-errors) for what each one says.
 When the clone is missing and you are on a terminal, it offers to fetch it.
 
 The server is a dev-only fixture — not committed, not a submodule — so fetch it
@@ -497,7 +497,7 @@ Good to know:
   and they must target the host's LAN address — not `127.0.0.1`.
 
 Failure modes are listed in
-[Troubleshooting](troubleshooting.md#testserver-issues).
+[Troubleshooting](troubleshooting.md#testserver-errors).
 
 #### `testserver smoke`
 

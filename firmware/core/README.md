@@ -20,7 +20,7 @@ uses mbed `TDBStore` / `FlashIAPBlockDevice`, which are only available there.
 | `NfcGateLink.h` | `NfcGateLink` | TCP transport to `nfcgate-server` over an Arduino `Client&` (WiFiNINA `WiFiClient` on device). `connect()`, `send()`, `sendControl()` (SYN/ACK/FIN), non-blocking `poll()` / `receive()`. Owns the asymmetric framing (`[4B len BE][1B session][payload]` c→s); delegates protobuf to `NfcGateCodec`. WiFi *association* stays in the sketch. |
 | `RelayEngine.h` | `RelayEngine` | Glue over `NfcController` + `NfcGateLink`: `begin()` (NFC bring-up + connect + `OP_SYN` session join), non-blocking `loop()`, `stop()` (`OP_FIN`). Owns the SYN/ACK handshake and the **READER**-role relay loop (command in → card transceive → response out). CARD role is a stub (Fase 5). No WiFiNINA dependency — WiFi stays in the sketch. |
 | `FlashIAPLimits.h` | `mbed::getFlashIAPLimits()` | Computes the usable flash region past the sketch (vendored from the relay sketches). |
-| `proto/…` | `NFCData`, `ServerData` | NFCGate wire messages, generated with nanopb in Fase 1. See [`../proto/UPSTREAM.md`](../proto/UPSTREAM.md). |
+| `proto/…` | `NFCData`, `ServerData` | NFCGate wire messages, generated with nanopb in Fase 1. See [`proto/UPSTREAM.md`](proto/UPSTREAM.md). |
 | `pb*.{h,c}` | nanopb runtime | Vendored nanopb 0.4.9.1 runtime (`pb.h`, `pb_common`, `pb_encode`, `pb_decode`), zlib-licensed — see `NANOPB_LICENSE.txt`. Kept flat in `src/` so the generated `proto/*.pb.h` resolve `#include <pb.h>` via the library's include path. |
 
 Coming in later phases: CARD-role relay (Fase 5), `SerialControl`.
