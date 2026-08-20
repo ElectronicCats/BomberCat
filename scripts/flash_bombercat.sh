@@ -196,16 +196,36 @@ ensure_core() {
   fi
 }
 
+# Muestra instrucciones de instalación manual para una librería que no se pudo
+# instalar automáticamente (desde el Library Manager del IDE o con arduino-cli).
+lib_install_help() {
+  local lib="$1"
+  err "No se pudo instalar la librería '$lib' automáticamente."
+  printf '\n%s    Cómo instalar '\''%s'\'' manualmente:%s\n' "$C_BLD" "$lib" "$C_RST" >&2
+  printf '      1) Con arduino-cli:\n' >&2
+  printf '           arduino-cli lib update-index\n' >&2
+  printf '           arduino-cli lib install "%s"\n' "$lib" >&2
+  printf '      2) Desde el IDE de Arduino:\n' >&2
+  printf '           Programa → Incluir librería → Administrar bibliotecas…\n' >&2
+  printf '           busca "%s" e instálala.\n' "$lib" >&2
+  printf '      Más info: https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-installing-a-library\n\n' >&2
+}
+
 ensure_libraries() {
   info "Instalando/verificando librerías..."
   arduino-cli lib update-index
-  local lib
+  local lib missing=()
   for lib in "${LIBRARIES[@]}"; do
     if arduino-cli lib list 2>/dev/null | grep -qi "^$lib "; then
       ok "Librería '$lib' presente."
     else
       info "Instalando '$lib'..."
-      arduino-cli lib install "$lib" || warn "No se pudo instalar '$lib' automáticamente."
+      if arduino-cli lib install "$lib"; then
+        ok "Librería '$lib' instalada."
+      else
+        lib_install_help "$lib"
+        missing+=("$lib")
+      fi
     fi
   done
   # SerialCommand (kroimon) desde git
@@ -214,8 +234,25 @@ ensure_libraries() {
   else
     info "Instalando 'SerialCommand' desde git..."
     arduino-cli config set library.enable_unsafe_install true >/dev/null 2>&1 || true
-    arduino-cli lib install --git-url "$SERIALCOMMAND_GIT" \
-      || warn "No se pudo instalar SerialCommand automáticamente. Instálala manualmente si el sketch la requiere."
+    if arduino-cli lib install --git-url "$SERIALCOMMAND_GIT"; then
+      ok "Librería 'SerialCommand' instalada."
+    else
+      err "No se pudo instalar 'SerialCommand' automáticamente."
+      printf '\n%s    Cómo instalar '\''SerialCommand'\'' manualmente (no está en el Library Manager):%s\n' "$C_BLD" "$C_RST" >&2
+      printf '      arduino-cli config set library.enable_unsafe_install true\n' >&2
+      printf '      arduino-cli lib install --git-url %s\n' "$SERIALCOMMAND_GIT" >&2
+      printf '      (o clónala en tu carpeta de librerías de Arduino:\n' >&2
+      printf '       git clone %s ~/Arduino/libraries/Arduino-SerialCommand)\n\n' "$SERIALCOMMAND_GIT" >&2
+      missing+=("SerialCommand")
+    fi
+  fi
+
+  # Resumen: si algo quedó sin instalar, avisa antes de compilar.
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    warn "Faltan librerías por instalar: ${missing[*]}"
+    warn "Instálalas con las indicaciones de arriba y vuelve a ejecutar el script."
+    warn "La compilación fallará si el sketch depende de ellas."
+    confirm "¿Continuar de todas formas?" || die "Cancelado: instala las librerías faltantes primero."
   fi
 }
 
