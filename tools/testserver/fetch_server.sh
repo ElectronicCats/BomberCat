@@ -29,7 +29,10 @@ DEST="$REPO_ROOT/server"
 if [ -f "$DEST/server.py" ]; then
     have="$(git -C "$DEST" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     if [ "$have" = "$SERVER_COMMIT" ]; then
-        echo ">> server already present at $DEST (@$have) — nothing to do"
+        echo ">> server already present at $DEST (@$have)"
+        # Still re-assert the latency patch: an existing clone may predate it,
+        # or have been reset with `git checkout`.
+        bash "$SCRIPT_DIR/apply_patch.sh"
         exit 0
     fi
     echo ">> $DEST exists but is @$have (want @$SERVER_COMMIT)"
@@ -41,5 +44,11 @@ echo ">> Cloning $SERVER_REPO into $DEST"
 git clone "$SERVER_REPO" "$DEST"
 echo ">> Pinning to $SERVER_COMMIT"
 git -C "$DEST" checkout --quiet "$SERVER_COMMIT"
-echo ">> Done. Server pinned at $(git -C "$DEST" rev-parse --short HEAD)."
+
+# Upstream is correct but slow: it leaves Nagle on and logs every relayed frame
+# on the lock-step hot path. Our fixes live in latency-fixes.patch, applied here
+# so a fresh clone is fast from the first run (run.sh re-asserts it too).
+bash "$SCRIPT_DIR/apply_patch.sh" "$DEST"
+
+echo ">> Done. Server pinned at $(git -C "$DEST" rev-parse --short HEAD) + latency patch."
 echo "   Next: tools/testserver/run.sh   (then relay_smoketest.py)"

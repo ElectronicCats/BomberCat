@@ -91,6 +91,13 @@ if ! docker_err="$(docker info 2>&1 >/dev/null)"; then
     esac
 fi
 
+# 4. The clone is upstream code; our relay latency fixes (Fases E and H of
+#    firmware/LATENCIA_OPTIMIZACION.md) are not in it. Re-assert them before the
+#    build — the Dockerfile COPYs server.py, so an unpatched clone bakes a
+#    correct-but-slow relay (~13.5 s/transaction instead of ~4.2 s) into the
+#    image. Idempotent: a patched clone is detected and left alone.
+bash "$SCRIPT_DIR/apply_patch.sh"
+
 echo ">> Building $IMAGE"
 docker build -f "$SCRIPT_DIR/Dockerfile" -t "$IMAGE" "$REPO_ROOT/server"
 
