@@ -136,9 +136,85 @@ def _docker_group_state() -> str:
     return "pending-login" if user in group.gr_mem else "absent"
 
 
+def _newgrp_install_hint() -> str | None:
+    """How to install `newgrp` on this distro, when we recognise it.
+
+    It lives in the shadow/login package, which minimal images and trimmed
+    installs routinely leave out — the machine still has Docker, just no way to
+    re-evaluate group membership without logging in again.
+    """
+    try:
+        release = Path("/etc/os-release").read_text()
+    except OSError:
+        return None
+
+    ids = " ".join(
+        line.split("=", 1)[1].strip().strip('"').lower()
+        for line in release.splitlines()
+        if line.startswith(("ID=", "ID_LIKE="))
+    )
+    if "debian" in ids or "ubuntu" in ids:
+        return "sudo apt install login"
+    if "fedora" in ids or "rhel" in ids or "centos" in ids:
+        return "sudo dnf install shadow-utils"
+    if "arch" in ids:
+        return "sudo pacman -S shadow"
+    if "alpine" in ids:
+        return "sudo apk add shadow"
+    if "suse" in ids:
+        return "sudo zypper install shadow"
+    return None
+
+
+def _activate_group_step() -> tuple[str, list[str]]:
+    """(step, notes) for making the docker group effective in this session.
+
+    `newgrp docker` is the usual answer, but it is not always there: it ships
+    in shadow/login, so trimmed installs and container images have Docker and
+    no `newgrp`. `sg` is the same package's sibling and is missing whenever
+    `newgrp` is, so when neither exists only a fresh login can pick the group
+    up — and we say so instead of printing a command that does not run.
+    """
+    if shutil.which("newgrp"):
+        return (
+            f"{fmt_command('newgrp docker')}\n"
+            "     start a shell that has the group — or log out and back in",
+            [],
+        )
+
+    if shutil.which("sg"):
+        sg = fmt_command('sg docker -c "$SHELL"')
+        return (
+            f"{sg}\n"
+            "     start a shell that has the group — newgrp is not installed\n"
+            "     here, but sg does the same thing",
+            [],
+        )
+
+    notes = [
+        "`newgrp` is not installed on this machine, so nothing can apply the "
+        "group to the session you are in — only a new login can.",
+    ]
+    if (install := _newgrp_install_hint()) is not None:
+        notes.append(f"To get it: {install} — then `newgrp docker` works too.")
+    # Spelled out with absolute paths: sudo resets PATH, and the CLI may well
+    # be running from a venv that root's PATH knows nothing about.
+    notes.append(
+        f"One-off, without logging out: sudo -E {sys.executable} "
+        f"{Path(sys.argv[0]).resolve()} testserver run"
+    )
+    return (
+        "[bold]Log out and back in[/bold], or reboot\n"
+        "     a fresh login is what reads your groups again",
+        notes,
+    )
+
+
 def _permission_fix() -> tuple[str, list[str], list[str]]:
     """(why, fix steps, notes) for a socket that refuses this user."""
     state = _docker_group_state()
+
+    activate, activate_notes = _activate_group_step()
 
     if state == "absent":
         return (
@@ -147,13 +223,13 @@ def _permission_fix() -> tuple[str, list[str], list[str]]:
             [
                 f"{fmt_command('sudo usermod -aG docker \"$USER\"')}\n"
                 "     add yourself to the group",
-                f"{fmt_command('newgrp docker')}\n"
-                "     apply it to this shell — or log out and back in for all of them",
+                activate,
                 f"{fmt_command('bombercat testserver run')}\n     re-run this command",
             ],
             [
-                "Group membership is applied at login: without step 2 the change "
-                "only takes effect in your next session.",
+                "Group membership is applied at login: adding yourself is not "
+                "enough on its own, the session has to pick it up.",
+                *activate_notes,
                 "Adding a user to the docker group grants root-equivalent access to "
                 "the host. Prefer rootless Docker if that is a concern.",
             ],
@@ -165,11 +241,10 @@ def _permission_fix() -> tuple[str, list[str], list[str]]:
             "before that — group membership is only applied at login, so the\n"
             "session is still running without it.",
             [
-                f"{fmt_command('newgrp docker')}\n"
-                "     start a shell that has the group — or log out and back in",
+                activate,
                 f"{fmt_command('bombercat testserver run')}\n     re-run this command",
             ],
-            ["Verify with: id -nG | grep docker"],
+            [*activate_notes, "Verify with: id -nG | grep docker"],
         )
 
     # The group is already in effect (or there is none) and it still refuses:

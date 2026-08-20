@@ -182,6 +182,13 @@ board (or check the app's session/role for Path B).
     member but in a session that predates it (`newgrp docker` — membership is
     only applied at login), or the group is already active and the socket
     refuses anyway (unusual ownership, or rootless Docker).
+    If `newgrp` is not installed (it comes from `shadow-utils`, `login` on
+    Debian/Ubuntu — trimmed installs and container images often lack it), the
+    panel offers `sg docker -c "$SHELL"` instead, and when that is missing too
+    it says so and points at the only remaining options: log out and back in
+    (or reboot), install the package, or run this once under `sudo -E` (the
+    panel prints the exact command, with absolute paths, since `sudo` resets
+    `PATH`).
   - **The Docker daemon is not running** — `sudo systemctl start docker`, or
     launch Docker Desktop on macOS/Windows.
   - **Host port N is already in use** — the panel distinguishes a test server

@@ -54,17 +54,31 @@ fi
 if ! docker_err="$(docker info 2>&1 >/dev/null)"; then
     case "$docker_err" in
         *"permission denied"*)
-            hint="Log out and back in (group membership is applied at login),"
-            hint2="or start a shell with the new group: newgrp docker"
-            if ! getent group docker 2>/dev/null | grep -qw "${USER:-$(id -un)}"; then
-                hint="Add your user to the 'docker' group, then log out and back in:"
-                hint2="  sudo usermod -aG docker \"\$USER\""
+            # newgrp/sg ship in shadow-utils (login on Debian); a trimmed
+            # install can have Docker and neither, and then only a fresh login
+            # applies the group. Only suggest what this machine actually has.
+            if command -v newgrp >/dev/null 2>&1; then
+                apply="Apply it to this shell:  newgrp docker"
+            elif command -v sg >/dev/null 2>&1; then
+                apply="Apply it to this shell:  sg docker -c \"\$SHELL\""
+            else
+                apply="Log out and back in — newgrp is not installed here, so"
+                apply="$apply nothing can apply it in place"
             fi
-            die "no permission to reach the Docker daemon (/var/run/docker.sock)" \
-                "$hint" \
-                "$hint2" \
-                "" \
-                "One-off alternative: sudo -E PORT=$PORT $SCRIPT_DIR/run.sh"
+            if getent group docker 2>/dev/null | grep -qw "${USER:-$(id -un)}"; then
+                die "no permission to reach the Docker daemon (/var/run/docker.sock)" \
+                    "You are in the 'docker' group, but this session predates it." \
+                    "$apply" \
+                    "" \
+                    "One-off alternative: sudo -E PORT=$PORT $SCRIPT_DIR/run.sh"
+            else
+                die "no permission to reach the Docker daemon (/var/run/docker.sock)" \
+                    "Add your user to the 'docker' group:" \
+                    "  sudo usermod -aG docker \"\$USER\"" \
+                    "$apply" \
+                    "" \
+                    "One-off alternative: sudo -E PORT=$PORT $SCRIPT_DIR/run.sh"
+            fi
             ;;
         *"Cannot connect to the Docker daemon"*|*"daemon is not running"*)
             die "the Docker daemon is not running" \
