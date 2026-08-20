@@ -17,6 +17,62 @@ PORT="${PORT:-5566}"
 IMAGE="bombercat-nfcgate-server"
 CONTAINER="bombercat-nfcgate-server-run"
 
+# --------------------------------------------------------------------------- #
+# Preflight: fail with an actionable message instead of a raw Docker/context
+# error. These are the ways a clean machine trips over `run.sh`.
+# --------------------------------------------------------------------------- #
+die() {
+    echo "ERROR: $1" >&2
+    shift
+    for line in "$@"; do
+        # Keep blank separators actually blank (no trailing indent).
+        [ -n "$line" ] && echo "       $line" >&2 || echo >&2
+    done
+    exit 1
+}
+
+# 1. The server clone is the Docker *build context*, not just a `smoke` dep.
+if [ ! -f "$REPO_ROOT/server/server.py" ]; then
+    die "nfcgate-server not found at $REPO_ROOT/server" \
+        "It is a dev-only fixture, cloned on demand. Fetch it once with:" \
+        "  $SCRIPT_DIR/fetch_server.sh"
+fi
+
+# 2. Docker itself.
+if ! command -v docker >/dev/null 2>&1; then
+    die "docker is not installed (or not on PATH)" \
+        "Install Docker Engine: https://docs.docker.com/engine/install/" \
+        "Or run the server without Docker — see tools/testserver/README.md"
+fi
+
+# 3. Can we actually talk to the daemon? `docker build` connects to the socket
+#    before it does anything useful, so check here and translate the failure.
+if ! docker_err="$(docker info 2>&1 >/dev/null)"; then
+    case "$docker_err" in
+        *"permission denied"*)
+            hint="Log out and back in (group membership is applied at login),"
+            hint2="or start a shell with the new group: newgrp docker"
+            if ! getent group docker 2>/dev/null | grep -qw "${USER:-$(id -un)}"; then
+                hint="Add your user to the 'docker' group, then log out and back in:"
+                hint2="  sudo usermod -aG docker \"\$USER\""
+            fi
+            die "no permission to reach the Docker daemon (/var/run/docker.sock)" \
+                "$hint" \
+                "$hint2" \
+                "" \
+                "One-off alternative: sudo -E PORT=$PORT $SCRIPT_DIR/run.sh"
+            ;;
+        *"Cannot connect to the Docker daemon"*|*"daemon is not running"*)
+            die "the Docker daemon is not running" \
+                "Start it with:  sudo systemctl start docker" \
+                "(on macOS/Windows: launch Docker Desktop)"
+            ;;
+        *)
+            die "docker is not usable:" "$docker_err"
+            ;;
+    esac
+fi
+
 echo ">> Building $IMAGE"
 docker build -f "$SCRIPT_DIR/Dockerfile" -t "$IMAGE" "$REPO_ROOT/server"
 

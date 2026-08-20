@@ -462,9 +462,14 @@ USB, serial or RF, so no board has to be plugged in — but the host must have:
 |---|---|---|
 | `bash` on `PATH` | the CLI launches the script as `bash run.sh` | `bash --version` |
 | Docker installed, daemon running, usable by your user | `run.sh` does `docker build` + `docker run` | `docker run --rm hello-world` |
+| Your user in the `docker` group (Linux) | otherwise the socket denies the build — add it with `sudo usermod -aG docker "$USER"` and re-login | `id -nG \| grep docker` |
 | The server clone at `<repo>/server` | it *is* the Docker build context (`docker build … <repo>/server`) | `ls server/server.py` |
 | Network access on the **first** run | the image pulls `python:3.11-slim` and installs `protobuf==3.20.3` | — |
 | The host port free (default `5566`) | it is published as `-p <port>:5566` | `ss -ltn \| grep 5566` |
+
+`run.sh` pre-checks Docker, the daemon, socket permissions and the server clone
+before it builds, and fails with the fix to apply instead of a raw Docker error — see
+[troubleshooting](troubleshooting.md#testserver-issues) for the exact messages.
 
 The server is a dev-only fixture — not committed, not a submodule — so fetch it
 once (needs `git`), the same step [`testserver smoke`](#testserver-smoke) needs:

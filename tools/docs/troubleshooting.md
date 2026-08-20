@@ -166,12 +166,21 @@ board (or check the app's session/role for Path B).
   (`tools/testserver/fetch_server.sh`) — the clone at `<repo>/server` is the
   Docker *build context*, not just a dependency of `smoke`. Full list in the
   [reference](reference.md#requirements).
-  - `could not launch the server:` — `bash` (or Docker) missing.
-  - `unable to prepare context: path "…/server" not found` — the server was
-    never fetched. Unlike `smoke`, `run` does not pre-check it, so the raw
-    `docker build` error is what surfaces.
-  - `Cannot connect to the Docker daemon` — daemon down, or your user is not in
-    the `docker` group.
+  `run.sh` pre-checks all three before building, so a clean machine gets an
+  actionable message instead of a raw `docker build` error:
+  - `could not launch the server:` — `bash` missing (the CLI cannot even start
+    the script).
+  - `nfcgate-server not found at …/server` — the server was never fetched; run
+    `tools/testserver/fetch_server.sh` once.
+  - `docker is not installed (or not on PATH)` — install Docker Engine, or run
+    the server without Docker (see [`testserver/README.md`](../testserver/README.md)).
+  - `no permission to reach the Docker daemon (/var/run/docker.sock)` — your
+    user is not in the `docker` group: `sudo usermod -aG docker "$USER"`, then
+    log out and back in (or `newgrp docker` for the current shell). Group
+    membership is only applied at login, so adding yourself is not enough
+    without a fresh session.
+  - `the Docker daemon is not running` — `sudo systemctl start docker`, or
+    launch Docker Desktop on macOS/Windows.
   - `port is already allocated` — something else holds the host port; pick
     another with `testserver run -p <port>`.
 - **`testserver smoke`**: needs the server fetched once
