@@ -50,15 +50,86 @@ FIRMWARE_DIR="$(cd "$SCRIPT_DIR/../firmware" && pwd)"
 # --------------------------------------------------------------------------- #
 if [[ -t 1 ]]; then
   C_RED=$'\033[31m'; C_GRN=$'\033[32m'; C_YEL=$'\033[33m'
-  C_BLU=$'\033[34m'; C_BLD=$'\033[1m';  C_RST=$'\033[0m'
+  C_BLU=$'\033[34m'; C_MAG=$'\033[35m'; C_CYN=$'\033[36m'
+  C_BLD=$'\033[1m';  C_DIM=$'\033[2m';  C_RST=$'\033[0m'
 else
-  C_RED=""; C_GRN=""; C_YEL=""; C_BLU=""; C_BLD=""; C_RST=""
+  C_RED=""; C_GRN=""; C_YEL=""; C_BLU=""; C_MAG=""; C_CYN=""
+  C_BLD=""; C_DIM=""; C_RST=""
 fi
-info()  { printf '%s[i]%s %s\n' "$C_BLU" "$C_RST" "$*"; }
-ok()    { printf '%s[✓]%s %s\n' "$C_GRN" "$C_RST" "$*"; }
-warn()  { printf '%s[!]%s %s\n' "$C_YEL" "$C_RST" "$*" >&2; }
-err()   { printf '%s[✗]%s %s\n' "$C_RED" "$C_RST" "$*" >&2; }
+
+# Glifos Unicode si el locale es UTF-8; si no, equivalentes ASCII.
+if [[ "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" == *[Uu][Tt][Ff]* ]]; then
+  G_INFO="•"; G_OK="✓"; G_WARN="▲"; G_ERR="✗"; G_ARROW="➜"
+  BX_H="─"; BX_TL="╭"; BX_TR="╮"; BX_BL="╰"; BX_BR="╯"; BX_V="│"
+else
+  G_INFO="*"; G_OK="+"; G_WARN="!"; G_ERR="x"; G_ARROW=">"
+  BX_H="-"; BX_TL="+"; BX_TR="+"; BX_BL="+"; BX_BR="+"; BX_V="|"
+fi
+
+# Ancho útil de la terminal (acotado para que las cajas no queden enormes).
+term_width() {
+  local w="${COLUMNS:-0}"
+  [[ "$w" -gt 0 ]] 2>/dev/null || w="$(tput cols 2>/dev/null || echo 80)"
+  (( w > 72 )) && w=72
+  (( w < 40 )) && w=40
+  echo "$w"
+}
+
+info()  { printf '%s%s%s %s\n' "$C_BLU" "$G_INFO" "$C_RST" "$*"; }
+ok()    { printf '%s%s%s %s\n' "$C_GRN" "$G_OK"   "$C_RST" "$*"; }
+warn()  { printf '%s%s%s %s\n' "$C_YEL" "$G_WARN" "$C_RST" "$*" >&2; }
+err()   { printf '%s%s%s %s\n' "$C_RED" "$G_ERR"  "$C_RST" "$*" >&2; }
 die()   { err "$*"; exit 1; }
+
+# Repite una cadena (segura para glifos multibyte, a diferencia de `tr`).
+repeat_str() {
+  local n="$1" s="$2" out=""
+  while (( n-- > 0 )); do out+="$s"; done
+  printf '%s' "$out"
+}
+
+# Regla horizontal del ancho de la terminal.
+hr() {
+  printf '%s%s%s\n' "$C_DIM" "$(repeat_str "$(term_width)" "$BX_H")" "$C_RST"
+}
+
+# Cabecera de sección: [n/N] Título, subrayado tenue.
+STEP_CUR=0
+STEP_TOTAL=0
+step() {
+  STEP_CUR=$((STEP_CUR + 1))
+  printf '\n%s%s[%d/%d]%s %s%s%s\n' \
+    "$C_BLD" "$C_CYN" "$STEP_CUR" "$STEP_TOTAL" "$C_RST" \
+    "$C_BLD" "$*" "$C_RST"
+}
+
+# Banner de bienvenida en una caja.
+banner() {
+  local w title sub pad_t pad_s inner
+  w="$(term_width)"
+  inner=$((w - 2))
+  title="BomberCat · Flasher de firmware"
+  sub="RP2040 · arduino-cli"
+  local top bot
+  top="$(repeat_str "$inner" "$BX_H")"
+  bot="$top"
+  printf '%s%s%s%s%s\n' "$C_MAG" "$BX_TL" "$top" "$BX_TR" "$C_RST"
+  # Línea de título centrada.
+  pad_t=$(( (inner - ${#title}) / 2 ))
+  printf '%s%s%s%*s%s%s%s%*s%s%s\n' \
+    "$C_MAG" "$BX_V" "$C_RST" \
+    "$pad_t" "" "$C_BLD" "$title" "$C_RST" \
+    "$(( inner - ${#title} - pad_t ))" "" \
+    "$C_MAG" "$BX_V$C_RST"
+  # Línea de subtítulo centrada.
+  pad_s=$(( (inner - ${#sub}) / 2 ))
+  printf '%s%s%s%*s%s%s%s%*s%s%s\n' \
+    "$C_MAG" "$BX_V" "$C_RST" \
+    "$pad_s" "" "$C_DIM" "$sub" "$C_RST" \
+    "$(( inner - ${#sub} - pad_s ))" "" \
+    "$C_MAG" "$BX_V$C_RST"
+  printf '%s%s%s%s%s\n' "$C_MAG" "$BX_BL" "$bot" "$BX_BR" "$C_RST"
+}
 
 # --------------------------------------------------------------------------- #
 # Sistema (portabilidad Debian/Ubuntu/Mint/…)
@@ -130,8 +201,13 @@ list_firmwares() {
 }
 
 if [[ $DO_LIST -eq 1 ]]; then
-  info "Firmwares disponibles en $FIRMWARE_DIR:"
-  list_firmwares | sed 's/^/  - /'
+  printf '%sFirmwares disponibles%s %s(%s)%s\n' \
+    "$C_BLD" "$C_RST" "$C_DIM" "$FIRMWARE_DIR" "$C_RST"
+  hr
+  list_firmwares | while IFS= read -r fw; do
+    printf '  %s%s%s %s\n' "$C_CYN" "$G_ARROW" "$C_RST" "$fw"
+  done
+  hr
   exit 0
 fi
 
@@ -333,7 +409,9 @@ flash_uf2() {
 confirm() {
   [[ $ASSUME_YES -eq 1 ]] && return 0
   local reply
-  read -r -p "$1 [s/N] " reply
+  printf '%s%s%s %s %s[s/N]%s ' \
+    "$C_YEL" "$G_ARROW" "$C_RST" "$1" "$C_DIM" "$C_RST" >&2
+  read -r reply
   [[ "$reply" =~ ^([sS]|[yY])$ ]]
 }
 
@@ -341,11 +419,16 @@ choose_firmware() {
   local fws=() i=1 choice
   mapfile -t fws < <(list_firmwares)
   [[ ${#fws[@]} -eq 0 ]] && die "No se encontraron firmwares en $FIRMWARE_DIR"
-  printf '\n%sSelecciona el firmware a flashear:%s\n' "$C_BLD" "$C_RST" >&2
+  printf '\n%s%sSelecciona el firmware a flashear%s\n' "$C_BLD" "$C_CYN" "$C_RST" >&2
+  hr >&2
   for i in "${!fws[@]}"; do
-    printf '  %2d) %s\n' "$((i+1))" "${fws[$i]}" >&2
+    printf '  %s%2d%s%s)%s %s\n' \
+      "$C_BLD$C_CYN" "$((i+1))" "$C_RST" "$C_DIM" "$C_RST" "${fws[$i]}" >&2
   done
-  read -r -p "Número [1-${#fws[@]}]: " choice
+  hr >&2
+  printf '%s%s%s Número %s[1-%d]%s: ' \
+    "$C_YEL" "$G_ARROW" "$C_RST" "$C_DIM" "${#fws[@]}" "$C_RST" >&2
+  read -r choice
   [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#fws[@]} )) \
     || die "Selección inválida."
   echo "${fws[$((choice-1))]}"
@@ -354,11 +437,23 @@ choose_firmware() {
 # --------------------------------------------------------------------------- #
 # Flujo principal
 # --------------------------------------------------------------------------- #
-ensure_arduino_cli
-ensure_core
-ensure_libraries
+banner
+
+# Número total de pasos para los indicadores [n/N].
+if [[ $SETUP_ONLY -eq 1 ]]; then
+  STEP_TOTAL=3
+elif [[ $COMPILE_ONLY -eq 1 ]]; then
+  STEP_TOTAL=4
+else
+  STEP_TOTAL=5
+fi
+
+step "Comprobando arduino-cli";  ensure_arduino_cli
+step "Preparando el core";       ensure_core
+step "Preparando las librerías"; ensure_libraries
 
 if [[ $SETUP_ONLY -eq 1 ]]; then
+  echo
   ok "Toolchain lista. Ejecuta el script de nuevo con -f <firmware> para flashear."
   exit 0
 fi
@@ -375,9 +470,10 @@ if [[ -f "$SKETCH_DIR/arduino_secrets.h" ]]; then
 fi
 
 # Compilar (a un directorio temporal para obtener el .uf2 y reutilizar el binario)
+step "Compilando '$FIRMWARE'"
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
-info "Compilando '$FIRMWARE' (FQBN: $FQBN)..."
+info "FQBN: $C_DIM$FQBN$C_RST"
 arduino-cli compile --fqbn "$FQBN" --output-dir "$BUILD_DIR" "$SKETCH_DIR"
 ok "Compilación correcta."
 
@@ -393,6 +489,7 @@ ELF_FILE="$(find "$BUILD_DIR" -maxdepth 1 -name '*.elf' | head -n1)"
 #   - Si el usuario forzó -p, usar ese puerto serie.
 #   - Si la placa está en modo bootloader (unidad RPI-RP2 montada), copiar el .uf2.
 #   - Si no, intentar detectar un puerto serie (arduino-cli hará el reset a 1200bps).
+step "Flasheando en el BomberCat"
 UF2_MOUNT=""
 if [[ -z "$PORT" ]]; then
   info "Detectando el BomberCat..."
