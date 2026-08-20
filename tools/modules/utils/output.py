@@ -4,9 +4,13 @@ output.py - Shared Rich console and output helpers for all modules
 
 from __future__ import annotations
 
-from rich.console import Console
-from rich.style import Style
+import re
+
+from rich.console import Console, Group
+from rich.padding import Padding
 from rich.panel import Panel
+from rich.style import Style
+from rich.table import Table
 
 STYLES = {
     "header": Style(color="cyan", bold=True),
@@ -195,6 +199,23 @@ def fmt_command(text: str) -> str:
     return f"[green]{text}[/green]"
 
 
+def numbered_steps(steps: list[str]) -> Padding:
+    """Ordered steps laid out so wrapped lines hang under the text, not the number.
+
+    A long step used to wrap back to the panel's left edge, which read as a new
+    step. The grid keeps every continuation line — wrapped or explicit — in the
+    text column.
+    """
+    grid = Table.grid(padding=(0, 1))
+    grid.add_column(justify="right", style="white", no_wrap=True)
+    grid.add_column(overflow="fold")
+    for i, step in enumerate(steps, 1):
+        # Callers hand-indent their own line breaks for the old flat layout;
+        # the grid owns that alignment now, so collapse it back out.
+        grid.add_row(f"{i}.", re.sub(r"\n[ \t]+", "\n", step))
+    return Padding(grid, (0, 0, 0, 2))
+
+
 def print_error_panel(
     title: str,
     problem: str,
@@ -213,18 +234,13 @@ def print_error_panel(
     the ordered steps (mark commands with `fmt_command` so they stand out), and
     `notes` the trailing asides. All accept Rich markup.
     """
-    body: list[str] = [f"[red bold]✗  {problem}[/red bold]"]
+    body: list = [f"[red bold]✗  {problem}[/red bold]"]
 
     if why:
         body += ["", why]
 
     if fix:
-        body += ["", f"[yellow bold]{fix_title}[/yellow bold]", ""]
-        # Right-align the numbers so multi-line steps stay visually aligned.
-        width = len(str(len(fix)))
-        body += [
-            f"  [white]{i:>{width}}.[/white] {step}" for i, step in enumerate(fix, 1)
-        ]
+        body += ["", f"[yellow bold]{fix_title}[/yellow bold]", "", numbered_steps(fix)]
 
     notes = [n for n in (notes or []) if n]
     if notes:
@@ -233,10 +249,44 @@ def print_error_panel(
     console.print("")
     console.print(
         Panel(
-            "\n".join(body),
+            Group(*body),
             title=f"[red bold]{title}[/red bold]",
             title_align="left",
             border_style=STYLES["error"],
+            padding=(1, 2),
+            expand=False,
+        )
+    )
+    console.print("")
+
+
+def print_success_panel(
+    title: str,
+    summary: str,
+    why: str = "",
+    notes: list[str] | None = None,
+) -> None:
+    """The mirror of `print_error_panel` for a check that came back clean.
+
+    Same frame, same reading order — headline, then the paragraph explaining
+    what was proven — so a pass and a fail of the same command look like two
+    outcomes of one report instead of two unrelated screens.
+    """
+    body: list = [f"[green bold]✓  {summary}[/green bold]"]
+
+    if why:
+        body += ["", why]
+
+    for note in [n for n in (notes or []) if n]:
+        body += ["", f"[dim]{note}[/dim]"]
+
+    console.print("")
+    console.print(
+        Panel(
+            Group(*body),
+            title=f"[green bold]{title}[/green bold]",
+            title_align="left",
+            border_style=STYLES["success"],
             padding=(1, 2),
             expand=False,
         )
