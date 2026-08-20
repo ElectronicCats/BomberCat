@@ -35,7 +35,7 @@ tools/.venv-proto/
 tools/.venv-smoke/
 
 # Dev-only nfcgate-server test fixture, cloned on demand by
-# tools/testserver/fetch_server.sh (pinned nfcgate/server@4d32cc1).
+# tools/testserver/fetch_server.sh (pinned ElectronicCats/nfcgate-server@fc9103d).
 /server/
 
 hardware/#auto_saved_files#
