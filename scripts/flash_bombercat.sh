@@ -61,6 +61,37 @@ err()   { printf '%s[✗]%s %s\n' "$C_RED" "$C_RST" "$*" >&2; }
 die()   { err "$*"; exit 1; }
 
 # --------------------------------------------------------------------------- #
+# Sistema (portabilidad Debian/Ubuntu/Mint/…)
+# --------------------------------------------------------------------------- #
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ¿Es una distro de la familia Debian? (Debian, Ubuntu, Mint, Pop!_OS, …)
+is_debian_like() {
+  [[ -r /etc/os-release ]] || return 1
+  local id id_like
+  id="$(. /etc/os-release; echo "${ID:-}")"
+  id_like="$(. /etc/os-release; echo "${ID_LIKE:-}")"
+  [[ "$id" == debian || "$id" == ubuntu ]] && return 0
+  [[ " $id_like " == *" debian "* || " $id_like " == *" ubuntu "* ]]
+}
+
+# Instala paquetes del sistema con apt (solo en distros Debian-like).
+apt_install() {
+  is_debian_like || return 1
+  have apt-get || return 1
+  local sudo=""; [[ "$(id -u)" -ne 0 ]] && sudo="sudo"
+  info "Instalando con apt: $*"
+  $sudo apt-get update -qq && $sudo apt-get install -y "$@"
+}
+
+# Descarga una URL a stdout usando curl o wget (lo que haya).
+fetch() {
+  if have curl; then curl -fsSL "$1"
+  elif have wget; then wget -qO- "$1"
+  else return 1; fi
+}
+
+# --------------------------------------------------------------------------- #
 # Opciones
 # --------------------------------------------------------------------------- #
 FIRMWARE=""
@@ -116,10 +147,17 @@ ensure_arduino_cli() {
   if ! confirm "¿Instalarlo en ~/.local/bin ahora?"; then
     die "arduino-cli es necesario. Instálalo desde https://arduino.github.io/arduino-cli/"
   fi
+  # El instalador oficial necesita un descargador. Si no hay ninguno, intenta
+  # traer curl con apt (en distros Debian-like).
+  if ! have curl && ! have wget; then
+    warn "No se encontró 'curl' ni 'wget' (necesarios para descargar)."
+    apt_install curl \
+      || die "Instala 'curl' o 'wget' y vuelve a ejecutar: sudo apt-get install curl"
+  fi
   local bindir="$HOME/.local/bin"
   mkdir -p "$bindir"
   info "Descargando arduino-cli..."
-  curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh \
+  fetch https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh \
     | BINDIR="$bindir" sh
   export PATH="$bindir:$PATH"
   command -v arduino-cli >/dev/null 2>&1 || die "No se pudo instalar arduino-cli."
@@ -194,6 +232,27 @@ detect_port() {
     [[ -e "$p" ]] && { echo "$p"; return; }
   done
   return 1
+}
+
+# En Debian/Ubuntu/Mint el acceso a /dev/ttyACM* requiere pertenecer al grupo
+# 'dialout'. Si no, arduino-cli falla con "Permission denied" al subir por serie.
+ensure_serial_access() {
+  local port="$1"
+  [[ "$(uname -s)" == "Linux" ]] || return 0
+  [[ -e "$port" ]] || return 0
+  # Si ya podemos leer/escribir el dispositivo, no hay nada que hacer.
+  [[ -r "$port" && -w "$port" ]] && return 0
+  local grp
+  grp="$(stat -c '%G' "$port" 2>/dev/null || echo dialout)"
+  warn "Sin permisos sobre $port (pertenece al grupo '$grp')."
+  if ! id -nG 2>/dev/null | tr ' ' '\n' | grep -qx "$grp"; then
+    warn "Tu usuario no está en el grupo '$grp'. Para arreglarlo permanentemente:"
+    printf '      sudo usermod -aG %s "$USER"   # luego cierra sesión y vuelve a entrar\n' "$grp" >&2
+    if have sudo && confirm "¿Añadirte al grupo '$grp' ahora?"; then
+      sudo usermod -aG "$grp" "$USER" \
+        && warn "Hecho. Debes CERRAR SESIÓN y volver a entrar (o reiniciar) para que aplique."
+    fi
+  fi
 }
 
 # En modo bootloader (doble reset) el RP2040 NO es un puerto serie, sino una
@@ -317,6 +376,7 @@ if [[ -n "$UF2_MOUNT" ]]; then
   ok "Firmware '$FIRMWARE' flasheado por UF2. La placa se reiniciará sola."
 elif [[ -n "$PORT" ]]; then
   ok "Usando puerto serie: $PORT"
+  ensure_serial_access "$PORT"
   confirm "¿Flashear '$FIRMWARE' en $PORT?" || die "Cancelado por el usuario."
   info "Flasheando..."
   arduino-cli upload -p "$PORT" --fqbn "$FQBN" --input-dir "$BUILD_DIR" --verbose "$SKETCH_DIR"
