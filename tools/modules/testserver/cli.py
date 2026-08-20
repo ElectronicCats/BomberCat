@@ -22,6 +22,7 @@ TOOLS_DIR = Path(__file__).resolve().parents[2]
 TESTSERVER_DIR = TOOLS_DIR / "testserver"
 RUN_SH = TESTSERVER_DIR / "run.sh"
 SMOKETEST = TESTSERVER_DIR / "relay_smoketest.py"
+VERIFY = TESTSERVER_DIR / "verify_patch.py"
 SMOKE_REQS = TESTSERVER_DIR / "requirements.txt"
 SERVER_DIR = TOOLS_DIR.parent / "server"
 # Kept in sync with run.sh, which names the container it starts.
@@ -131,6 +132,35 @@ def run(port):
             ],
         )
         rc = 1
+    sys.exit(rc)
+
+
+@testserver.command("verify")
+@click.argument("host", default="127.0.0.1")
+@click.argument("port", default=5566, type=int)
+@click.option("-n", "--rounds", default=8, show_default=True,
+              help="Relayed frames to measure.")
+def verify(host, port, rounds):
+    """Check that a RUNNING server carries the relay latency patch.
+
+    Grepping server.py only proves the file on disk is patched. This asks the
+    server on the wire, so it also catches a Docker container still running an
+    image built before the patch.
+    """
+    if not VERIFY.exists():
+        print_error(f"Verifier not found: {VERIFY}")
+        sys.exit(1)
+
+    # Same protobuf dependency as the smoke test — it builds real ServerData
+    # frames so the server's `log` plugin can decode them.
+    preflight.check_server_sources(SERVER_DIR, FETCH_SH)
+
+    python = _smoketest_python()
+
+    print_info(f"Verifying latency patch → {host}:{port}")
+    rc = subprocess.run(
+        [python, str(VERIFY), host, str(port), "-n", str(rounds)]
+    ).returncode
     sys.exit(rc)
 
 
