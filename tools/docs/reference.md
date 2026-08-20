@@ -411,7 +411,7 @@ bombercat capture stop -d 1
 
 ## Dev tooling
 
-These wrap the reproducible build/test scripts under `tools/` (NFCGATE_PLAN.md
+These wrap the reproducible build/test scripts under `tools/` (docs/NFCGATE_PLAN.md
 Fases 1–5). They do **not** talk to a board.
 
 ### `proto`

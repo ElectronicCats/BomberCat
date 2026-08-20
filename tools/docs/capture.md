@@ -10,7 +10,7 @@ control serial as `:apdu` events (see [protocol](protocol.md#apdu-capture-events
 So capturing never slows or alters the relay.
 
 Requires firmware ≥ 0.8.0 (the `capture` control command). The **live** feed also
-needs Wireshark installed; a file-only capture does not. (NFCGATE_PLAN.md Fase 8 / §16.)
+needs Wireshark installed; a file-only capture does not. (docs/NFCGATE_PLAN.md Fase 8 / §16.)
 
 ---
 

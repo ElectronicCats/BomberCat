@@ -9,7 +9,7 @@
  *                                                                     |
  *   [ terminal/PoS ] <--RF--- [   peer  CARD/HCE ] <--WiFi/TCP--------+
  *
- * Both roles are implemented end to end (NFCGATE_PLAN.md Fase 4 + Fase 5):
+ * Both roles are implemented end to end (docs/NFCGATE_PLAN.md Fase 4 + Fase 5):
  *   - READER: receive a command over TCP -> replay to the physical card ->
  *     return the response.
  *   - CARD/HCE: read the terminal's command over RF -> forward it over TCP ->
@@ -44,7 +44,7 @@
 // past the CLI's run window. WiFiNINA's default connTimeout (0) leaves it to the
 // NINA firmware's long default. Keep the worst-case budget aligned with the CLI:
 //   CLI run read_timeout >= WiFi(20s) + NFC + TCP_CONNECT + SYN + margin.
-// See tools/modules/core/bombercat.py run() and firmware/DEBUG_run_timeout_mismatch.md.
+// See tools/modules/core/bombercat.py run().
 #define RELAY_TCP_CONNECT_TIMEOUT_MS 8000
 
 // --- Globals (must outlive the engine / control) ---
@@ -62,7 +62,7 @@ SerialControl control(Serial, store, cfg, engine, BOMBERCAT_FW_VERSION);
 // serial REPL is serviced throughout and a slow/stuck phase can never wedge the
 // device. Progress is published over `status` (idle -> connecting -> relaying |
 // error). This replaces the old synchronous runRelay() that blocked loop() for
-// the whole WiFi+NFC+TCP+SYN sequence — see firmware/DEBUG_run_timeout_mismatch.md.
+// the whole WiFi+NFC+TCP+SYN sequence.
 enum class Phase : uint8_t {
   Idle,       // nothing running; waiting for `run`
   Wifi,       // associating WiFi (non-blocking poll, hard deadline)

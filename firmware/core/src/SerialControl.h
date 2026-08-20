@@ -3,9 +3,9 @@
  *
  * A tiny line-based control REPL over a Stream (USB-serial), so the Python
  * control CLI in tools/ can configure, start/stop and monitor the relay without
- * carrying any APDUs on the wire (APDUs go over WiFi/TCP — see NFCGATE_PLAN.md).
+ * carrying any APDUs on the wire (APDUs go over WiFi/TCP — see docs/NFCGATE_PLAN.md).
  *
- * This is the device end of NFCGATE_PLAN.md Fase 6.
+ * This is the device end of docs/NFCGATE_PLAN.md Fase 6.
  *
  * Wire protocol (ASCII, one command per line, '\n'-terminated):
  *

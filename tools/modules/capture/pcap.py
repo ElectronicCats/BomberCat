@@ -5,7 +5,7 @@
 # The link type is DLT_ISO_14443 (264): each APDU is wrapped so Wireshark's
 # iso14443 dissector parses it as an ISO 14443-4 I-block with a direction tag.
 # Same classic-pcap wire format catnip uses (protocol/common.py), so it streams
-# straight into a live FIFO or a .pcap file. NFCGATE_PLAN.md Fase 8 / §16.
+# straight into a live FIFO or a .pcap file. docs/NFCGATE_PLAN.md Fase 8 / §16.
 # Distributed as-is; no warranty is given.
 
 import struct

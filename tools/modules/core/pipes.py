@@ -4,7 +4,7 @@
 # pipes.py — named-pipe (FIFO) transport + a Wireshark launcher, so a live
 # capture can be streamed straight into Wireshark's "-k -i <fifo>" as pcap.
 # Ported from catnip's modules/core/pipes.py (CatSniffer) and adapted for
-# BomberCat's NFCGate APDU capture (NFCGATE_PLAN.md Fase 8 / §16).
+# BomberCat's NFCGate APDU capture (docs/NFCGATE_PLAN.md Fase 8 / §16).
 # Distributed as-is; no warranty is given.
 
 import os

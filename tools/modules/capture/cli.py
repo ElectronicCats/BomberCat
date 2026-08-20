@@ -4,7 +4,7 @@
 # `bombercat capture` — arm the device APDU tap and turn its ":apdu" events into
 # a classic-pcap stream, fed live into Wireshark (over a FIFO) and/or written to
 # a .pcap file. The relay itself is untouched: APDUs still travel over WiFi/TCP,
-# and this only consumes a copy over the control serial. NFCGATE_PLAN.md Fase 8.
+# and this only consumes a copy over the control serial. docs/NFCGATE_PLAN.md Fase 8.
 # Distributed as-is; no warranty is given.
 
 import _thread

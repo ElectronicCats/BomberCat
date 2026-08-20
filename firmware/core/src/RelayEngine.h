@@ -226,8 +226,8 @@ class RelayEngine {
 
   // Max response length injected back to the terminal. Unlike commands, ISO-DEP
   // *responses* routinely exceed 255 B (EMV READ RECORD certificate records
-  // reach 256 B — a 256 B response was silently dropped end-to-end in Camino B2,
-  // see DEBUG_nfcgate_app_camino_b.md). NfcController::cardSend() fragments the
+  // reach 256 B — a 256 B response was silently dropped end-to-end in Camino B2).
+  // NfcController::cardSend() fragments the
   // outbound NCI data packets (PBF), so the ceiling here is the NFCData.data
   // field capacity (512), not the 255 B single-packet limit.
   static const size_t RELAY_MAX_RESP = 512;

@@ -4,7 +4,7 @@
 # usb_connection.py — low-level USB-serial transport for the BomberCat control
 # CLI: enumerate serial ports, group them into numbered devices and open them.
 # The line protocol on top lives in bombercat.py (DeviceLink).
-# See NFCGATE_PLAN.md Fase 6.
+# See docs/NFCGATE_PLAN.md Fase 6.
 # Distributed as-is; no warranty is given.
 
 import os
@@ -49,7 +49,7 @@ BOMBERCAT_USB_IDS: Set[Tuple[int, int]] = {
     # Sketches built against the stock Arduino Mbed RP2040 profile (rather than
     # electroniccats:mbed_rp2040:bombercat) keep Arduino's Nano RP2040 Connect
     # USB identity — that is what the boards on the bench actually report
-    # (`VID:PID=2341:005E`, see firmware/DEBUG_serial_no_handshake.md §2). Listing
+    # (`VID:PID=2341:005E`). Listing
     # it here is what lets device numbering (`-d`) work on those builds. A real
     # Nano RP2040 Connect matches too, so this only *tags* a port as a candidate:
     # auto-detection and `device list`'s ✓ still require the control handshake.
@@ -214,7 +214,7 @@ def open_serial(port: str,
 
     ``write_timeout`` bounds blocking writes so a wedged firmware (one that stops
     servicing its USB-OUT endpoint) surfaces as a clean error instead of hanging
-    the CLI indefinitely — see firmware/DEBUG_serial_no_handshake.md.
+    the CLI indefinitely.
     """
     return serial.Serial(port=port, baudrate=baudrate, timeout=timeout,
                          write_timeout=write_timeout)

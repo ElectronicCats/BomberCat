@@ -5,7 +5,7 @@
  * FlashIAP block device. Refactor of the duplicated SketchStats get/set +
  * FlashIAP setup blocks in host_Relay_NFC / client_Relay_NFC, re-scoped from
  * the old MQTT parameters to the NFCGate ones (server host/port, session byte,
- * role) per NFCGATE_PLAN.md and firmware/core/proto/UPSTREAM.md.
+ * role) per docs/NFCGATE_PLAN.md and firmware/core/proto/UPSTREAM.md.
  *
  * mbed_rp2040 core only (TDBStore / FlashIAPBlockDevice).
  *

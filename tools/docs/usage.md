@@ -1,7 +1,7 @@
 # End-to-end usage
 
 The real workflow: bring up an NFCGate relay on hardware and drive it from the
-CLI. Two topologies are supported and validated on hardware (NFCGATE_PLAN.md §15):
+CLI. Two topologies are supported and validated on hardware (docs/NFCGATE_PLAN.md §15):
 
 - **Path A** — two BomberCats (reader + card) joined by an `nfcgate-server`.
 - **Path B** — one BomberCat against the **NFCGate Android app** as the other

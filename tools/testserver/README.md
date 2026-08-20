@@ -57,7 +57,7 @@ BOMBERCAT_SKIP_LATENCY_PATCH=1 tools/testserver/run.sh
 > If the clone was edited by hand the patch stops applying and `run.sh` aborts
 > rather than build a slow server; the error prints how to reset the clone.
 > A **dedicated server/VPS** clones the same fork, so the fixes arrive with it —
-> see `SERVIDOR_DEDICADO_NFCGATE.md` §2.2.
+> see `docs/SERVIDOR_DEDICADO_NFCGATE.md` §2.2.
 
 ## Run the server
 

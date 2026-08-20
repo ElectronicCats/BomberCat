@@ -307,8 +307,8 @@ void RelayEngine::readerHandleCommand(const NfcData &nfc) {
   // its ISO-DEP session dies during the idle gap and the raw reader path never
   // re-polls — so the first command of the next transaction finds a stale
   // _tagReady, the transceive times out, and the command would be dropped with
-  // no response. The card peer then never gets an answer and reconnects forever
-  // (DEBUG_card_stale_link_second_txn.md). This is the reader-side analog of the
+  // no response. The card peer then never gets an answer and reconnects
+  // forever. This is the reader-side analog of the
   // card's re-arm: on a failed activation OR a failed exchange, re-arm the reader
   // front-end and retry once before giving up, so a new transaction self-heals.
   //
@@ -502,7 +502,7 @@ void RelayEngine::cardPollTerminal() {
   // A frame came back from the PN7150: the terminal activated the emulated card
   // and the RF front-end is alive. Record the activity (so an idle gap later
   // triggers the re-arm above) and log even an empty frame, so RF activation is
-  // observable *before* the first real APDU (DEBUG_card_emulation_no_rf_activation.md §4.4).
+  // observable *before* the first real APDU.
   _lastCardActivity = millis();
   _cardActivitySinceReArm = true;
   if (cmdLen == 0) {

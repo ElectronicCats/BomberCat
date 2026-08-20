@@ -5,7 +5,7 @@
 // plus the vendored nanopb, then plays the same reader<->card loopback as
 // tools/testserver/relay_smoketest.py — but building/parsing every frame with
 // the code the RP2040 will run. This is the "probado contra el servidor"
-// verification for NfcGateLink's wire format (NFCGATE_PLAN.md Fase 3 / §6 mock).
+// verification for NfcGateLink's wire format (docs/NFCGATE_PLAN.md Fase 3 / §6 mock).
 //
 //   client -> server : [4B len BE][1B session][payload]   (encodeFrame emits this)
 //   server -> client : [4B len BE][payload]               (we de-frame, then decode)

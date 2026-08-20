@@ -4,7 +4,7 @@
  * Single include that pulls in the reusable BomberCat relay building blocks.
  * Sketches may include this or the individual module headers directly.
  *
- * Modules present (NFCGATE_PLAN.md Fases 2-6):
+ * Modules present (docs/NFCGATE_PLAN.md Fases 2-6):
  *   - Log        : level-gated logging over a Stream
  *   - HexUtils   : hex formatting helpers
  *   - NfcController : PN7150 wrapper (reader / emulation)

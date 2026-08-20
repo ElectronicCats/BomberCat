@@ -20,7 +20,7 @@ Both `nfcgate` and `server` reference `protocol` as the submodule
 The `protocol/README.md` and the server's `test.py` describe an **older** scheme
 (`Wrapper`/`metaMessage.proto`, `Session` create/join handshake, `Data`,
 `Anticol`, `Status`). That version is **obsolete** and does not match the pinned
-`server.py`. The BomberCat plan (`NFCGATE_PLAN.md` §4) was written against those
+`server.py`. The BomberCat plan (`docs/NFCGATE_PLAN.md` §4) was written against those
 stale docs; the reality we target is what is documented here.
 
 At the pinned commit there are only **two** messages and **no** Wrapper/Session/

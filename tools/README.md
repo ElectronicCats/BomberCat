@@ -7,7 +7,7 @@ live and capture the relayed APDUs to Wireshark.
 **Control plane only.** No APDUs travel over serial — those go over WiFi/TCP to
 the `nfcgate-server`. The USB link is a text, line-based control channel: it
 configures, arms, starts, monitors and captures the device, nothing more
-(NFCGATE_PLAN.md Fase 6). Keep this in mind everywhere below.
+(docs/NFCGATE_PLAN.md Fase 6). Keep this in mind everywhere below.
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ one by its ID with `-d/--device`. See the
 
 ## Dev tooling
 
-These wrap the reproducible build/test scripts (see NFCGATE_PLAN.md Fases 1–5);
+These wrap the reproducible build/test scripts (see docs/NFCGATE_PLAN.md Fases 1–5);
 full details in the [reference](docs/reference.md#dev-tooling):
 
 ```sh
@@ -205,7 +205,7 @@ Concretely, the non-Linux gaps are:
   emulating the card) requires a **rooted** phone with Xposed and NFCGate's
   native hook — it is not possible on a stock phone. Variant B2 (BomberCat as
   `card`, phone as reader) works on a stock device. See
-  [HARDWARE_TESTING.md](../HARDWARE_TESTING.md).
+  [docs/HARDWARE_TESTING.md](../docs/HARDWARE_TESTING.md).
 
 ## Appendix: run the server on a dedicated VPS
 
@@ -224,7 +224,7 @@ logic.
 
 The code is the **`ElectronicCats/nfcgate-server` fork** (branch `v2`) pinned to
 commit `fc9103d` — upstream `nfcgate/server@4d32cc1` plus our latency patch. A
-fuller Spanish walkthrough lives in `SERVIDOR_DEDICADO_NFCGATE.md` (repo root);
+fuller Spanish walkthrough lives in `docs/SERVIDOR_DEDICADO_NFCGATE.md`;
 this is the condensed English version.
 
 **The whole appendix in one screen:**

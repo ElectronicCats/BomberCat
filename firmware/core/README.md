@@ -1,7 +1,7 @@
 # BomberCatCore
 
 Reusable Arduino library that is the foundation for the NFCGate relay firmware
-(see [`../../NFCGATE_PLAN.md`](../../NFCGATE_PLAN.md)). It is a **local library**:
+(see [`../../docs/NFCGATE_PLAN.md`](../../docs/NFCGATE_PLAN.md)). It is a **local library**:
 `#include <BomberCatCore.h>` from any sketch in this repo, or include a single
 module header directly.
 

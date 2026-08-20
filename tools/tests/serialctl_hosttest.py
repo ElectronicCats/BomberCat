@@ -6,7 +6,7 @@
 # No hardware and no nfcgate-server needed; this is the control-plane counterpart
 # to tools/testserver/codec_hosttest (which checks the RF/protobuf wire format).
 #
-# It proves the CLI side of NFCGATE_PLAN.md Fase 6: the leading-marker protocol
+# It proves the CLI side of docs/NFCGATE_PLAN.md Fase 6: the leading-marker protocol
 # (`:key value`, `+OK`, `-ERR`), log-noise filtering, data collection, values
 # with spaces, and error propagation — all mirroring firmware SerialControl.
 #

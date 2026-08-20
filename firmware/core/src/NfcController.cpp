@@ -98,7 +98,7 @@ bool NfcController::beginEmulationMode() {
   // internal library reset(), which begins with stopDiscovery() and skips
   // configureSettings() when a protocol is already latched — leaving the RF
   // front-end not cleanly in listen/CARDEMU mode, so no terminal can activate
-  // the emulated card (0 APDUs relayed; see DEBUG_card_emulation_no_rf_activation.md).
+  // the emulated card (0 APDUs relayed).
   if (!reset()) {
     return false;
   }
@@ -142,8 +142,8 @@ bool NfcController::readerTransceive(uint8_t *cmd, uint8_t cmdLen,
   // already in `resp`), that second read finds nothing and busy-waits the FULL
   // 2000 ms on EVERY relayed APDU — ~2 s of dead time per command, enough to
   // make an EMV terminal abandon
-  // the transaction (LogServerReaderCard.md: reader legs ~2.4 s, txn dies at READ
-  // RECORD). This directly contradicts NFCGATE_PLAN.md §17's assumption that the
+  // the transaction (observed on hardware: reader legs ~2.4 s, txn dies at READ
+  // RECORD). This directly contradicts docs/NFCGATE_PLAN.md §17's assumption that the
   // second receive never hits the 2000 ms ceiling — hardware shows it does.
   //
   // IRQ-gate it: the PN7150 drives its IRQ line HIGH only when a frame is
@@ -175,8 +175,8 @@ bool NfcController::cardSend(uint8_t *buf, uint16_t len) {
   // A single NCI data packet carries its payload length in one byte, so it caps
   // at 255 B — but ISO-DEP responses can be larger (EMV records reach 256 B).
   // The library's cardModeSend() only ever emits one packet, silently capping
-  // the relay at 255 B (a 256 B READ RECORD response was dropped end-to-end; see
-  // DEBUG_nfcgate_app_camino_b.md). Fragment here instead: emit <=255 B NCI data
+  // the relay at 255 B (a 256 B READ RECORD response was dropped end-to-end).
+  // Fragment here instead: emit <=255 B NCI data
   // packets and set the Packet Boundary Flag (PBF, bit 4 of the header) on every
   // segment except the last, so the PN7150 reassembles them into one RF frame.
   // Header layout matches the library's cardModeSend(): [conn-id/PBF][RFU=0][len].

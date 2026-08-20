@@ -6,7 +6,7 @@
 # and PcapBuilder the CLI uses, write a .pcap, and (when tshark is available)
 # confirm Wireshark disssects it as ISO 14443 with the right per-frame direction.
 #
-# This is the host-side verification for NFCGATE_PLAN.md Fase 8 / §16: the pcap
+# This is the host-side verification for docs/NFCGATE_PLAN.md Fase 8 / §16: the pcap
 # writer + DLT_ISO_14443 encapsulation. It complements codec_hosttest (RF wire
 # format) and serialctl_hosttest (control protocol).
 #

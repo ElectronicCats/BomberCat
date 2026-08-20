@@ -12,7 +12,7 @@ NFCGate peer — another BomberCat, or the NFCGate Android app — through an
 [ terminal/PoS ] <--RF--- [   peer  CARD/HCE ] <--WiFi/TCP--------+
 ```
 
-**Both roles are implemented end to end** (NFCGATE_PLAN.md Fase 4 + Fase 5) and
+**Both roles are implemented end to end** (docs/NFCGATE_PLAN.md Fase 4 + Fase 5) and
 the device is driven over USB-serial by the control CLI (Fase 6).
 
 ## What each role does
@@ -121,7 +121,7 @@ second peer (a `card`-role peer or the NFCGate app) on the same session byte.
 
 ## Status
 
-**Validated end to end on real hardware** (NFCGATE_PLAN.md §15):
+**Validated end to end on real hardware** (docs/NFCGATE_PLAN.md §15):
 
 - **Path A** — two BomberCats through a live `nfcgate-server`: a full EMV
   transaction (SELECT PPSE → FCI → SELECT AID → GPO → READ RECORD → GET DATA)

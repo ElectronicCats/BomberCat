@@ -2,7 +2,7 @@
 
 # Electronic Cats
 # `bombercat config|run|stop|status|monitor` — configure and drive the NFCGate
-# relay over the control protocol (NFCGATE_PLAN.md Fase 6).
+# relay over the control protocol (docs/NFCGATE_PLAN.md Fase 6).
 # Distributed as-is; no warranty is given.
 
 import time

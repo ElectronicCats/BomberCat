@@ -3,7 +3,7 @@
 # Electronic Cats
 # bombercat.py — DeviceLink: the line-based control protocol client the CLI uses
 # to talk to a BomberCat over USB-serial. Mirrors firmware/core/src/SerialControl
-# (see NFCGATE_PLAN.md Fase 6). No APDUs travel here — this is the control plane.
+# (see docs/NFCGATE_PLAN.md Fase 6). No APDUs travel here — this is the control plane.
 # Distributed as-is; no warranty is given.
 
 import time
@@ -235,14 +235,14 @@ def resolve_port(preferred: Optional[str] = None,
 
     # None answered. If USB still shows a BomberCat by VID/PID, the board is
     # there but its firmware isn't serving the control REPL — point the user at
-    # that instead of a bare "not found". See DEBUG_serial_no_handshake.md.
+    # that instead of a bare "not found".
     tagged = bombercat_ports()
     if len(tagged) == 1:
         p = tagged[0]
         raise DeviceError(
             f"a BomberCat is connected at {p.device} (USB {p.hwid}) but it did "
             "not answer the handshake — is it running the NFCGate relay "
-            "firmware? (see firmware/DEBUG_serial_no_handshake.md)")
+            "firmware?")
     if len(tagged) > 1:
         raise DeviceError(
             f"BomberCats detected by USB id ({describe_devices()}) but none "

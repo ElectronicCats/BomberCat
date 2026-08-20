@@ -81,7 +81,7 @@ STALL_HIDDEN = (
 )
 SPLIT_FIX = [
     "Apply tools/testserver/latency-fixes.patch on the server "
-    "(SERVIDOR_DEDICADO_NFCGATE.md section 2.2).",
+    "(docs/SERVIDOR_DEDICADO_NFCGATE.md section 2.2).",
     "With Docker you must REBUILD the image and recreate the container — a "
     "restart reuses the server.py baked in at build time.",
 ]
@@ -96,7 +96,7 @@ ODD_NOTE = (
 )
 SLOW_NOTE = (
     "NOTE: a %.0f ms round trip is high. That is network distance, not Nagle — see "
-    "SERVIDOR_DEDICADO_NFCGATE.md section 5.1 for what RTT costs you per "
+    "docs/SERVIDOR_DEDICADO_NFCGATE.md section 5.1 for what RTT costs you per "
     "transaction (~72 one-way hops)."
 )
 UNREACHABLE_FIX = [

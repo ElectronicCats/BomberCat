@@ -3,7 +3,7 @@
 # Electronic Cats
 # `bombercat device` — enumerate serial ports, number the attached BomberCats
 # (the IDs `--device/-d` takes) and query one over the control protocol
-# (NFCGATE_PLAN.md Fase 6).
+# (docs/NFCGATE_PLAN.md Fase 6).
 # Distributed as-is; no warranty is given.
 
 import click
@@ -71,8 +71,8 @@ def list_cmd(show_all):
 
     if not responders and usb_only:
         print_info("A BomberCat is present by USB id but did not answer the "
-                   "handshake — it may not be running the NFCGate relay firmware "
-                   "(see firmware/DEBUG_serial_no_handshake.md).")
+                   "handshake — it may not be running the NFCGate relay "
+                   "firmware.")
     elif not responders:
         print_info("No BomberCat answered the handshake. Is one connected and "
                    "flashed with the NFCGate firmware?")
