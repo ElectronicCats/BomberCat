@@ -103,6 +103,52 @@ En Windows/Mac/Linux puedes ver la IP con `ipconfig` o `ip a`.
 
 ---
 
+### Preparación única: grabar el firmware de relay en la BomberCat
+
+Cada BomberCat que vayas a usar como extremo (`reader` o `card`) necesita tener
+grabado el **firmware de relay NFCGate**. Esto se hace **una sola vez** por
+dispositivo (o cuando salga una versión nueva del firmware). Si compraste la
+BomberCat con otro firmware, o no estás seguro, sigue estos pasos.
+
+**Qué necesitas:**
+
+- La BomberCat conectada por USB-C a tu PC.
+- El [Arduino IDE](https://www.arduino.cc/en/software) 2.x **o** `arduino-cli`.
+- El paquete de placas **Electronic Cats Mbed OS RP2040** y las librerías
+  **WiFiNINA** y **Electronic Cats PN7150** (el Arduino IDE las instala desde su
+  gestor de placas y de librerías).
+
+**Con `arduino-cli` (lo más rápido):**
+
+```sh
+cd firmware/NFCGate
+arduino-cli compile -b electroniccats:mbed_rp2040:bombercat --library ../core .
+arduino-cli upload  -b electroniccats:mbed_rp2040:bombercat -p /dev/ttyACM0 .
+```
+
+> Sustituye `/dev/ttyACM0` por el puerto de tu BomberCat (en Windows será algo
+> como `COM5`). Los avisos de WiFiNINA *"architecture may be incompatible"* son
+> **normales** en la BomberCat, no son un error.
+
+**Con el Arduino IDE:** abre `firmware/NFCGate/NFCGate.ino`, selecciona la placa
+**"Electronic Cats BomberCat"** y, para que resuelva `#include <BomberCatCore.h>`,
+crea un enlace de la carpeta `firmware/core` dentro de `~/Arduino/libraries`.
+Después pulsa **Subir**.
+
+**Comprueba que quedó grabado** (con el software de control ya instalado):
+
+```sh
+bombercat device info      # debe responder: fw 0.9.7, state idle
+```
+
+Si responde con la versión y `state idle`, la BomberCat está lista. Repite el
+proceso en la **segunda** BomberCat si vas a usar el Modo 1.
+
+> Los detalles técnicos completos (pines, librerías, opciones de compilación)
+> están en [`firmware/NFCGate/README.md`](../firmware/NFCGate/README.md).
+
+---
+
 ### Modo 1 — BomberCat Reader + BomberCat Card
 
 **Propósito:** el modo más fiable y recomendado. Dos BomberCat: una lee una

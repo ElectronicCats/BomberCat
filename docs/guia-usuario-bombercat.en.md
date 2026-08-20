@@ -102,6 +102,52 @@ On Windows/Mac/Linux you can see the IP with `ipconfig` or `ip a`.
 
 ---
 
+### One-time preparation: flash the relay firmware onto the BomberCat
+
+Every BomberCat you will use as an end (`reader` or `card`) needs the **NFCGate
+relay firmware** flashed onto it. This is done **once** per device (or when a new
+firmware version is released). If you bought the BomberCat with different firmware,
+or you are not sure, follow these steps.
+
+**What you need:**
+
+- The BomberCat connected to your PC over USB-C.
+- The [Arduino IDE](https://www.arduino.cc/en/software) 2.x **or** `arduino-cli`.
+- The **Electronic Cats Mbed OS RP2040** board package and the **WiFiNINA** and
+  **Electronic Cats PN7150** libraries (the Arduino IDE installs them from its
+  board and library managers).
+
+**With `arduino-cli` (the fastest way):**
+
+```sh
+cd firmware/NFCGate
+arduino-cli compile -b electroniccats:mbed_rp2040:bombercat --library ../core .
+arduino-cli upload  -b electroniccats:mbed_rp2040:bombercat -p /dev/ttyACM0 .
+```
+
+> Replace `/dev/ttyACM0` with your BomberCat's port (on Windows it will be
+> something like `COM5`). The WiFiNINA *"architecture may be incompatible"*
+> warnings are **normal** on the BomberCat, not an error.
+
+**With the Arduino IDE:** open `firmware/NFCGate/NFCGate.ino`, select the board
+**"Electronic Cats BomberCat"** and, so it resolves `#include <BomberCatCore.h>`,
+create a link to the `firmware/core` folder inside `~/Arduino/libraries`. Then
+click **Upload**.
+
+**Check that it was flashed** (with the control software already installed):
+
+```sh
+bombercat device info      # should reply: fw 0.9.7, state idle
+```
+
+If it replies with the version and `state idle`, the BomberCat is ready. Repeat
+the process on the **second** BomberCat if you are going to use Mode 1.
+
+> The full technical details (pins, libraries, build options) are in
+> [`firmware/NFCGate/README.md`](../firmware/NFCGate/README.md).
+
+---
+
 ### Mode 1 — BomberCat Reader + BomberCat Card
 
 **Purpose:** the most reliable and recommended mode. Two BomberCats: one reads
