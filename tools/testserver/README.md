@@ -1,8 +1,8 @@
 # Local nfcgate-server (relay testing)
 
 A throwaway `nfcgate-server` for developing and testing the BomberCat relay
-without the Android app. It wraps the pinned upstream server (`../../server`,
-`nfcgate/server@4d32cc1`) in Docker.
+without the Android app. It wraps the pinned server (`../../server`,
+`ElectronicCats/nfcgate-server@fc9103d`) in Docker.
 
 The server just relays length-prefixed frames between the two clients that share
 a 1-byte session number — see the wire format in
@@ -14,7 +14,7 @@ The server is a dev-only fixture, so it is **not** committed or a submodule — 
 is cloned on demand into `../../server` (which is gitignored):
 
 ```bash
-tools/testserver/fetch_server.sh            # clones nfcgate/server@4d32cc1
+tools/testserver/fetch_server.sh            # clones ElectronicCats/nfcgate-server@fc9103d
 SERVER_REPO=/path/to/clone tools/testserver/fetch_server.sh   # offline / mirror
 ```
 
@@ -30,26 +30,33 @@ path. Across the ~36 relays of one EMV transaction that is the difference betwee
 **~13.5 s and ~4.2 s** (Fases E and H of
 [`../../firmware/LATENCIA_OPTIMIZACION.md`](../../firmware/LATENCIA_OPTIMIZACION.md)).
 
-The fixes are upstream-code changes, so they live here as a versioned patch,
-[`latency-fixes.patch`](latency-fixes.patch), applied by
-[`apply_patch.sh`](apply_patch.sh). You never call it by hand: `fetch_server.sh`
-applies it to a fresh clone, and `run.sh` re-asserts it before every build (the
-Dockerfile `COPY`s `server.py`, so an unpatched clone would bake a slow relay
-into the image). It is idempotent — an already-patched clone is left alone.
+The fixes now live **in the fork**, as a real commit: `fc9103d` is exactly
+upstream `4d32cc1` plus them, so the clone `fetch_server.sh` makes is already
+fast. The same changes stay here as a versioned patch,
+[`latency-fixes.patch`](latency-fixes.patch), which
+[`apply_patch.sh`](apply_patch.sh) uses to *assert* that a clone carries them —
+a no-op on the normal path, but it still catches a hand-edited clone or one
+pinned to pristine upstream. You never call it by hand: `fetch_server.sh` runs it
+after cloning and `run.sh` re-asserts it before every build (the Dockerfile
+`COPY`s `server.py`, so an unpatched clone would bake a slow relay into the
+image). It is idempotent — an already-patched clone is left alone.
 
 ```bash
 tools/testserver/apply_patch.sh    # only if you want to check/repair by hand
 ```
 
-To measure a phase against its pristine baseline, skip it for one run:
+To measure a phase against its pristine baseline you now need the *unpatched*
+upstream commit, since the pinned fork commit is patched at the source:
 
 ```bash
+rm -rf server
+SERVER_COMMIT=4d32cc1 BOMBERCAT_SKIP_LATENCY_PATCH=1 tools/testserver/fetch_server.sh
 BOMBERCAT_SKIP_LATENCY_PATCH=1 tools/testserver/run.sh
 ```
 
 > If the clone was edited by hand the patch stops applying and `run.sh` aborts
 > rather than build a slow server; the error prints how to reset the clone.
-> Deploying to a **dedicated server/VPS** needs the same patch applied manually —
+> A **dedicated server/VPS** clones the same fork, so the fixes arrive with it —
 > see `SERVIDOR_DEDICADO_NFCGATE.md` §2.2.
 
 ## Run the server

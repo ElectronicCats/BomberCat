@@ -2,7 +2,8 @@
 """Relay smoke test for the local nfcgate-server.
 
 Validates both the running server and the BomberCat wire protocol
-(nfcgate protocol @804fa9a, server 4d32cc1) without any RF/hardware:
+(nfcgate protocol @804fa9a, ElectronicCats/nfcgate-server @fc9103d) without any
+RF/hardware:
 
     frame  client -> server : [4B big-endian length][1B session][payload]
     frame  server -> client : [4B big-endian length][payload]

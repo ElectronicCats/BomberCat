@@ -66,14 +66,14 @@ def check_server_sources(server_dir: Path, fetch_script: Path) -> None:
     print_error_panel(
         TITLE,
         "The nfcgate-server sources are missing.",
-        "The test server is not part of this repo — it is the upstream\n"
-        "[bold]nfcgate/server[/bold], used here as a throwaway test fixture, so it is\n"
-        "neither committed nor a submodule. It has to be cloned once, and that\n"
-        f"clone is also what Docker builds the image from.\n\n"
+        "The test server is not part of this repo — it is the\n"
+        "[bold]ElectronicCats/nfcgate-server[/bold] fork, used here as a throwaway test\n"
+        "fixture, so it is neither committed nor a submodule. It has to be cloned\n"
+        f"once, and that clone is also what Docker builds the image from.\n\n"
         f"Expected it at: [bold]{server_dir}/server.py[/bold]",
         fix=[
             f"{fmt_command(fetch)}\n"
-            "     clones nfcgate/server@4d32cc1 — needs git and network, once",
+            "     clones ElectronicCats/nfcgate-server@fc9103d — needs git and network, once",
             f"{fmt_command('bombercat testserver run')}\n"
             "     re-run this command; it will build and start the server",
         ],

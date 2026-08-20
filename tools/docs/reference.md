@@ -477,7 +477,7 @@ The server is a dev-only fixture — not committed, not a submodule — so fetch
 once (needs `git`), the same step [`testserver smoke`](#testserver-smoke) needs:
 
 ```sh
-tools/testserver/fetch_server.sh                            # clones nfcgate/server@4d32cc1
+tools/testserver/fetch_server.sh                            # clones ElectronicCats/nfcgate-server@fc9103d
 SERVER_REPO=/path/to/clone tools/testserver/fetch_server.sh # offline / mirror
 ```
 

@@ -3,11 +3,15 @@
 # apply_patch.sh — make sure the on-demand nfcgate-server clone carries our relay
 # latency fixes (Fases E and H of firmware/LATENCIA_OPTIMIZACION.md).
 #
-# Why this exists: the fixes live in `server.py`, which is upstream code cloned
-# on demand into ./server (gitignored, see fetch_server.sh). Nothing in the repo
-# used to carry them, so a fresh clone silently produced a *correct but slow*
-# relay — ~13.5 s per transaction instead of ~4.2 s. That is a miserable bug to
-# notice, because everything works; it is just slow. So the patch is versioned
+# Why this exists: the fixes live in `server.py`, which is server code cloned on
+# demand into ./server (gitignored, see fetch_server.sh). Since the migration to
+# the ElectronicCats/nfcgate-server fork they ship as a real commit (fc9103d), so
+# on the normal path this script is a no-op assertion. It still earns its keep: a
+# clone can be hand-edited, or pinned to pristine upstream with
+# SERVER_COMMIT=4d32cc1, and the Dockerfile COPYs server.py at build time — an
+# unpatched clone silently bakes a *correct but slow* relay (~13.5 s per
+# transaction instead of ~4.2 s) into the image. That is a miserable bug to
+# notice, because everything works; it is just slow. So the patch stays versioned
 # (latency-fixes.patch) and re-asserted here before every build.
 #
 # Idempotent by design: safe to call on every run. An already-patched clone is
@@ -16,8 +20,12 @@
 # Usage:
 #   tools/testserver/apply_patch.sh          # patch ./server if needed
 #
-# Escape hatch — run the pristine upstream instead (for A/B latency runs, the
-# way LATENCIA_OPTIMIZACION.md measures a phase against its baseline):
+# Escape hatch — run the pristine upstream instead (for A/B latency runs, the way
+# LATENCIA_OPTIMIZACION.md measures a phase against its baseline). The pinned
+# fork commit is patched at the source, so skipping this script is no longer
+# enough — re-fetch the unpatched upstream commit too:
+#   rm -rf server
+#   SERVER_COMMIT=4d32cc1 BOMBERCAT_SKIP_LATENCY_PATCH=1 tools/testserver/fetch_server.sh
 #   BOMBERCAT_SKIP_LATENCY_PATCH=1 tools/testserver/run.sh
 #
 set -euo pipefail
@@ -38,8 +46,12 @@ die() {
 
 if [ "${BOMBERCAT_SKIP_LATENCY_PATCH:-0}" != "0" ]; then
     echo ">> BOMBERCAT_SKIP_LATENCY_PATCH set — leaving $DEST as-is."
-    echo "   The relay will run the pristine upstream: expect ~13.5 s/transaction,"
-    echo "   not ~4.2 s (firmware/LATENCIA_OPTIMIZACION.md, Fases E and H)."
+    echo "   The relay will run whatever $DEST holds. Note the pinned fork commit"
+    echo "   already contains the fixes, so this flag alone no longer gives you the"
+    echo "   pristine baseline (~13.5 s/transaction instead of ~4.2 s — see"
+    echo "   firmware/LATENCIA_OPTIMIZACION.md, Fases E and H). For that, re-fetch:"
+    echo "     rm -rf $DEST && SERVER_COMMIT=4d32cc1 BOMBERCAT_SKIP_LATENCY_PATCH=1 \\"
+    echo "       $SCRIPT_DIR/fetch_server.sh"
     exit 0
 fi
 
@@ -61,10 +73,11 @@ fi
 
 if ! git -C "$DEST" apply --check "$PATCH" 2>/dev/null; then
     die "the latency patch does not apply to $DEST/server.py" \
-        "It is written against nfcgate/server@4d32cc1 and the clone looks" \
-        "different — wrong commit, or server.py was edited by hand." \
+        "It is written against nfcgate/server@4d32cc1 — the parent of the fork's" \
+        "pinned fc9103d — and the clone matches neither: wrong commit, or" \
+        "server.py was edited by hand." \
         "" \
-        "Check the commit:  git -C $DEST rev-parse --short HEAD   (want 4d32cc1)" \
+        "Check the commit:  git -C $DEST rev-parse --short HEAD   (want fc9103d)" \
         "Reset the clone:   git -C $DEST checkout -- server.py" \
         "Start over:        rm -rf $DEST && $SCRIPT_DIR/fetch_server.sh" \
         "" \

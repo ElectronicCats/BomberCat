@@ -1,7 +1,10 @@
 Fases E y H de firmware/LATENCIA_OPTIMIZACION.md — parche de latencia del relé.
 
-Aplica sobre un checkout limpio de nfcgate/server @ 4d32cc1 (el commit fijado en
-firmware/core/proto/UPSTREAM.md):
+Ya viene incorporado en el fork: ElectronicCats/nfcgate-server @ fc9103d (rama
+`v2`) es exactamente 4d32cc1 + este parche, y es el commit que clona
+tools/testserver/fetch_server.sh. Este archivo se conserva para (a) parchear a
+mano un checkout pristine de nfcgate/server @ 4d32cc1 y (b) que apply_patch.sh
+pueda verificar que un clon lleva las fixes:
 
     git -C /opt/nfcgate-server apply latency-fixes.patch
 
@@ -18,7 +21,8 @@ Fase H — saca los logs por-frame del hot-path lock-step (~50-150 ms):
   - El hex-dump "data:" de handle() y el "Publish reached" de send_to_clients()
     solo corren con --verbose. Los logs de conexión/sesión se conservan siempre.
 
-Verificado: aplica limpio sobre 4d32cc1 y py_compile OK.
+Verificado: aplica limpio sobre 4d32cc1, revierte limpio sobre fc9103d (que es
+su resultado exacto), py_compile OK.
 diff --git a/server.py b/server.py
 index 205461a..bfc8269 100755
 --- a/server.py
