@@ -87,7 +87,7 @@ The control link runs at **115200 baud**. After flashing, verify the device
 answers over serial:
 
 ```sh
-bombercat device info      # -> fw 0.7.0, state idle
+bombercat device info      # -> fw 0.9.7, state idle
 ```
 
 Then configure it (above), point it at a running `nfcgate-server` with a card in
@@ -119,11 +119,29 @@ tools/testserver/codec_hosttest/build_and_run.sh     # terminal 2: PASS
 On device, point the sketch at a running server with a card in the field and a
 second peer (a `card`-role peer or the NFCGate app) on the same session byte.
 
-## Status / not yet done
+## Status
 
-- **On-device E2E** — Fase 7: two BomberCats (or one + the NFCGate Android app)
-  through a live server; the serial control path is verified against a simulated
-  device but not yet on real hardware.
+**Validated end to end on real hardware** (NFCGATE_PLAN.md §15):
+
+- **Path A** — two BomberCats through a live `nfcgate-server`: a full EMV
+  transaction (SELECT PPSE → FCI → SELECT AID → GPO → READ RECORD → GET DATA)
+  relays end to end, including consecutive transactions without hanging
+  (2026-08-17).
+- **Path B** — against the **NFCGate Android app**, both variants: B1 (BomberCat
+  `reader` + phone as `card`/HCE) and B2 (BomberCat `card` + phone as `reader`)
+  (2026-08-19).
+- **APDU capture (Fase 8)** — the `:apdu` tap + `bombercat capture` write a
+  Wireshark-openable pcap; validated on HW by capturing a real Path A EMV
+  transaction (`CapturaWireshark.pcapng`).
+- **Per-transaction latency** — brought down from ~12–15 s to **~4.5 s**
+  (`firmware/LATENCIA_OPTIMIZACION.md`).
+
+### Not yet done
+
+- **Latency floor** — the remaining floor below ~4.5 s is architectural; the only
+  way past it is an opt-in board-to-board *turbo* mode that breaks NFCGate
+  compatibility (`firmware/REDISENO_COMUNICACION.md` §5.1). Open only if needed.
 - **TLS** — later phase; the link is plain TCP for now.
-- **Keepalive / WTX** — the loop reconnects on link error but does not yet send
-  periodic keepalives or handle EMV WTX (a risk noted in the plan §8).
+- **Keepalive / WTX** — the loop reconnects on link error (including the
+  half-open TCP case fixed for Path A) but does not yet send periodic keepalives
+  or handle EMV WTX (a risk noted in the plan §8).
