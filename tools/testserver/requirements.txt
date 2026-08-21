@@ -1,0 +1,4 @@
+# Runtime for the vendored nfcgate-server's committed *_pb2.py modules.
+# The classic protobuf C-descriptor generated code requires the 3.x runtime;
+# protobuf >= 4 raises "Descriptors cannot be created directly".
+protobuf==3.20.3

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package de.tu_darmstadt.seemoo.nfcgate.network.c2s;
+// Message types for client<->server communication
+
+
+// Session management messages
+message ServerData {
+	enum Opcode {
+        OP_PSH = 0;
+		OP_SYN = 1;
+		OP_ACK = 2;
+		OP_FIN = 3;
+	}
+
+	// Describes intent of the sender
+	Opcode        opcode = 1;
+
+	// Binary blob containing the message content
+	bytes           data = 2;
+}

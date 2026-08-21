@@ -45,6 +45,31 @@ However, card emulation mode is not only beneficial for smartphones but any type
 Magspoof mode can emulate magnetic stripe cards by emulating the electromagnetic pulses of this type of card.
 
 
+## NFCGate relay
+
+BomberCat can act as an [NFCGate](https://github.com/nfcgate/nfcgate)-compatible
+**relay** endpoint: it pairs with a second NFCGate peer — another BomberCat or the
+NFCGate Android app — through an `nfcgate-server`, relaying NFC APDUs over WiFi/TCP.
+This makes a card that is physically in one place appear in front of a reader in
+another — the classic test for whether a contactless reader accepts a card that is
+not really present.
+
+It ships with three pieces:
+
+- **Relay firmware** — [`firmware/NFCGate/`](firmware/NFCGate/README.md), a
+  role-selectable (`reader` / `card`) sketch built on the
+  [`firmware/core/`](firmware/core/README.md) (`BomberCatCore`) library.
+- **`bombercat` control CLI** — a Python tool ([`tools/`](tools/README.md)) that
+  configures, runs, monitors and captures the relay over USB-serial (APDU capture
+  opens straight in Wireshark).
+- **User guides** — step-by-step, non-technical walkthroughs of the three relay
+  setups (two BomberCats, or one BomberCat + the NFCGate Android app):
+  [English](docs/guia-usuario-bombercat.en.md) ·
+  [Español](docs/guia-usuario-bombercat.es.md).
+
+> Relay/spoofing features are for **authorized security audits only** — see the
+> Disclaimer below.
+
 ## Characteristics:
 - Cortex M0+ processor
 - USB C 2.0

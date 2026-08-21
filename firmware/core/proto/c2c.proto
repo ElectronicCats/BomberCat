@@ -1,0 +1,28 @@
+syntax = "proto3";
+package de.tu_darmstadt.seemoo.nfcgate.network.c2c;
+// Messages for client<->client communication
+
+// Message for passing NFC data between clients
+message NFCData {
+	enum DataSource {
+		READER = 0;
+		CARD   = 1;
+	}
+	
+	enum DataType {
+        INITIAL      = 0;
+        CONTINUATION = 1;
+	}
+
+	// If data is coming from a NFC Card or a NFC Reader
+	DataSource data_source = 1;
+	
+	// If data is initial card data or continuation
+	DataType     data_type = 2;
+	
+	// Unix timestamp in millis
+	int64        timestamp = 4;
+
+	// The actual bytes to be sent
+	bytes             data = 3;
+}

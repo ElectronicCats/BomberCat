@@ -1,0 +1,130 @@
+Fases E y H de firmware/LATENCIA_OPTIMIZACION.md — parche de latencia del relé.
+
+Ya viene incorporado en el fork: ElectronicCats/nfcgate-server @ fc9103d (rama
+`v2`) es exactamente 4d32cc1 + este parche, y es el commit que clona
+tools/testserver/fetch_server.sh. Este archivo se conserva para (a) parchear a
+mano un checkout pristine de nfcgate/server @ 4d32cc1 y (b) que apply_patch.sh
+pueda verificar que un clon lleva las fixes:
+
+    git -C /opt/nfcgate-server apply latency-fixes.patch
+
+Sin este parche la latencia por transacción sube de ~4.2 s a ~13.5 s. Los cambios
+son puramente del lado servidor; no requieren reflashear las placas.
+
+Fase E — mata el stall de Nagle/delayed-ACK (el mayor recorte: ~13.5 s -> ~5 s):
+  - setup(): setsockopt(IPPROTO_TCP, TCP_NODELAY, 1) por conexión.
+  - send_to_clients(): header de 4 B + payload en UN solo wfile.write(), para que
+    salgan como un único segmento TCP (wfile es unbuffered, wbufsize=0).
+
+Fase H — saca los logs por-frame del hot-path lock-step (~50-150 ms):
+  - Nuevo flag -v/--verbose (default False), propagado a NFCGateServer.verbose.
+  - El hex-dump "data:" de handle() y el "Publish reached" de send_to_clients()
+    solo corren con --verbose. Los logs de conexión/sesión se conservan siempre.
+
+Verificado: aplica limpio sobre 4d32cc1, revierte limpio sobre fc9103d (que es
+su resultado exacto), py_compile OK.
+diff --git a/server.py b/server.py
+index 205461a..bfc8269 100755
+--- a/server.py
++++ b/server.py
+@@ -49,6 +49,20 @@ class NFCGateClientHandler(socketserver.StreamRequestHandler):
+         self.write_lock = threading.Lock()
+         self.state = {}
+         self.request.settimeout(300)
++
++        # Disable Nagle (LATENCIA_OPTIMIZACION.md Fase E). The relay exchanges tiny
++        # length-prefixed frames strictly lock-step, and StreamRequestHandler's
++        # wfile is unbuffered (wbufsize=0), so a frame's 4-byte header and payload
++        # went out as two separate TCP segments. With Nagle on, the payload segment
++        # waits for the header's ACK — or the ~40 ms delayed-ACK timer — on EVERY
++        # server->board relay (2 of the 4 hops per APDU pair), i.e. up to ~40 ms of
++        # dead time per hop. TCP_NODELAY sends each segment immediately; combined
++        # with the single coalesced write in send_to_clients it removes the stall.
++        try:
++            self.request.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
++        except OSError:
++            pass  # e.g. non-TCP transport; nothing to tune
++
+         self.log("server", "connected")
+ 
+     def handle(self):
+@@ -65,7 +79,15 @@ class NFCGateClientHandler(socketserver.StreamRequestHandler):
+ 
+             msg_len, session = struct.unpack("!IB", msg_len_data)
+             data = self.rfile.read(msg_len)
+-            self.log("server", "data:", bytes(data))
++            # Per-frame hex dump is a HOT-PATH cost (Fase H, LATENCIA_OPTIMIZACION.md).
++            # The relay is strictly lock-step and this log runs synchronously BETWEEN
++            # reading a frame and forwarding it, so building bytes(data)'s repr (up to
++            # 256 B) + datetime.now() + print()/flush lands on the causal chain on every
++            # one of the ~36 relayed frames per transaction — the server-side analog of
++            # H1 (Debug logging per APDU on the board). Gated behind --verbose so the
++            # default relay path never pays it; enable -v only to diagnose.
++            if self.server.verbose:
++                self.log("server", "data:", bytes(data))
+ 
+             # no data was sent or no session number supplied and none set yet
+             if msg_len == 0 or session == 0 and self.session is None:
+@@ -90,10 +112,14 @@ class NFCGateClientHandler(socketserver.StreamRequestHandler):
+ 
+ 
+ class NFCGateServer(socketserver.ThreadingTCPServer):
+-    def __init__(self, server_address, request_handler, plugins, tls_options=None, bind_and_activate=True):
++    def __init__(self, server_address, request_handler, plugins, tls_options=None, bind_and_activate=True,
++                 verbose=False):
+         self.allow_reuse_address = True
+         super().__init__(server_address, request_handler, bind_and_activate)
+ 
++        # Fase H: when False (default) the per-frame hot-path logs are skipped so a
++        # relay run stays quiet and fast; -v turns them back on for diagnostics.
++        self.verbose = verbose
+         self.clients = {}
+         self.plugins = PluginHandler(plugins)
+ 
+@@ -146,15 +172,26 @@ class NFCGateServer(socketserver.ThreadingTCPServer):
+ 
+             with client.write_lock:
+                 for msg in msgs:
+-                    client.wfile.write(int.to_bytes(len(msg), 4, byteorder='big'))
+-                    client.wfile.write(msg)
++                    # Single coalesced write so the 4-byte length header and the
++                    # payload leave as ONE TCP segment (Fase E): with the unbuffered
++                    # wfile the previous two writes produced two segments and, under
++                    # Nagle, a ~40 ms delayed-ACK stall between them on every relay.
++                    client.wfile.write(int.to_bytes(len(msg), 4, byteorder='big') + bytes(msg))
+ 
+-        self.log("Publish reached", len(self.clients[session]) - 1, "clients")
++        # Also a hot-path per-frame log (Fase H): the forward already happened above,
++        # but this print still steals the thread (and the GIL) once per relayed frame.
++        # Gated behind --verbose like the receive-side dump.
++        if self.verbose:
++            self.log("Publish reached", len(self.clients[session]) - 1, "clients")
+ 
+ 
+ def parse_args():
+     parser = argparse.ArgumentParser(prog="NFCGate server")
+     parser.add_argument("plugins", type=str, nargs="*", help="List of plugin modules to load.")
++    parser.add_argument("-v", "--verbose", help="Log every relayed frame (per-APDU hex dump + "
++                        "'Publish reached'). Off by default: those logs are on the lock-step relay "
++                        "hot path (Fase H), so leaving them off cuts per-frame latency.",
++                        default=False, action="store_true")
+     parser.add_argument("-s", "--tls", help="Enable TLS. You must specify certificate and key.",
+                         default=False, action="store_true")
+     parser.add_argument("--tls_cert", help="TLS certificate file in PEM format.", action="store")
+@@ -179,12 +216,13 @@ def parse_args():
+         except ssl.SSLError:
+             print("Certificate or key could not be loaded. Please check format and file permissions!")
+             sys.exit(1)
+-    return args.plugins, tls_options
++    return args.plugins, tls_options, args.verbose
+ 
+ 
+ def main():
+-    plugins, tls_options = parse_args()
+-    NFCGateServer((HOST, PORT), NFCGateClientHandler, plugins, tls_options).serve_forever()
++    plugins, tls_options, verbose = parse_args()
++    NFCGateServer((HOST, PORT), NFCGateClientHandler, plugins, tls_options,
++                  verbose=verbose).serve_forever()
+ 
+ 
+ if __name__ == "__main__":

@@ -1,0 +1,9 @@
+click==8.4.2
+markdown-it-py==4.2.0
+mdurl==0.1.2
+Pygments==2.20.0
+pyserial==3.5
+rich==15.0.0
+python-magic>=0.4.27; sys_platform != "win32"
+python-magic-bin>=0.4.14; sys_platform == "win32"
+pywin32>=311; sys_platform == "win32"
