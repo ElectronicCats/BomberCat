@@ -54,18 +54,13 @@ This makes a card that is physically in one place appear in front of a reader in
 another — the classic test for whether a contactless reader accepts a card that is
 not really present.
 
-It ships with three pieces:
+It ships with two pieces, each in its own repository:
 
-- **Relay firmware** — [`firmware/NFCGate/`](firmware/NFCGate/README.md), a
-  role-selectable (`reader` / `card`) sketch built on the
-  [`firmware/core/`](firmware/core/README.md) (`BomberCatCore`) library.
-- **`bombercat` control CLI** — a Python tool ([`tools/`](tools/README.md)) that
-  configures, runs, monitors and captures the relay over USB-serial (APDU capture
-  opens straight in Wireshark).
-- **User guides** — step-by-step, non-technical walkthroughs of the three relay
-  setups (two BomberCats, or one BomberCat + the NFCGate Android app):
-  [English](docs/guia-usuario-bombercat.en.md) ·
-  [Español](docs/guia-usuario-bombercat.es.md).
+- **Relay firmware** — [`bombercat-firmware`](https://github.com/ElectronicCats/bombercat-firmware),
+  a role-selectable (`reader` / `card`) sketch built on the `BomberCatCore` library.
+- **`bombercat` control CLI** — [`bombercat-tools`](https://github.com/ElectronicCats/bombercat-tools),
+  a Python tool that configures, runs, monitors and captures the relay over
+  USB-serial (APDU capture opens straight in Wireshark).
 
 > Relay/spoofing features are for **authorized security audits only** — see the
 > Disclaimer below.
@@ -116,6 +111,26 @@ This step is essential to ensure the board can be detected and the firmware uplo
 ## Wiki and Getting Started
 
 [Getting Started in our Wiki](https://github.com/ElectronicCats/BomberCat/wiki)
+
+## Repositories
+
+This repository holds the **hardware** design (KiCad, BOM, mechanical files) and
+general project documentation. Firmware and host tooling used to live here but were
+split out into their own repositories for better version control and issue tracking:
+
+### Firmware Repository
+All BomberCat firmware (NFCGate relay, DetectTags, DetectReaders, magspoof, and more)
+lives here:
+
+https://github.com/ElectronicCats/bombercat-firmware
+
+All BomberCat versions are supported in this repository — check which version you own
+and select the proper branch to develop, build, or program your board.
+
+### Tools Repository
+The `bombercat` control CLI and other Python dev tooling live here:
+
+https://github.com/ElectronicCats/bombercat-tools
 
 ## Disclaimer
 >[!IMPORTANT]
