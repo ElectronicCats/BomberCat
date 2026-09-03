@@ -233,9 +233,10 @@ physical card.
 > reversed and works on normal phones.
 >
 > 📱 **Don't know how to root the phone or set up NFCGate?** Follow the
-> [Guide to rooting an Android phone for NFCGate](guia-rooteo-android-nfcgate.en.md),
-> which explains step by step how to root with Magisk and install the NFCGate
-> module (Zygisk + LSPosed), with their corresponding warnings.
+> [Guide to rooting an Android phone for NFCGate](https://github.com/ElectronicCats/bombercat-tools/blob/main/docs/guia-rooteo-android-nfcgate.en.md)
+> (in the `bombercat-tools` repository), which explains step by step how to
+> root with Magisk and install the NFCGate module (Zygisk + LSPosed), with
+> their corresponding warnings.
 
 **Minimum requirements:**
 
