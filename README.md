@@ -6,6 +6,7 @@
 </a>
 </p>
 
+<p align=center><b>Where to buy and learn more</b></p>
 <p align=center>
 <a href="https://electroniccats.com/store/bombercat/">
   <img src="https://github.com/ElectronicCats/BomberCat/assets/107638696/f9bbb579-0f5c-4f9f-a3ca-376aa8895035" width="200" height="104" />
