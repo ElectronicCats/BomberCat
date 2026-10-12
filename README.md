@@ -6,6 +6,7 @@
 </a>
 </p>
 
+<p align=center><b>Where to buy and learn more</b></p>
 <p align=center>
 <a href="https://electroniccats.com/store/bombercat/">
   <img src="https://github.com/ElectronicCats/BomberCat/assets/107638696/f9bbb579-0f5c-4f9f-a3ca-376aa8895035" width="200" height="104" />
@@ -16,12 +17,9 @@
 </p>
 
 <p align=center>
-Also available at distributors:
-</p>
-<p align=center>
-<a href="https://labs.ksec.co.uk/product-category/electronic-cat/">
-<img src="https://cdn.ksec.co.uk/ksec-solutions/ksec-W-BW-MV-small-clipped.png" width="200" />
-</a>
+  <a href="https://electroniccats.com/distributors/">
+    <img src="https://electroniccats.com/wp-content/uploads/2026/10/official-distributors-button-v2.png" width="200" alt="Official distributors" />
+  </a>
 </p>
 
 BomberCat 💣 is the latest security tool that combines the most common card technologies: NFC technology (Near Field Communication) and magnetic stripe technology used in access control, identification, and banking cards.
